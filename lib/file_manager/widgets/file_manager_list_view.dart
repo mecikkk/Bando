@@ -45,14 +45,18 @@ class FileManagerListViewState extends State<FileManagerListView> {
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(20.0), topRight: Radius.circular(20.0)),
-          color: Colors.white),
-      child: Expanded(
-        child: ListView.builder(
-            itemCount: files.length,
-            itemBuilder: (BuildContext context, int index) {
-              return new EntryFileItem(files[index]);
-            }),
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(25.0), topRight: Radius.circular(25.0)),
+          color: Theme.of(context).scaffoldBackgroundColor),
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: ListView.builder(
+                itemCount: files.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return new EntryFileItem(files[index]);
+                }),
+          ),
+        ],
       ),
     );
   }
