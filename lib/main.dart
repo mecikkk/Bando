@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'file_manager/widgets/file_manager_list_view.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -10,43 +12,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Bando',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
+        primaryColor: Color(0xfff3f4f9),
+        accentColor: Color.fromRGBO(168, 0, 79, 1.0),
+        scaffoldBackgroundColor: Color(0xfff3f4f9),
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Varela',
       ),
-      home: MyHomePage(title: 'Bando'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Hello World',
-            ),
-          ],
-        ),
-      ),
+      home: FileManagerListView(),
     );
   }
 }
