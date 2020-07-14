@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="117.4637mm"
+   height="161.95576mm"
+   viewBox="0 0 117.4637 161.95576"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="logo.svg"
+   inkscape:export-filename="D:\Android\Bando\img\logo1.png"
+   inkscape:export-xdpi="121"
+   inkscape:export-ydpi="121">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35355339"
+     inkscape:cx="153.7336"
+     inkscape:cy="31.453486"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:snap-nodes="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1672"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1">
+    <sodipodi:guide
+       position="188.85603,136.31112"
+       orientation="1,0"
+       id="guide2043"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-51.85337,-55.043542)">
+    <path
+       style="opacity:1;fill:none;stroke:#000000;stroke-width:13;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 110.58522,216.99931 V 186.12968"
+       id="path1966"
+       inkscape:connector-curvature="0"
+       inkscape:export-xdpi="121"
+       inkscape:export-ydpi="121" />
+    <path
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:13;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       d="m 58.35337,132.81874 c 0,28.84685 23.38497,52.23185 52.23182,52.23185 28.84689,0 52.23188,-23.385 52.23188,-52.23185"
+       id="path1239-1-4-2-7"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="csc"
+       inkscape:export-xdpi="121"
+       inkscape:export-ydpi="121" />
+    <path
+       inkscape:connector-curvature="0"
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:13;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       d="m 110.58523,104.9459 c -15.171965,0 -27.471205,12.29923 -27.471205,27.47119 0,15.17196 12.29924,27.47119 27.471205,27.47119 15.17196,0 27.47119,-12.29923 27.47119,-27.47119 0,-15.17196 -12.29923,-27.47119 -27.47119,-27.47119 z"
+       id="path1239-1-4-2-4-9"
+       sodipodi:nodetypes="sssss"
+       inkscape:export-xdpi="121"
+       inkscape:export-ydpi="121" />
+    <path
+       style="opacity:1;fill:none;stroke:#000000;stroke-width:13;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 83.114085,132.41704 V 85.377508 c 0,-13.163137 10.67083,-23.833966 23.833975,-23.833966 13.16314,0 23.83397,10.670829 23.83397,23.833966 0,4.36883 -2.03705,19.568392 -20.1968,19.568392"
+       id="path1881-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccscc"
+       inkscape:export-xdpi="121"
+       inkscape:export-ydpi="121" />
+  </g>
+</svg>

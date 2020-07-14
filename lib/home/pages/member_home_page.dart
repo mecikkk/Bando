@@ -1,17 +1,17 @@
 import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/widgets/fade_on_scroll.dart';
 import 'package:bando/utils/consts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class LeaderHomePage extends StatefulWidget {
+class MemberHomePage extends StatefulWidget {
 
   @override
-  _LeaderHomePageState createState() => _LeaderHomePageState();
+  _MemberHomePageState createState() => _MemberHomePageState();
+
 }
 
-class _LeaderHomePageState extends State<LeaderHomePage> {
+class _MemberHomePageState extends State<MemberHomePage> {
   double _fullWidth;
   final ScrollController scrollController = ScrollController();
 
@@ -93,12 +93,7 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
             decoration: BoxDecoration(
               gradient: Constants.getGradient(context, Alignment.topLeft, Alignment.centerRight),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                color: Theme.of(context).scaffoldBackgroundColor,
-              ),
-            )),
+            child: FileManagerListView()),
       ),
     );
   }
@@ -155,14 +150,9 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              FirebaseAuth.instance.signOut();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Icon(Icons.account_circle, color: Colors.white),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Icon(Icons.account_circle, color: Colors.white),
           )
         ],
       ),

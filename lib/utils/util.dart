@@ -1,0 +1,1 @@
+enum ConfigurationType {NEW_GROUP, JOIN_TO_EXIST}

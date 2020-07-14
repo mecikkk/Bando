@@ -1,6 +1,6 @@
 # bando
 
-An application for synchronizing work with lyrics for music bands.
+ An application for synchronizing work with lyrics for music bands.
 
 ## Getting Started
 
