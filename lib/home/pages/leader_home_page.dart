@@ -4,6 +4,7 @@ import 'package:bando/utils/consts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LeaderHomePage extends StatefulWidget {
 
@@ -35,7 +36,7 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
           return <Widget>[
             SliverAppBar(
               automaticallyImplyLeading: false,
-              expandedHeight: 250,
+              expandedHeight: 180,
               floating: false,
               pinned: true,
               titleSpacing: 0.0,
@@ -66,19 +67,22 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
                           height: 25.0,
                         ),
                         buildExpandedTopAppBar("Nazwa zespołu"),
-                        buildMembersListWidget(),
+                        //buildMembersListWidget(),
+//                        SizedBox(
+//                          height: 28,
+//                          child: Center(
+//                            child: Container(
+//                              height: 2,
+//                              width: MediaQuery.of(context).size.width / 1.1,
+//                              decoration: BoxDecoration(
+//                                color: Colors.white.withOpacity(0.5),
+//                                borderRadius: BorderRadius.circular(5),
+//                              ),
+//                            ),
+//                          ),
+//                        ),
                         SizedBox(
-                          height: 28,
-                          child: Center(
-                            child: Container(
-                              height: 2,
-                              width: MediaQuery.of(context).size.width / 1.1,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                            ),
-                          ),
+                          height: 25.0,
                         ),
                         buildSubtitle("Aktualny tekst : "),
                       ],
@@ -129,13 +133,11 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
 
   Widget buildSubtitle(String text) {
     return Container(
-      child: Padding(
         padding: EdgeInsets.only(left: 20.0),
         child: Text(
           text,
           textAlign: TextAlign.left,
           style: TextStyle(color: Colors.white, fontSize: 14.0),
-        ),
       ),
     );
   }
@@ -151,7 +153,7 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
               padding: const EdgeInsets.all(20.0),
               child: Text(
                 bandName,
-                style: TextStyle(color: Colors.white, fontSize: 24.0),
+                style: TextStyle(color: Colors.white, fontSize: 28.0),
               ),
             ),
           ),
@@ -174,11 +176,7 @@ class _LeaderHomePageState extends State<LeaderHomePage> {
       children: <Widget>[
         Expanded(
           flex: 1,
-          child: Icon(
-            Icons.play_circle_outline,
-            color: Colors.white,
-            size: 21,
-          ),
+          child: SvgPicture.asset("assets/audio-doc.svg", height: 20, color: Colors.white,),
         ),
         Expanded(
           flex: 6,

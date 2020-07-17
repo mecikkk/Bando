@@ -56,7 +56,7 @@ class RegisterPage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 children: <Widget>[
                   RegisterForm(pageController: _pageController),
-                  RegisterGroupForm(),
+                  RegisterGroupForm(context),
                 ],
               ),
             ),

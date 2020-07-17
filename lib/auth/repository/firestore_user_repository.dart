@@ -28,4 +28,9 @@ class FirestoreUserRepository{
     return User.fromEntity(UserEntity.fromSnapshot(await usersCollection.document(uid).get()));
   }
 
+  Future<bool> isUserGroupConfigured(String uid) async {
+    DocumentSnapshot snapshot = await usersCollection.document(uid).get();
+    return (snapshot.data["groupId"] == "") ? false : true;
+  }
+
 }

@@ -37,7 +37,7 @@ class GroupEntity extends Equatable {
     return GroupEntity(
       snapshot.documentID,
       snapshot.data["name"],
-      snapshot.data["members"],
+      List.from(snapshot.data["members"]),
     );
   }
 

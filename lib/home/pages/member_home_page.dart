@@ -1,254 +1,306 @@
+import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
+import 'package:bando/auth/pages/register_group_form.dart';
 import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
+import 'package:bando/home/blocs/home_bloc.dart';
 import 'package:bando/home/widgets/fade_on_scroll.dart';
 import 'package:bando/utils/consts.dart';
+import 'package:bando/widgets/rounded_colored_shadow_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
+import 'package:flutter_svg/svg.dart';
 
 class MemberHomePage extends StatefulWidget {
-
   @override
   _MemberHomePageState createState() => _MemberHomePageState();
-
 }
 
 class _MemberHomePageState extends State<MemberHomePage> {
   double _fullWidth;
-  final ScrollController scrollController = ScrollController();
+  String _groupName = "------";
+  String _userName = "user";
+
+  HomeBloc _bloc;
 
   @override
   Future<void> initState() {
     super.initState();
+    _bloc = BlocProvider.of<HomeBloc>(context);
   }
 
   @override
   void dispose() {
-    scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: NestedScrollView(
-        controller: scrollController,
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return <Widget>[
-            SliverAppBar(
-              automaticallyImplyLeading: false,
-              expandedHeight: 250,
-              floating: false,
-              pinned: true,
-              titleSpacing: 0.0,
-              backgroundColor: Theme.of(context).accentColor,
-              brightness: Brightness.dark,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: EdgeInsetsDirectional.only(start: 4, bottom: 14),
-                collapseMode: CollapseMode.parallax,
-                stretchModes: [StretchMode.zoomBackground, StretchMode.blurBackground],
-                title: buildCurrentSongTitleWidget(
-                  context,
-                  "Każdy się cieszy jak jo dotyko uło o o o",
-                  "śpiwenik/blok1",
-                ),
-                background: FadeOnScroll(
-                  scrollController: scrollController,
-                  fullOpacityOffset: 0,
-                  zeroOpacityOffset: 180,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: Constants.getGradient(context, Alignment.bottomLeft, Alignment.topRight),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SizedBox(
-                          height: 25.0,
-                        ),
-                        buildExpandedTopAppBar("Nazwa zespołu"),
-                        buildMembersListWidget(),
-                        SizedBox(
-                          height: 28,
-                          child: Center(
-                            child: Container(
-                              height: 2,
-                              width: MediaQuery.of(context).size.width / 1.1,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                            ),
-                          ),
-                        ),
-                        buildSubtitle("Aktualny tekst : "),
-                      ],
+    _fullWidth = MediaQuery.of(context).size.width;
+    updateStatusbar();
+
+    _loadCurrentUserInfo();
+
+    return BlocListener<HomeBloc, HomeState>(
+      listener: (context, state) {
+        if (state is HomeReadyState) {
+          print("ready state !");
+          _userName = state.user.username;
+          _groupName = state.group.name;
+        }
+
+        if (state is HomeNoGroupState) {
+          print("No Group State !");
+          _userName = state.user.username;
+        }
+
+        if (state is HomeLoadingState) {
+          print("Loading state !");
+        }
+
+        if (state is HomeFailureState) {
+          print("Failure State ! ");
+        }
+      },
+      child: BlocBuilder<HomeBloc, HomeState>(
+        builder: (context, state) {
+          return Scaffold(
+            body: Builder(
+              builder: (scaffoldContext) => Stack(
+                children: <Widget>[
+                  Positioned(
+                    top: 190,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 800),
+                      child:
+                          (state is HomeNoGroupState) ? _buildNoGroupInfoContent(scaffoldContext) : _buildMainContent(scaffoldContext),
                     ),
                   ),
-                ),
+                  buildHeader(scaffoldContext),
+                ],
               ),
-            )
-          ];
-        },
-        body: Container(
-            decoration: BoxDecoration(
-              gradient: Constants.getGradient(context, Alignment.topLeft, Alignment.centerRight),
             ),
-            child: FileManagerListView()),
+          );
+        },
       ),
     );
   }
 
-  Column buildMembersListWidget() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  ListView _buildMainContent(BuildContext context) {
+    return ListView(
+      key: UniqueKey(),
+      padding: EdgeInsets.only(top: 30),
       children: <Widget>[
-        buildSubtitle("Członkowie : "),
-        SizedBox(
-          height: 5,
-        ),
         Container(
-            height: 45,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: <Widget>[
-                buildMemberChip("Tadek", true),
-                buildMemberChip("Ziutekkkkkkkkkkkkkkkkkkk", false),
-                buildMemberChip("Marian", true),
-                buildMemberChip("Władek", false),
-                buildMemberChip("Henio", false),
-              ],
-            ))
+          width: MediaQuery.of(context).size.width,
+        ),
       ],
     );
   }
 
-  Widget buildSubtitle(String text) {
-    return Container(
-      child: Padding(
-        padding: EdgeInsets.only(left: 20.0),
-        child: Text(
-          text,
-          textAlign: TextAlign.left,
-          style: TextStyle(color: Colors.white, fontSize: 14.0),
+  Padding _buildNoGroupInfoContent(BuildContext buildContext) {
+    return Padding(
+      key: UniqueKey(),
+      padding: const EdgeInsets.only(top: 30.0),
+      child: Align(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                "Nie należysz do żadnej grupy. Utwórz nową grupę, lub dołącz do istniejącej.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18.0),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: SvgPicture.asset(
+                "assets/no_group.svg",
+                height: 100,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: RoundedColoredShadowButton(
+                text: "Dodaj grupę",
+                icon: Icons.add,
+                height: 40,
+                width: 200,
+                backgroundColor: Theme.of(buildContext).scaffoldBackgroundColor,
+                shadowColor: Constants.getStartGradientColor(buildContext),
+                iconColor: Constants.getStartGradientColor(buildContext),
+                borderColor: Constants.getStartGradientColor(buildContext),
+                textColor: Constants.getStartGradientColor(buildContext),
+                onTap: () {
+                  Navigator.of(buildContext).push(MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                            value: BlocProvider.of<RegisterBloc>(buildContext),
+                            child: RegisterGroupForm(buildContext),
+                          )));
+                },
+              ),
+            )
+          ],
         ),
       ),
     );
   }
 
-  Container buildExpandedTopAppBar(String bandName) {
+  Positioned buildHeader(BuildContext context) {
+    return Positioned(
+      top: 0,
+      child: Container(
+        height: 220,
+        width: _fullWidth,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+            gradient: Constants.getGradient(context, Alignment.centerLeft, Alignment.topRight),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black38,
+                spreadRadius: 0,
+                blurRadius: 15,
+                offset: Offset(0, 1),
+              ),
+            ]),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20.0, left: 20.0),
+                      child: Text(
+                        _groupName,
+                        style: TextStyle(color: Colors.white, fontSize: 28.0),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      FirebaseAuth.instance.signOut();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20.0, right: 20.0),
+                      child: Icon(Icons.account_circle, color: Colors.white),
+                    ),
+                  )
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 22.0),
+                child: Text(
+                  "Witaj $_userName",
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              SizedBox(height: 40),
+              _buildSubtitle("Aktualny tekst"),
+              _buildCurrentSongTitleWidget(
+                context,
+                "W Krainieckiej dziewczynie każdy się cieszy, jak jo dotyko",
+                "śpiewnik/blok1",
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void updateStatusbar() async {
+    await FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
+  }
+
+  Widget _buildSubtitle(String text) {
     return Container(
-      height: 70.0,
-      width: _fullWidth,
+      padding: EdgeInsets.only(left: 22.0, bottom: 8),
+      child: Text(
+        text,
+        textAlign: TextAlign.left,
+        style: TextStyle(color: Colors.white, fontSize: 14.0),
+      ),
+    );
+  }
+
+  Widget _buildCurrentSongTitleWidget(BuildContext context, String title, String directory) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                bandName,
-                style: TextStyle(color: Colors.white, fontSize: 24.0),
+            flex: 1,
+            child: SvgPicture.asset(
+              "assets/audio-doc.svg",
+              height: 30,
+              color: Colors.white,
+            ),
+          ),
+          Expanded(
+            flex: 6,
+            child: Container(
+              width: _fullWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    // Song Title
+                    title,
+                    textAlign: TextAlign.left,
+                    overflow: TextOverflow.fade,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(color: Colors.white, fontSize: 16.0),
+                  ),
+                  SizedBox(
+                    height: 2,
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: Icon(
+                          Icons.folder_open,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
+                      ),
+                      Text(
+                        // Directory name
+                        directory,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(color: Colors.white70, fontSize: 14.0, fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Icon(Icons.account_circle, color: Colors.white),
-          )
         ],
       ),
     );
   }
 
-  Widget buildCurrentSongTitleWidget(BuildContext context, String title, String directory) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-          flex: 1,
-          child: Icon(
-            Icons.play_circle_outline,
-            color: Colors.white,
-            size: 21,
-          ),
-        ),
-        Expanded(
-          flex: 6,
-          child: Container(
-            height: 31.0,
-            width: MediaQuery.of(context).size.width,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  // Song Title
-                  title,
-                  textAlign: TextAlign.left,
-                  overflow: TextOverflow.fade,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(color: Colors.white, fontSize: 13.0),
-                ),
-                SizedBox(
-                  height: 2,
-                ),
-                Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4.0),
-                      child: Icon(
-                        Icons.folder_open,
-                        color: Colors.white,
-                        size: 11,
-                      ),
-                    ),
-                    Text(
-                      // Directory name
-                      directory,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.white, fontSize: 10.0, fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildMemberChip(String memberName, bool isOnline) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 8.0, right: 0.0),
-      child: Container(
-        width: 90,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.0)),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Center(
-                    child: Text(
-                  memberName,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.fade,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(color: isOnline ? Colors.green : Colors.grey, fontWeight: FontWeight.bold),
-                )),
-              ),
-            ),
-            Expanded(
-                flex: 1,
-                child: Icon(
-                  isOnline ? Icons.check : Icons.block,
-                  color: isOnline ? Colors.green : Colors.grey,
-                  size: 20,
-                ))
-          ],
-        ),
-      ),
-    );
+  void _loadCurrentUserInfo() async {
+    FirebaseAuth.instance.currentUser().then((value) {
+      _bloc.add(
+        HomeInitialEvent(uid: value.uid),
+      );
+    });
   }
 }

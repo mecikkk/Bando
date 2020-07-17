@@ -9,7 +9,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:koin_flutter/koin_flutter.dart';
 
 class LoginPage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     Constants.updateNavBarTheme(context);
@@ -30,9 +29,7 @@ class LoginPage extends StatelessWidget {
           ),
           Container(
             child: BlocProvider<LoginBloc>(
-              create: (context) =>
-                  LoginBloc(
-                      authRepository: get<AuthRepository>()),
+              create: (context) => LoginBloc(authRepository: get<AuthRepository>()),
               child: LoginForm(),
             ),
           ),

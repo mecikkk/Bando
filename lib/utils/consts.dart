@@ -10,6 +10,8 @@ class Constants {
   static Color lightSecondAccentColor = Color.fromRGBO(189, 51, 86, 1.0);
   static Color darkSecondAccentColor = Color.fromRGBO(201, 73, 88, 1.0);
   static Color positiveGreenColor = Color.fromRGBO(3, 252, 119, 1.0);
+  static Color errorColorLight = Color.fromRGBO(230, 48, 75, 1.0);
+  static Color errorColorDark = Color.fromRGBO(227, 57, 82, 1.0);
 
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
@@ -29,6 +31,11 @@ class Constants {
     dividerColor: Colors.white38,
 
   );
+
+  static Color getErrorColor(BuildContext context) {
+    if(Theme.of(context).brightness == Brightness.light) return errorColorLight;
+    else return errorColorDark;
+  }
 
   static updateNavBarTheme(BuildContext context) {
     Brightness _systemNavIcons;

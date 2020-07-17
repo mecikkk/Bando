@@ -20,12 +20,11 @@ class LoginState {
 
   factory LoginState.initial() {
     return LoginState(
-      isEmailValid: true,
-      isPasswordValid: true,
-      isSubmitting: false,
-      isSuccess: false,
-      isFailure: false
-    );
+        isEmailValid: true,
+        isPasswordValid: true,
+        isSubmitting: false,
+        isSuccess: false,
+        isFailure: false);
   }
 
   factory LoginState.loading() {
@@ -58,15 +57,12 @@ class LoginState {
     );
   }
 
-  LoginState update({
-    bool isEmailValid,
-    bool isPasswordValid
-  }) {
+  LoginState update({bool isEmailValid, bool isPasswordValid}) {
     return copyWith(
-      isEmailValid : isEmailValid,
-      isPasswordValid : isPasswordValid,
-      isSubmitting : false,
-      isSuccess : false,
+      isEmailValid: isEmailValid,
+      isPasswordValid: isPasswordValid,
+      isSubmitting: false,
+      isSuccess: false,
       isFailure: false,
     );
   }
@@ -97,4 +93,3 @@ class LoginState {
         'isFailure: $isFailure)';
   }
 }
-

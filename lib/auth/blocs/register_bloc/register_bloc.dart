@@ -53,6 +53,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       yield* _mapRegisterSubmittedWithNewGroupEvent(event.groupName);
     } else if (event is RegisterSubmittedJoinToGroup) {
       yield* _mapRegisterSubmittedAndJoinedToGroupEvent(event.groupId);
+    } else if (event is RegisterQRCodeScanned) {
+      yield* _mapRegisterQRCodeScannedToEvent(event.groupId);
     }
   }
 
@@ -114,7 +116,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
       await _userRepository.addGroupToUser(uid, groupId);
 
-      // TODO : Dodać opcję tworzenia folderu zespolowego w Storage i upload'u określonego folderu.
+      // TODO : Create directory in Storage for group.
 
       yield RegisterState.newGroupConfigured(groupId);
     } catch (_) {
@@ -131,11 +133,25 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
       await _userRepository.addGroupToUser(uid, groupId);
       await _groupRepository.addUserToGroup(groupId, uid);
 
-      // TODO : Dodać opcję pobrania folderu zespolowego, o ile istnieje
+      // TODO : Download group lyrics folder if exist
 
       yield RegisterState.joiningToGroupConfigured();
     } catch (_) {
       yield RegisterState.failure();
     }
+  }
+
+  Stream<RegisterState> _mapRegisterQRCodeScannedToEvent(String groupId) async* {
+    yield RegisterState.searchingForGroup();
+
+    try {
+
+      Group group = await _groupRepository.getGroup(groupId);
+
+      yield RegisterState.groupFoundByQRCode(group.name);
+    } catch (_) {
+      yield RegisterState.failureFindingGroupByQRCode();
+    }
+
   }
 }

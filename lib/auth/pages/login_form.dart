@@ -1,5 +1,7 @@
 import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/auth/blocs/login_bloc/login_bloc.dart';
+import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
+import 'package:bando/auth/pages/register_group_form.dart';
 import 'package:bando/auth/pages/register_page.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
@@ -9,8 +11,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class LoginForm extends StatefulWidget {
-
-
   State<LoginForm> createState() => _LoginFormState();
 }
 
@@ -69,119 +69,123 @@ class _LoginFormState extends State<LoginForm> {
             );
         }
         if (state.isSuccess) {
+          print("state SUCCESS and GROUP CONFIGURED");
           BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
         }
+
       },
       child: BlocBuilder<LoginBloc, LoginState>(
         builder: (context, state) {
-          return Form(
-            child: ListView(
-              padding: EdgeInsets.all(20),
-              children: <Widget>[
-                _buildHeader(),
-                SizedBox(
-                  height: 25,
-                ),
-                RoundedTextField(
-                  controller: _emailController,
-                  labelText: 'Email',
-                  icon: Icons.mail_outline,
-                  inputType: TextInputType.emailAddress,
-                  isValid: state.isEmailValid,
-                  passwordMode: false,
-                  validator: (_) {
-                    return !state.isEmailValid ? 'Niepoprawny Email' : null;
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20.0),
-                  child: RoundedTextField(
-                    controller: _passwordController,
-                    labelText: 'Hasło',
-                    icon: Icons.lock_outline,
-                    passwordMode: true,
-                    isValid: state.isPasswordValid,
+          return Scaffold(
+            body: Form(
+              child: ListView(
+                padding: EdgeInsets.all(20),
+                children: <Widget>[
+                  _buildHeader(),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  RoundedTextField(
+                    controller: _emailController,
+                    labelText: 'Email',
+                    icon: Icons.mail_outline,
+                    inputType: TextInputType.emailAddress,
+                    isValid: state.isEmailValid,
+                    passwordMode: false,
                     validator: (_) {
-                      return !state.isPasswordValid ? 'Niepoprawne Hasło' : null;
+                      return !state.isEmailValid ? 'Niepoprawny Email' : null;
                     },
                   ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      GradientRaisedButton(
-                        colors: [Constants.getEndGradientColor(context), Constants.getStartGradientColor(context)],
-                        text: "Zaloguj",
-                        height: 45.0,
-                        onPressed: isLoginButtonEnabled(state) ? _onFormSubmitted : null,
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      RaisedButton.icon(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                            side: BorderSide(color: Colors.black.withOpacity(0.1))),
-                        icon: SvgPicture.asset(
-                          "assets/google_g.svg",
-                          height: 22,
-                        ),
-                        onPressed: () {
-                          BlocProvider.of<LoginBloc>(context).add(
-                            LoginWithGooglePressed(),
-                          );
-                        },
-                        label: Text('Zaloguj z Google',
-                            style: TextStyle(color: Theme.of(context).textTheme.bodyText1.color)),
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 30.0, bottom: 15),
-                        child: Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: Divider(
-                                height: 20,
-                                thickness: 2,
-                                indent: 15,
-                                endIndent: 15,
-                                color: Theme.of(context).dividerColor,
-                              ),
-                            ),
-                            Text("lub"),
-                            Expanded(
-                              child: Divider(
-                                height: 20,
-                                thickness: 2,
-                                indent: 15,
-                                endIndent: 15,
-                                color: Theme.of(context).dividerColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      FlatButton(
-                        child: Text(
-                          'Utwórz konto',
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) {
-                              return RegisterPage();
-                            }),
-                          );
-                        },
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: RoundedTextField(
+                      controller: _passwordController,
+                      labelText: 'Hasło',
+                      icon: Icons.lock_outline,
+                      passwordMode: true,
+                      isValid: state.isPasswordValid,
+                      validator: (_) {
+                        return !state.isPasswordValid ? 'Niepoprawne Hasło' : null;
+                      },
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        GradientRaisedButton(
+                          colors: [Constants.getEndGradientColor(context), Constants.getStartGradientColor(context)],
+                          text: "Zaloguj",
+                          height: 45.0,
+                          onPressed: isLoginButtonEnabled(state) ? _onFormSubmitted : null,
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        RaisedButton.icon(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                              side: BorderSide(color: Colors.black.withOpacity(0.1))),
+                          icon: SvgPicture.asset(
+                            "assets/google_g.svg",
+                            height: 22,
+                          ),
+                          onPressed: () {
+                            BlocProvider.of<LoginBloc>(context).add(
+                              LoginWithGooglePressed(),
+                            );
+                          },
+                          label: Text('Zaloguj z Google',
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyText1.color)),
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 30.0, bottom: 15),
+                          child: Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Divider(
+                                  height: 20,
+                                  thickness: 2,
+                                  indent: 15,
+                                  endIndent: 15,
+                                  color: Theme.of(context).dividerColor,
+                                ),
+                              ),
+                              Text("lub"),
+                              Expanded(
+                                child: Divider(
+                                  height: 20,
+                                  thickness: 2,
+                                  indent: 15,
+                                  endIndent: 15,
+                                  color: Theme.of(context).dividerColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        FlatButton(
+                          child: Text(
+                            'Utwórz konto',
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) {
+                                return RegisterPage();
+                              }),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

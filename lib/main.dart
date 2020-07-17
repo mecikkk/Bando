@@ -64,6 +64,12 @@ class MyApp extends StatelessWidget {
       darkTheme: Constants.darkTheme,
       home: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
+//
+//          return SuccessPage(
+//            configurationType: ConfigurationType.JOIN_TO_EXIST,
+//            groupId: "dsdfjkndmals;fdsknf",
+//            groupName: "Tadki Band",
+//          );
 
           swapPages(state);
 

@@ -48,11 +48,7 @@ class RegisterSubmittedEvent extends RegisterEvent {
   final String password;
   final String username;
 
-  const RegisterSubmittedEvent({
-    @required this.email,
-    @required this.password,
-    @required this.username
-  });
+  const RegisterSubmittedEvent({@required this.email, @required this.password, @required this.username});
 
   @override
   List<Object> get props => [email, password, username];
@@ -73,6 +69,14 @@ class RegisterSubmittedNewGroup extends RegisterEvent {
   List<Object> get props => [groupName];
 }
 
+class RegisterQRCodeScanned extends RegisterEvent {
+  final String groupId;
+
+  const RegisterQRCodeScanned({@required this.groupId});
+
+  @override
+  List<Object> get props => [groupId];
+}
 
 class RegisterSubmittedJoinToGroup extends RegisterEvent {
   final String groupId;
