@@ -19,6 +19,10 @@ class HomeNoGroupState extends HomeState {
 
 class HomeLoadingState extends HomeState {}
 
+class HomeUploadingSongbookState extends HomeState {}
+
+class HomeUploadSongbookSuccessState extends HomeState {}
+
 class HomeReadyState extends HomeState {
   final Group group;
   final User user;
@@ -28,5 +32,16 @@ class HomeReadyState extends HomeState {
   @override
   List<Object> get props => [group, user];
 }
+
+class HomeGroupConfiguredState extends HomeState {
+  final Group group;
+
+  HomeGroupConfiguredState({@required this.group});
+
+  @override
+  List<Object> get props => [group];
+}
+
+class HomeSelectedDirectoryMovedState extends HomeState {}
 
 class HomeFailureState extends HomeState {}

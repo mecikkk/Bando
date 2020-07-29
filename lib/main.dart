@@ -1,22 +1,19 @@
 import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/auth/pages/login_page.dart';
-import 'package:bando/auth/pages/success_page.dart';
 import 'package:bando/auth/repository/auth_repository.dart';
-import 'package:bando/auth/repository/firestore_user_repository.dart';
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/dependency_injection.dart';
 import 'package:bando/home/pages/home_page.dart';
 import 'package:bando/utils/consts.dart';
-import 'package:bando/utils/util.dart';
 import 'package:bloc/bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:koin/koin.dart';
 
-void main() {
+import 'file_manager/utils/files_utils.dart';
 
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = SimpleBlocObserver();
 
@@ -26,22 +23,18 @@ void main() {
   }).koin;
 
   runApp(
-
     BlocProvider(
-        create: (context) =>
-            AuthBloc(authRepository: koin.get<AuthRepository>())
-              ..add(AuthStarted()),
-        child: MyApp()),
+        create: (context) => AuthBloc(authRepository: koin.get<AuthRepository>())..add(AuthStarted()), child: MyApp()),
   );
 }
 
 class MyApp extends StatelessWidget {
-
   Widget currentPage;
-
 
   @override
   Widget build(BuildContext context) {
+    FilesUtils.generateSongbookDirectory();
+
     Brightness _systemNavIcons;
     if (Theme.of(context).brightness == Brightness.light)
       _systemNavIcons = Brightness.dark;
@@ -64,37 +57,30 @@ class MyApp extends StatelessWidget {
       darkTheme: Constants.darkTheme,
       home: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
-//
-//          return SuccessPage(
-//            configurationType: ConfigurationType.JOIN_TO_EXIST,
-//            groupId: "dsdfjkndmals;fdsknf",
-//            groupName: "Tadki Band",
-//          );
 
           swapPages(state);
 
           return AnimatedSwitcher(
-            duration: Duration(milliseconds: 800),
-            child: currentPage,
+                  duration: Duration(milliseconds: 800),
+                  child: currentPage,
           );
-
         },
       ),
     );
   }
 
-  void swapPages(AuthState state){
-    if(state is Unauthenticated)
-      currentPage = LoginPage();
-    else if(state is Authenticated) {
+  void swapPages(AuthState state) {
+    if (state is Unauthenticated)
+      currentPage = LoginPage(
+      );
+    else if (state is Authenticated) {
       currentPage = HomePage(
         title: "Bando",
       );
+    } else {
+      currentPage = _buildHeader(
+      );
     }
-    else {
-      currentPage = _buildHeader();
-    }
-
   }
 
   Widget _buildHeader() {
@@ -119,5 +105,4 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
-
 }

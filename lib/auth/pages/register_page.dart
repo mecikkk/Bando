@@ -1,3 +1,4 @@
+import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
 import 'package:bando/auth/pages/register_group_form.dart';
 import 'package:bando/auth/pages/register_form.dart';
@@ -13,13 +14,11 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:koin_flutter/koin_flutter.dart';
 
 class RegisterPage extends StatelessWidget {
-
   final PageController _pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
-    Constants.updateNavBarTheme(
-        context);
+    Constants.updateNavBarTheme(context);
 
     return Scaffold(
       body: Stack(
@@ -31,43 +30,40 @@ class RegisterPage extends StatelessWidget {
               child: SvgPicture.asset(
                 "assets/logo.svg",
                 height: 250,
-                color: Theme
-                    .of(
-                    context)
-                    .textTheme
-                    .bodyText1
-                    .color
-                    .withOpacity(
-                    0.03),
+                color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.03),
               ),
             ),
           ),
           Container(
-            child: BlocProvider<RegisterBloc>(
-              create: (context) =>
-                  RegisterBloc(
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<RegisterBloc>(
+                  create: (context) => RegisterBloc(
                     authRepository: get<AuthRepository>(),
+                    userRepository: get<FirestoreUserRepository>(),
+                  ),
+                ),
+                BlocProvider<GroupBloc>(
+                  create: (context) => GroupBloc(
                     userRepository: get<FirestoreUserRepository>(),
                     groupRepository: get<FirestoreGroupRepository>(),
                   ),
+                )
+              ],
               child: PageView(
                 physics: NeverScrollableScrollPhysics(),
                 controller: _pageController,
                 scrollDirection: Axis.horizontal,
                 children: <Widget>[
                   RegisterForm(pageController: _pageController),
-                  RegisterGroupForm(context),
+                  RegisterGroupForm(),
                 ],
               ),
             ),
           ),
           Positioned(
             bottom: 25,
-            width: MediaQuery
-                .of(
-                context)
-                .size
-                .width,
+            width: MediaQuery.of(context).size.width,
             child: Center(
               child: SmoothPageIndicator(
                 controller: _pageController,
@@ -80,9 +76,7 @@ class RegisterPage extends StatelessWidget {
                     paintStyle: PaintingStyle.stroke,
                     strokeWidth: 0,
                     dotColor: Colors.grey,
-                    activeDotColor: Constants.getEndGradientColor(
-                        context)
-                ),
+                    activeDotColor: Constants.getEndGradientColor(context)),
               ),
             ),
           )

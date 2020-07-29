@@ -1,3 +1,4 @@
+import 'package:bando/auth/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
@@ -5,7 +6,7 @@ class GroupEntity extends Equatable {
 
   final String groupId;
   final String name;
-  final List<String> members;
+  final List<Map<String, dynamic>> members;
 
 
   GroupEntity(this.groupId, this.name, this.members);
@@ -29,7 +30,7 @@ class GroupEntity extends Equatable {
     return GroupEntity(
       json["groupId"] as String,
       json["name"] as String,
-      json["members"] as List<String>,
+      json["members"] as List<Map<String, dynamic>>,
     );
   }
 

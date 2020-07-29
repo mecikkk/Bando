@@ -1,14 +1,15 @@
 import 'package:bando/auth/entities/group_entity.dart';
+import 'package:bando/auth/models/user_model.dart';
 
 class Group {
 
   final String name;
   final String groupId;
-  final List<String> members;
+  final List<Map<String, dynamic>> members;
 
   Group(this.groupId, {this.name = 'Group', this.members});
 
-  Group copyWith({String groupId, String name, List<String> members}) {
+  Group copyWith({String groupId, String name, List<Map<String, dynamic>> members}) {
     return Group(
       groupId ?? this.groupId,
       name : name ?? this.name,
@@ -21,7 +22,7 @@ class Group {
 
 
   @override
-  bool operator ==(other) =>
+  bool operator == (other) =>
       identical(this, other) ||
           other is Group &&
               runtimeType == other.runtimeType &&

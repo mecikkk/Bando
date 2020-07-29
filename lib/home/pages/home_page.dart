@@ -1,11 +1,9 @@
-import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
-import 'package:bando/auth/repository/auth_repository.dart';
+import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/auth/repository/firestore_group_repository.dart';
 import 'package:bando/auth/repository/firestore_user_repository.dart';
-import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
-import 'package:bando/home/pages/leader_home_page.dart';
 import 'package:bando/home/pages/member_home_page.dart';
+import 'package:bando/repositories/firebase_storage_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,10 +48,10 @@ class _HomePageState extends State<HomePage> {
             create: (context) => HomeBloc(
                   groupRepository: get<FirestoreGroupRepository>(),
                   userRepository: get<FirestoreUserRepository>(),
+                  storageRepository: get<FirebaseStorageRepository>(),
                 )),
-        BlocProvider<RegisterBloc>(
-            create: (context) => RegisterBloc(
-                  authRepository: get<AuthRepository>(),
+        BlocProvider<GroupBloc>(
+            create: (context) => GroupBloc(
                   userRepository: get<FirestoreUserRepository>(),
                   groupRepository: get<FirestoreGroupRepository>(),
                 )),

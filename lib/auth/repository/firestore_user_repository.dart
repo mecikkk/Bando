@@ -1,6 +1,7 @@
 import 'package:bando/auth/entities/user_entity.dart';
 import 'package:bando/auth/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreUserRepository{
 
@@ -26,6 +27,16 @@ class FirestoreUserRepository{
 
   Future<User> getUser(String uid) async {
     return User.fromEntity(UserEntity.fromSnapshot(await usersCollection.document(uid).get()));
+  }
+
+  Future<String> currentUserId() async {
+    return FirebaseAuth.instance.currentUser().then((value) => value.uid);
+  }
+
+  Future<String> getUserGroupId() async {
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    DocumentSnapshot snapshot = await usersCollection.document(user.uid).get();
+    return snapshot.data["groupId"];
   }
 
   Future<bool> isUserGroupConfigured(String uid) async {

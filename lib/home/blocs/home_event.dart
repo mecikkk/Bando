@@ -14,3 +14,24 @@ class HomeInitialEvent extends HomeEvent {
   @override
   List<Object> get props => [uid];
 }
+
+class HomeConfigureSongbookDirectoryEvent extends HomeEvent {
+  final FileModel directoryToMove;
+
+  HomeConfigureSongbookDirectoryEvent({@required this.directoryToMove});
+
+  @override
+  List<Object> get props => [directoryToMove];
+}
+
+class HomeUploadSongbookToCloudEvent extends HomeEvent {
+}
+
+class HomeGroupConfiguredEvent extends HomeEvent {
+  final Group group;
+
+  HomeGroupConfiguredEvent({@required this.group});
+
+  @override
+  List<Object> get props => [group];
+}

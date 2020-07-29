@@ -1,6 +1,6 @@
-import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
 import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/validator.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';
 import 'package:flutter/material.dart';
@@ -22,12 +22,16 @@ class _RegisterFormState extends State<RegisterForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool isEmailValid = true;
+  bool isPasswordValid = true;
+  bool isUsernameValid = true;
+
   RegisterBloc _registerBloc;
 
   bool get isRegisterFieldsValid => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty && _usernameController.text.isNotEmpty;
 
   bool isRegisterButtonEnabled(RegisterState state) {
-    return state.isFormValid && isRegisterFieldsValid && _usernameController.text.isNotEmpty && !(state.isRegistrationSubmitting);
+    return isRegisterFieldsValid && _usernameController.text.isNotEmpty && !(state is RegisterSubmittingState);
   }
 
   @override
@@ -43,7 +47,7 @@ class _RegisterFormState extends State<RegisterForm> {
   Widget build(BuildContext context) {
     return BlocListener<RegisterBloc, RegisterState>(
       listener: (context, state) {
-        if (state.isFailure) {
+        if (state is RegisterFailureState) {
           Scaffold.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -57,7 +61,7 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
             );
         }
-        if (state.isRegistrationSubmitting) {
+        if (state is RegisterSubmittingState) {
           Scaffold.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -73,16 +77,12 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
             );
         }
-        if (state.isRegistrationSuccess) {
+        if (state is RegisterRegistrationSuccessState) {
           Scaffold.of(context)
             ..hideCurrentSnackBar();
 
           widget._pageController.animateToPage(1, duration: Duration(milliseconds: 600), curve: Curves.easeInOutQuad);
-//          Navigator.of(context).push(
-//            MaterialPageRoute(builder: (context) {
-//              return RegisterSecondForm(userRepository: _userRepository);
-//            }),
-//          );
+
         }
       },
       child: BlocBuilder<RegisterBloc, RegisterState>(
@@ -102,9 +102,9 @@ class _RegisterFormState extends State<RegisterForm> {
                     labelText: 'Nazwa użytkownika',
                     icon: Icons.person_outline,
                     passwordMode: false,
-                    isValid: state.isUsernameValid,
+                    isValid: isUsernameValid,
                     validator: (_) {
-                      return !state.isUsernameValid ? 'Pole jest puste' : null;
+                      return !isUsernameValid ? 'Pole jest puste' : null;
                     },
                   ),
                 ),
@@ -113,10 +113,10 @@ class _RegisterFormState extends State<RegisterForm> {
                   labelText: 'Email',
                   icon: Icons.mail_outline,
                   inputType: TextInputType.emailAddress,
-                  isValid: state.isEmailValid,
+                  isValid: isEmailValid,
                   passwordMode: false,
                   validator: (_) {
-                    return !state.isEmailValid ? 'Niepoprawny Email' : null;
+                    return !isEmailValid ? 'Niepoprawny Email' : null;
                   },
                 ),
                 Padding(
@@ -126,9 +126,9 @@ class _RegisterFormState extends State<RegisterForm> {
                     labelText: 'Hasło',
                     icon: Icons.lock_outline,
                     passwordMode: true,
-                    isValid: state.isPasswordValid,
+                    isValid: isPasswordValid,
                     validator: (_) {
-                      return !state.isPasswordValid ? 'Niepoprawne Hasło' : null;
+                      return !isPasswordValid ? 'Minimum 8 znaków, w tym jedna cyfra' : null;
                     },
                   ),
                 ),
@@ -187,22 +187,17 @@ class _RegisterFormState extends State<RegisterForm> {
     super.dispose();
   }
 
+
   void _onEmailChanged() {
-    _registerBloc.add(
-      RegisterEmailChanged(email: _emailController.text),
-    );
+    isEmailValid = _emailController.text.isNotEmpty && Validators.isValidEmail(_emailController.text);
   }
 
   void _onPasswordChanged() {
-    _registerBloc.add(
-      RegisterPasswordChanged(password: _passwordController.text),
-    );
+    isPasswordValid = _passwordController.text.isNotEmpty && Validators.isValidPassword(_passwordController.text);
   }
 
   void _onUsernameChanged(){
-    _registerBloc.add(
-      RegisterUsernameChanged(username: _usernameController.text),
-    );
+    isUsernameValid = _usernameController.text.isNotEmpty;
   }
 
   void _onFormSubmitted() {

@@ -37,6 +37,10 @@ class Constants {
     else return errorColorDark;
   }
 
+  static bool isLightTheme(BuildContext context) {
+    return (Theme.of(context).brightness == Brightness.light);
+  }
+
   static updateNavBarTheme(BuildContext context) {
     Brightness _systemNavIcons;
     if(Theme.of(context).brightness == Brightness.light) _systemNavIcons = Brightness.dark;

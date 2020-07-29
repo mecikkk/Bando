@@ -1,68 +1,73 @@
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bando/file_manager/models/file_model.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:bando/home/pages/lyrics_page.dart';
+import 'package:bando/utils/consts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path/path.dart';
 
 class EntryFileItem extends StatelessWidget {
   final FileModel _fileModel;
+  final BuildContext context;
+  final Function onLongClick;
+  final Function onClick;
 
-  EntryFileItem(this._fileModel);
+  EntryFileItem(this._fileModel, this.context, {this.onClick , this.onLongClick});
 
   Widget _buildTiles(FileModel root) {
     return GestureDetector(
-      onLongPress: () {
-        if(root.isDirectory)
-          debugPrint("Selected dir : ${root.getFileName()}");
-      },
-      child: root.children.isEmpty ? _fileOrEmptyDirectoryWidget(root) : _directoryWidget(root)
-    );
+        onLongPress: () {
+          print("${root.fileSystemEntity.path}");
+          if (root.isDirectory) {
+            onLongClick(root);
+          }
+        },
+        onTap: () {
+          onClick(root);
+        },
+        child: root.children.isEmpty ? _fileOrEmptyDirectoryWidget(root) : _directoryWidget(root));
+  }
+
+  void _loadFile(File file) async {
+    Navigator.push(context, MaterialPageRoute(builder: (_) {
+      return LyricsPage(path: file.path);
+    }));
   }
 
   bool isTextFile(FileModel root) {
-    String fileExtension = extension(root.fileSystemEntity.path);
-    List<String> extensions = ['.doc', '.docx', '.pdf', '.rtf'];
-
-    for(int i = 0; i < extensions.length; i++){
-      if(extensions[i] == fileExtension) return true;
-    }
-
-    return false;
-
+    return (extension(root.fileSystemEntity.path) == '.pdf');
   }
 
   Widget _fileOrEmptyDirectoryWidget(FileModel root) => Padding(
-    padding: const EdgeInsets.only(left : 4.0),
-    child: ListTile(
-      leading: SvgPicture.asset(
-        root.isDirectory ? 'assets/folder.svg' : (isTextFile(root) ? 'assets/audio-doc.svg' : 'assets/doc.svg'),
-        width: 35.0,
-        height: 35.0,
-      ),
-      title: Text(root.getFileName()),
-    ),
-  );
+        padding: const EdgeInsets.only(left: 4.0),
+        child: ListTile(
+          leading: SvgPicture.asset(
+            root.isDirectory ? 'assets/folder.svg' : (isTextFile(root) ? 'assets/audio-doc.svg' : 'assets/doc.svg'),
+            width: 35.0,
+            height: 35.0,
+          ),
+          title: Text(root.getFileName()),
+        ),
+      );
 
   Widget _directoryWidget(FileModel root) => Padding(
-    padding: const EdgeInsets.only(left : 4.0),
-    child: ExpansionTile(
-      key: PageStorageKey<FileModel>(root),
-      leading: SvgPicture.asset(
-        root.isDirectory ? 'assets/folder.svg' : (isTextFile(root) ? 'assets/audio-doc.svg' : 'assets/doc.svg'),
-        width: 35.0,
-        height: 35.0,
-      ),
-      title: Text(root.getFileName()),
-      children: root.children.map(_buildTiles).toList(),
-    ),
-  );
+        padding: const EdgeInsets.only(left: 4.0),
+        child: ExpansionTile(
+          key: PageStorageKey<FileModel>(root),
+          leading: SvgPicture.asset(
+            root.isDirectory ? 'assets/folder.svg' : (isTextFile(root) ? 'assets/audio-doc.svg' : 'assets/doc.svg'),
+            width: 35.0,
+            height: 35.0,
+          ),
+          title: Text(root.getFileName()),
+          children: root.children.map(_buildTiles).toList(),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: _buildTiles(_fileModel)
-    );
+    return Padding(padding: const EdgeInsets.all(8.0), child: _buildTiles(_fileModel));
   }
 }

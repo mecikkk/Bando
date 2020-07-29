@@ -1,13 +1,19 @@
-import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
+import 'dart:io';
+
+import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/auth/pages/register_group_form.dart';
+import 'package:bando/file_manager/models/file_model.dart';
+import 'package:bando/file_manager/pages/library_chooser_page.dart';
+import 'package:bando/file_manager/utils/files_utils.dart';
+import 'package:bando/file_manager/widgets/file_item_widget.dart';
 import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
-import 'package:bando/home/widgets/fade_on_scroll.dart';
 import 'package:bando/utils/consts.dart';
+import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:flutter_svg/svg.dart';
@@ -24,6 +30,11 @@ class _MemberHomePageState extends State<MemberHomePage> {
 
   HomeBloc _bloc;
 
+  Widget _homeContentWidget;
+  BuildContext _scaffoldContext;
+
+  List<FileModel> songbook = List();
+
   @override
   Future<void> initState() {
     super.initState();
@@ -39,35 +50,62 @@ class _MemberHomePageState extends State<MemberHomePage> {
   Widget build(BuildContext context) {
     _fullWidth = MediaQuery.of(context).size.width;
     updateStatusbar();
-
     _loadCurrentUserInfo();
 
     return BlocListener<HomeBloc, HomeState>(
-      listener: (context, state) {
+      listener: (context, state) async {
+
+        if(state is HomeInitialState) {
+          _homeContentWidget = LoadingWidget();
+          await loadFilesList();
+        }
+
         if (state is HomeReadyState) {
           print("ready state !");
           _userName = state.user.username;
           _groupName = state.group.name;
+          _homeContentWidget = _buildMainContent(_scaffoldContext);
         }
 
         if (state is HomeNoGroupState) {
           print("No Group State !");
           _userName = state.user.username;
+          _homeContentWidget = _buildNoGroupInfoContent(_scaffoldContext);
         }
 
         if (state is HomeLoadingState) {
           print("Loading state !");
+          _homeContentWidget = LoadingWidget();
         }
 
         if (state is HomeFailureState) {
           print("Failure State ! ");
         }
+
+        if (state is HomeGroupConfiguredState) {
+          print("Group Configured State ! ");
+          _groupName = state.group.name;
+        }
+
+        if (state is HomeSelectedDirectoryMovedState) {
+          print("Directory moved successful");
+          _bloc.add(HomeUploadSongbookToCloudEvent());
+        }
+        if (state is HomeUploadingSongbookState) {
+          _homeContentWidget = LoadingWidget();
+        }
+        if (state is HomeUploadSongbookSuccessState) {
+          print("Uploading success");
+          _homeContentWidget = _buildMainContent(_scaffoldContext);
+          // TODO : Print all files from BandoSongbook
+        }
       },
       child: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           return Scaffold(
-            body: Builder(
-              builder: (scaffoldContext) => Stack(
+            body: Builder(builder: (scaffoldContext) {
+              _scaffoldContext = scaffoldContext;
+              return Stack(
                 children: <Widget>[
                   Positioned(
                     top: 190,
@@ -76,55 +114,176 @@ class _MemberHomePageState extends State<MemberHomePage> {
                     bottom: 0,
                     child: AnimatedSwitcher(
                       duration: Duration(milliseconds: 800),
-                      child:
-                          (state is HomeNoGroupState) ? _buildNoGroupInfoContent(scaffoldContext) : _buildMainContent(scaffoldContext),
+                      child: _homeContentWidget,
                     ),
                   ),
                   buildHeader(scaffoldContext),
                 ],
-              ),
-            ),
+              );
+            }),
           );
         },
       ),
     );
   }
 
-  ListView _buildMainContent(BuildContext context) {
-    return ListView(
-      key: UniqueKey(),
-      padding: EdgeInsets.only(top: 30),
+  Widget _buildMainContent(BuildContext context) {
+    if(songbook.isEmpty) loadFilesList();
+
+    return (songbook.isEmpty) ? _buildLibraryConfigurationView() :
+     Container(
+      child: ListView.builder(
+          itemCount: songbook.length,
+          itemBuilder: (BuildContext context, int index) {
+            return new EntryFileItem(songbook[index], context, onClick : (file) {
+              // TODO : on file click reaction
+              print("Click");
+            },
+            onLongClick: () {},);
+          }),
+    );
+  }
+
+  loadFilesList() async {
+    print("Start Loading local songbook");
+    Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
+    FilesUtils.getFilesInPath(songbookDirectory.path).then((value) {
+      print("getting files ended");
+      songbook = value;
+      setState(() {
+        print("Update UI");
+      });
+    });
+  }
+
+  Widget _buildLibraryConfigurationView() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Container(
-          width: MediaQuery.of(context).size.width,
+        Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+          child: Text(
+            "Biblioteka jest pusta.",
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              fontSize: 26.0,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 8.0),
+          child: Text(
+            "Wybierz folder, w którym znajdują się pliki PDF z tekstami.",
+            textAlign: TextAlign.start,
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: RaisedButton(
+                    onPressed: () {
+                      _runSongbookDirectoryChooser();
+                    },
+                    child: Text(
+                      "Przeglądaj".toUpperCase(),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    color: Theme.of(context).accentColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Container(
+                  height: 35,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.2),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "/ścieżka/",
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.2),
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 20, right: 20),
+          child: Text(
+            "Zawartość zostanie przeniesiona do specjalnie utworzonego folderu, oraz umieszczona w chmurze.",
+            style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),
+          ),
         ),
       ],
     );
   }
 
+  void _runSongbookDirectoryChooser() async {
+    var selectedDirectory = await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) {
+        return LibraryChooser();
+      },
+      settings: RouteSettings(name: '/', arguments: Map()),
+    ));
+
+    _bloc.add(HomeConfigureSongbookDirectoryEvent(
+      directoryToMove: selectedDirectory,
+    ));
+  }
+
   Padding _buildNoGroupInfoContent(BuildContext buildContext) {
     return Padding(
       key: UniqueKey(),
-      padding: const EdgeInsets.only(top: 30.0),
+      padding: const EdgeInsets.only(top: 60.0),
       child: Align(
         alignment: Alignment.center,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: EdgeInsets.only(top: 20, right: 20, left: 20, bottom: 5),
               child: Text(
-                "Nie należysz do żadnej grupy. Utwórz nową grupę, lub dołącz do istniejącej.",
+                "Nie należysz do żadnej grupy.",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18.0),
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.only(bottom: 15, right: 20, left: 20),
+              child: Text(
+                "Utwórz nową grupę, lub dołącz do istniejącej.",
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20, bottom: 20),
               child: SvgPicture.asset(
-                "assets/no_group.svg",
-                height: 100,
+                Constants.isLightTheme(context) ? "assets/no_group.svg" : "assets/no_group_dark.svg",
+                height: 150,
               ),
             ),
             Padding(
@@ -140,11 +299,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
                 borderColor: Constants.getStartGradientColor(buildContext),
                 textColor: Constants.getStartGradientColor(buildContext),
                 onTap: () {
-                  Navigator.of(buildContext).push(MaterialPageRoute(
-                      builder: (_) => BlocProvider.value(
-                            value: BlocProvider.of<RegisterBloc>(buildContext),
-                            child: RegisterGroupForm(buildContext),
-                          )));
+                  _showGroupForm(buildContext);
                 },
               ),
             )
@@ -152,6 +307,25 @@ class _MemberHomePageState extends State<MemberHomePage> {
         ),
       ),
     );
+  }
+
+  _showGroupForm(BuildContext context) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: BlocProvider.of<GroupBloc>(context),
+          child: RegisterGroupForm(),
+        ),
+      ),
+    ).then((_) {
+      print("GROUP CONFIGURED ! Update UI");
+      _updateUI();
+    });
+  }
+
+  void _updateUI() async {
+    _bloc.add(HomeInitialEvent(uid: (await FirebaseAuth.instance.currentUser()).uid));
   }
 
   Positioned buildHeader(BuildContext context) {

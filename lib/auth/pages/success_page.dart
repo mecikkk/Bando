@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'dart:io';
 
 import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
+import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/file_manager/utils/files_utils.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bando/utils/util.dart';
@@ -23,10 +24,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 class SuccessPage extends StatefulWidget {
   final ConfigurationType configurationType;
-  final String groupId;
-  final String groupName;
+  final Group group;
 
-  SuccessPage({@required this.configurationType, this.groupId = "", this.groupName});
+  SuccessPage({@required this.configurationType, @required this.group});
 
   @override
   State<StatefulWidget> createState() {
@@ -35,7 +35,6 @@ class SuccessPage extends StatefulWidget {
 }
 
 class SuccessPageState extends State<SuccessPage> {
-  static const double _topSectionHeight = 50.0;
 
   GlobalKey globalKey = new GlobalKey();
 
@@ -60,8 +59,8 @@ class SuccessPageState extends State<SuccessPage> {
       Uint8List pngBytes = byteData.buffer.asUint8List();
 
       await Share.file(
-          'esys image', 'qr_${widget.groupName.toLowerCase()}.jpg', pngBytes.buffer.asUint8List(), 'image/jpg',
-          text: 'QR Grupy ${widget.groupName}');
+          'esys image', 'qr_${widget.group.name.toLowerCase()}.jpg', pngBytes.buffer.asUint8List(), 'image/jpg',
+          text: 'QR Grupy ${widget.group.name}');
     } catch (e) {
       print(e.toString());
     }
@@ -95,7 +94,7 @@ class SuccessPageState extends State<SuccessPage> {
           Padding(
             padding: const EdgeInsets.only(left : 20.0, top : 20.0, right : 20.0),
             child: Text(
-              "Gratulujemy dołączenia do grupy ${widget.groupName} !",
+              "Gratulujemy dołączenia do grupy ${widget.group.name} !",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 18.0, color: Colors.white),
             ),
@@ -124,11 +123,7 @@ class SuccessPageState extends State<SuccessPage> {
                   alignment: Alignment.center,
                   child: RoundedColoredShadowButton(
                       onTap: () {
-                        BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
-
-                        Future.delayed(Duration(seconds: 1), () {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
-                        });
+                        _onGoToAppClick();
                       },
                       text : "Przejdź do aplikacji",
                     width: 270,
@@ -150,6 +145,7 @@ class SuccessPageState extends State<SuccessPage> {
     );
   }
 
+
   _newGroupContent() {
     return Container(
       decoration: BoxDecoration(gradient: Constants.getGradient(context, Alignment.centerLeft, Alignment.topRight)),
@@ -166,7 +162,7 @@ class SuccessPageState extends State<SuccessPage> {
           Padding(
             padding: EdgeInsets.only(bottom: 28.0, left: 3),
             child: Text(
-              "Grupa ${widget.groupName}",
+              "Grupa ${widget.group.name}",
               style: TextStyle(fontSize: 18.0, color: Colors.white),
             ),
           ),
@@ -184,9 +180,17 @@ class SuccessPageState extends State<SuccessPage> {
               color: Colors.white,
               child: RepaintBoundary(
                 key: globalKey,
-                child: QrImage(
-                  data: widget.groupId,
-                  size: 180,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Text(widget.group.name, style: TextStyle(fontSize: 14, color: Colors.black)),
+                    ),
+                    QrImage(
+                      data: widget.group.groupId,
+                      size: 180,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -223,14 +227,9 @@ class SuccessPageState extends State<SuccessPage> {
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: RaisedButton(
-
+                  child: FlatButton(
                       onPressed: () {
-                        BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
-
-                        Future.delayed(Duration(seconds: 1), () {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
-                        });
+                        _onGoToAppClick();
                       },
                       child: Text(
                         "Zakończ".toUpperCase(),
@@ -243,5 +242,11 @@ class SuccessPageState extends State<SuccessPage> {
         ],
       ),
     );
+  }
+
+  void _onGoToAppClick() {
+    Future.delayed(Duration(milliseconds: 500), () {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    });
   }
 }

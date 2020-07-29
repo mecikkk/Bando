@@ -52,4 +52,12 @@ class UserEntity extends Equatable{
     };
   }
 
+  Map<String, Object> toMap() {
+    return {
+      "uid" : uid,
+      "username" : username,
+      "shouldUpdateFiles" : shouldUpdateFiles
+    };
+  }
+
 }

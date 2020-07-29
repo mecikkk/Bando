@@ -1,10 +1,13 @@
-import 'package:bando/auth/blocs/register_bloc/register_bloc.dart';
+import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
+import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
+import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/auth/pages/success_page.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/simple_rounded_card.dart';
 import 'package:bando/widgets/text_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
@@ -12,11 +15,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 
 class RegisterGroupForm extends StatefulWidget {
-  final BuildContext scaffoldContext;
-
-
-  RegisterGroupForm(this.scaffoldContext);
-
   @override
   State<StatefulWidget> createState() {
     return RegisterGroupFormState();
@@ -24,7 +22,9 @@ class RegisterGroupForm extends StatefulWidget {
 }
 
 class RegisterGroupFormState extends State<RegisterGroupForm> {
-  RegisterBloc _registerBloc;
+  //RegisterBloc _registerBloc;
+  GroupBloc _groupBloc;
+  BuildContext scaffoldContext;
 
   final PageController _groupPageViewController = PageController();
   final TextEditingController _groupNameController = TextEditingController();
@@ -34,15 +34,15 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
   bool disableTouch = false;
 
-  String groupId;
+  String groupIdFromQrCode;
+  Group groupFound;
 
   Widget _joinToGroupWidget;
 
   @override
   void initState() {
     super.initState();
-    _registerBloc = BlocProvider.of<RegisterBloc>(context);
-    _groupNameController.addListener(_onGroupNameChanged);
+    //_registerBloc = BlocProvider.of<RegisterBloc>(context);
   }
 
   @override
@@ -54,68 +54,63 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
   @override
   Widget build(BuildContext context) {
-
     _joinToGroupWidget = _buildFirstQRScannerWidget();
 
-    return BlocListener<RegisterBloc, RegisterState>(
+    return BlocListener<GroupBloc, GroupState>(
       listener: (context, state) {
         // Hide Snackbar from previous page
 //        if (state.isRegistrationSuccess) {
 //          Scaffold.of(context)..hideCurrentSnackBar();
 //        }
 
-        if (state.isFailure) {
-          Scaffold.of(widget.scaffoldContext)
+        if (state is GroupFailureState) {
+          Scaffold.of(scaffoldContext)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
                 behavior: SnackBarBehavior.floating,
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text('Błąd..'), Icon(Icons.error)],
+                  children: (state.configurationType == GroupConfigurationType.JOINING_TO_GROUP)
+                      ? [
+                          Text('Problem z dołączeniem do grupy...'),
+                          Icon(Icons.error),
+                        ]
+                      : [
+                          Text('Problem przy tworzeniu nowej grupy...'),
+                          Icon(Icons.error),
+                        ],
                 ),
                 backgroundColor: Colors.red,
               ),
             );
         }
-        if (state.isGroupSubmitting && state.isJoiningToExistingGroup) {
+        if (state is GroupLoadingState) {
           disableTouch = true;
-          Scaffold.of(widget.scaffoldContext)
+          Scaffold.of(scaffoldContext)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
                 behavior: SnackBarBehavior.floating,
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Dołączanie do grupy...'),
-                    CircularProgressIndicator(),
-                  ],
-                ),
-              ),
-            );
-        }
-        if (state.isGroupSubmitting && state.isNewGroupCreating) {
-          disableTouch = true;
-          Scaffold.of(widget.scaffoldContext)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                behavior: SnackBarBehavior.floating,
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Tworzę nową grupę...'),
-                    CircularProgressIndicator(),
-                  ],
+                  children: (state.loadingType == GroupConfigurationType.JOINING_TO_GROUP)
+                      ? [
+                          Text('Dołączam do grupy...'),
+                          CircularProgressIndicator(),
+                        ]
+                      : [
+                          Text('Tworzę nową grupę...'),
+                          CircularProgressIndicator(),
+                        ],
                 ),
               ),
             );
         }
 
-        if(state.isSearchingForGroup) {
+        if (state is GroupByQRCodeLoadingState) {
           disableTouch = true;
-          Scaffold.of(widget.scaffoldContext)
+          Scaffold.of(scaffoldContext)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
@@ -131,36 +126,36 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
             );
         }
 
-        if(state.isGroupByQRCodeFound){
-          Scaffold.of(widget.scaffoldContext)
-            ..hideCurrentSnackBar();
+        if (state is GroupByQRCodeFoundState) {
+          Scaffold.of(scaffoldContext)..hideCurrentSnackBar();
+          groupFound = state.group;
+          print("Group found : ${groupFound.name}");
 
-          print("Group found : ${state.groupName}");
           disableTouch = false;
           setState(() {
-            _joinToGroupWidget = _buildSecondQRScannerWidget(state.groupName);
+            _joinToGroupWidget = _buildSecondQRScannerWidget(groupFound.name);
           });
         }
 
-        if(state.isFindingGroupByQrCodeFailure) {
+        if (state is GroupByQRCodeNotFoundState) {
           print("Group founding error");
           disableTouch = false;
-          Scaffold.of(widget.scaffoldContext)
+          Scaffold.of(scaffoldContext)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
                 behavior: SnackBarBehavior.floating,
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text('Taka grupa nie istnieje..'), Icon(Icons.error)],
+                  children: [Text('Grupa nie istnieje.'), Icon(Icons.error)],
                 ),
                 backgroundColor: Colors.red,
               ),
             );
         }
 
-        if (state.isGroupConfigurationSuccess) {
-          Scaffold.of(widget.scaffoldContext)
+        if (state is GroupConfigurationSuccessState) {
+          Scaffold.of(scaffoldContext)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
@@ -172,115 +167,122 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                 backgroundColor: Constants.positiveGreenColor,
               ),
             );
-          if(state.isNewGroupCreating) {
-            Future.delayed(const Duration(milliseconds: 1000), () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-                      return SuccessPage(
-                        configurationType: ConfigurationType.NEW_GROUP,
-                        groupId: state.groupId,
-                        groupName: _groupNameController.text,
-                      );
-                    }),
-              );
-            });
-          } else if(state.isJoiningToExistingGroup){
 
-            // TODO : Ten state nie przechwyca nazwy grupy. Trzeba w State .joiningToGroupConfigured przez parametr dac nazwe grupy czy cos
-
-            Future.delayed(const Duration(milliseconds: 1000), () {
-              Navigator.of(
-                  context).push(
-                MaterialPageRoute(
-                    builder: (context) {
-                      return SuccessPage(
-                        configurationType: ConfigurationType.JOIN_TO_EXIST,
-                        groupId: state.groupId,
-                        groupName: state.groupName,
-                      );
-                    }),
-              );
-            });
+          if (state.configurationType == GroupConfigurationType.CREATING_GROUP) {
+            _showSuccessPage(
+              context,
+              state.group,
+              ConfigurationType.NEW_GROUP,
+            );
+          } else if (state.configurationType == GroupConfigurationType.JOINING_TO_GROUP) {
+            _showSuccessPage(
+              context,
+              state.group,
+              ConfigurationType.JOIN_TO_EXIST,
+            );
           }
         }
 
-        // TODO : Ogranac cofanie sie przyciskiem wstecz w nieodpowiednich miejscach
-
-        if (state.isNewGroupCreating && !state.isGroupSubmitting && !state.isGroupConfigurationSuccess) {
-          _newGroupCardColor = Constants.getStartGradientColor(context);
-          _joinToGroupCardColor = Colors.black12;
-          _groupPageViewController.animateToPage(0, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
-        }
-        if (state.isJoiningToExistingGroup && !state.isGroupSubmitting && !state.isGroupConfigurationSuccess) {
-          _newGroupCardColor = Colors.black12;
-          _joinToGroupCardColor = Constants.getEndGradientColor(context);
-          _groupPageViewController.animateToPage(1, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
+        if (state is GroupInitialState) {
+          if (state.configurationType == GroupConfigurationType.CREATING_GROUP) {
+            _newGroupCardColor = Constants.getStartGradientColor(context);
+            _joinToGroupCardColor = Colors.black12;
+            _groupPageViewController.animateToPage(0, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
+          } else {
+            _newGroupCardColor = Colors.black12;
+            _joinToGroupCardColor = Constants.getEndGradientColor(context);
+            _groupPageViewController.animateToPage(1, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
+          }
         }
       },
-      child: BlocBuilder<RegisterBloc, RegisterState>(
+      child: BlocBuilder<GroupBloc, GroupState>(
         builder: (context, state) {
-          return Scaffold(
-            body: AbsorbPointer(
-              absorbing: disableTouch,
-              child: Form(
-                child: ListView(
-                  children: <Widget>[
-                    _buildHeader(),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 20, right: 20),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: buildNewGroupCard(onTap: () {
-                              _registerBloc.add(
-                                RegisterNewGroupCreating(),
-                              );
-                            }),
-                          ),
-                          Expanded(
-                            child: buildJoinToGroupCard(onTap: () {
-                              _registerBloc.add(
-                                RegisterJoiningToGroup(),
-                              );
-                            }),
-                          ),
-                        ],
+          _groupBloc = BlocProvider.of<GroupBloc>(context);
+
+          return Scaffold(body: Builder(
+            builder: (scaffold) {
+              scaffoldContext = scaffold;
+              return AbsorbPointer(
+                absorbing: disableTouch,
+                child: Form(
+                  child: ListView(
+                    children: <Widget>[
+                      _buildHeader(),
+                      SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      indent: 25,
-                      endIndent: 25,
-                    ),
-                    Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Container(
-                          width: MediaQuery.of(context).size.width,
-                          height: 390,
-                          child: PageView(
-                            physics: NeverScrollableScrollPhysics(),
-                            controller: _groupPageViewController,
-                            scrollDirection: Axis.horizontal,
-                            children: <Widget>[
-                              _buildGroupCreatorWidget(state, _groupNameController),
-                              _buildQRCodeGroupView(state.isGroupByQRCodeFound, groupName : state.groupName) ,
-                            ],
-                          ),
-                        )),
-                  ],
+                      Padding(
+                        padding: EdgeInsets.only(left: 20, right: 20),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: buildNewGroupCard(onTap: () {
+                                _groupBloc.add(
+                                  GroupConfigurationTypeChangeEvent(
+                                      configurationType: GroupConfigurationType.CREATING_GROUP),
+                                );
+                              }),
+                            ),
+                            Expanded(
+                              child: buildJoinToGroupCard(onTap: () {
+                                _groupBloc.add(
+                                  GroupConfigurationTypeChangeEvent(
+                                      configurationType: GroupConfigurationType.JOINING_TO_GROUP),
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 25,
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        indent: 25,
+                        endIndent: 25,
+                      ),
+                      Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 390,
+                            child: PageView(
+                              physics: NeverScrollableScrollPhysics(),
+                              controller: _groupPageViewController,
+                              scrollDirection: Axis.horizontal,
+                              children: <Widget>[
+                                _buildGroupCreatorWidget(state, _groupNameController),
+                                _buildQRCodeGroupView(state),
+                              ],
+                            ),
+                          )),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          );
+              );
+            },
+          ));
         },
       ),
     );
+  }
+
+  void _showSuccessPage(BuildContext context, Group group, ConfigurationType configurationType) {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
+
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) {
+          return SuccessPage(
+            configurationType: configurationType,
+            group: group,
+          );
+        }),
+//        ModalRoute.withName('/'),
+      );
+    });
   }
 
   Widget _buildHeader() {
@@ -360,8 +362,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
     );
   }
 
-  Widget _buildGroupCreatorWidget(RegisterState state, TextEditingController controller) {
-    debugPrint("BuildGroupCreatorWidget");
+  Widget _buildGroupCreatorWidget(GroupState state, TextEditingController controller) {
     return Container(
       child: Column(
         mainAxisSize: MainAxisSize.max,
@@ -388,9 +389,9 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
               labelText: 'Nazwa grupy',
               icon: Icons.group,
               passwordMode: false,
-              isValid: state.isGroupNameValid,
+              isValid: _groupNameController.text.isNotEmpty,
               validator: (_) {
-                return !state.isGroupNameValid ? 'Pole jest puste' : null;
+                return _groupNameController.text.isEmpty ? 'Pole jest puste' : null;
               },
             ),
           ),
@@ -402,7 +403,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                   text: "Utwórz grupę",
                   height: 50.0,
                   colors: [Constants.getStartGradientColor(context), Constants.getEndGradientColor(context)],
-                  onPressed: state.isUsernameValid ? _onCreateGroupClick : null,
+                  onPressed: _groupNameController.text.isNotEmpty ? _onCreateGroupClick : null,
                 )),
           ),
         ],
@@ -410,11 +411,12 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
     );
   }
 
-  Widget _buildQRCodeGroupView(bool isGroupFounded, {String groupName = ""}) {
-
+  Widget _buildQRCodeGroupView(GroupState state) {
     return AnimatedSwitcher(
       duration: Duration(milliseconds: 500),
-      child: isGroupFounded ? _buildSecondQRScannerWidget(groupName) : _buildFirstQRScannerWidget(),
+      child: (state is GroupByQRCodeFoundState)
+          ? _buildSecondQRScannerWidget(state.group.name)
+          : _buildFirstQRScannerWidget(),
     );
   }
 
@@ -441,7 +443,11 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
             alignment: Alignment.center,
             child: Padding(
               padding: EdgeInsets.only(top: 30, bottom: 30),
-              child: SvgPicture.asset("assets/qr-code.svg", width: 150, height: 150,),
+              child: SvgPicture.asset(
+                "assets/qr-code.svg",
+                width: 150,
+                height: 150,
+              ),
             ),
           ),
           Padding(
@@ -453,8 +459,8 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
               onPressed: () {
                 scanQRCode().then((value) {
                   setState(() {
-                    groupId = value;
-                    debugPrint("Group ID : $groupId");
+                    groupIdFromQrCode = value;
+                    debugPrint("Group ID : $groupIdFromQrCode");
 
                     _onQRScanSuccess();
                   });
@@ -468,13 +474,11 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
   }
 
   Widget _buildSecondQRScannerWidget(String groupName) {
-
     return Container(
       child: Column(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Align(
             alignment: Alignment.center,
             child: Padding(
@@ -486,7 +490,11 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
             alignment: Alignment.center,
             child: Padding(
               padding: EdgeInsets.only(top: 5, bottom: 40),
-              child: Text("$groupName ?", style: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold,)),
+              child: Text("$groupName ?",
+                  style: TextStyle(
+                    fontSize: 28.0,
+                    fontWeight: FontWeight.bold,
+                  )),
             ),
           ),
           Align(
@@ -499,28 +507,32 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                 height: 50,
                 width: 170,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(70),
-                  border : Border.all(
-                    color: Constants.positiveGreenColor
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Constants.positiveGreenColor,
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                      offset: Offset(0,0),
-                    )
-                  ]
-                ),
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(70),
+                    border: Border.all(color: Constants.positiveGreenColor),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Constants.positiveGreenColor,
+                        blurRadius: 15,
+                        spreadRadius: 1,
+                        offset: Offset(0, 0),
+                      )
+                    ]),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Icon(Icons.check, color: Constants.positiveGreenColor, size: 30,),
+                    Icon(
+                      Icons.check,
+                      color: Constants.positiveGreenColor,
+                      size: 30,
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(left: 8, right: 8),
-                      child: Text("Dołącz".toUpperCase(), style: TextStyle(fontSize: 18.0, color: Constants.positiveGreenColor),),
+                      child: Text(
+                        "Dołącz".toUpperCase(),
+                        style: TextStyle(fontSize: 18.0, color: Constants.positiveGreenColor),
+                      ),
                     )
                   ],
                 ),
@@ -532,12 +544,15 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
             child: Padding(
               padding: EdgeInsets.only(left: 20, right: 20, top: 60),
               child: FlatButton(
-                child: Text("SKANUJ PONOWNIE", style: TextStyle(fontSize: 16),),
+                child: Text(
+                  "SKANUJ PONOWNIE",
+                  style: TextStyle(fontSize: 16),
+                ),
                 onPressed: () {
                   scanQRCode().then((value) {
                     setState(() {
-                      groupId = value;
-                      debugPrint("Group ID : $groupId");
+                      groupIdFromQrCode = value;
+                      debugPrint("Group ID : $groupIdFromQrCode");
                       _onQRScanSuccess();
                     });
                   });
@@ -550,39 +565,30 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
     );
   }
 
-
-  // TODO : Przetestowac i rozkminić ui do doawania sie do grupy
   Future<String> scanQRCode() async {
-    return await FlutterBarcodeScanner.scanBarcode(
-        "#bd3356",
-        "Anuluj",
-        true,
-        ScanMode.QR);
+    return await FlutterBarcodeScanner.scanBarcode("#bd3356", "Anuluj", true, ScanMode.QR);
   }
 
-  void _onCreateGroupClick() {
-    _registerBloc.add(RegisterSubmittedNewGroup(
+  void _onCreateGroupClick() async {
+    print("PAGE onCreateGroupClick...");
+    _groupBloc.add(GroupConfigurationSubmittingEvent(
+      configurationType: GroupConfigurationType.CREATING_GROUP,
       groupName: _groupNameController.text,
+      uid: (await FirebaseAuth.instance.currentUser()).uid,
     ));
   }
 
   void _onQRScanSuccess() {
-    _registerBloc.add(RegisterQRCodeScanned(
-      groupId: groupId,
+    _groupBloc.add(GroupQRCodeScannedEvent(
+      groupId: groupIdFromQrCode,
     ));
   }
 
-  void _onJoinToGroupClick() {
-    _registerBloc.add(RegisterSubmittedJoinToGroup(
-      groupId: groupId,
+  void _onJoinToGroupClick() async {
+    _groupBloc.add(GroupConfigurationSubmittingEvent(
+      configurationType: GroupConfigurationType.JOINING_TO_GROUP,
+      groupId: groupIdFromQrCode,
+      uid: (await FirebaseAuth.instance.currentUser()).uid,
     ));
-  }
-
-  void _onGroupNameChanged() {
-    _registerBloc.add(
-      RegisterGroupNameChanged(
-        groupName: _groupNameController.text,
-      ),
-    );
   }
 }
