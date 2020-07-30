@@ -6,6 +6,7 @@ import 'package:bando/auth/repository/auth_repository.dart';
 import 'package:bando/auth/repository/firestore_group_repository.dart';
 import 'package:bando/auth/repository/firestore_user_repository.dart';
 import 'package:bando/utils/consts.dart';
+import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -78,6 +79,35 @@ class RegisterPage extends StatelessWidget {
                     dotColor: Colors.grey,
                     activeDotColor: Constants.getEndGradientColor(context)),
               ),
+            ),
+          ),
+          Positioned(
+            bottom: 24,
+            left: 24,
+            right: 24,
+            child: ConnectivityWidget(
+              offlineBanner: Container(
+                height: 34,
+                decoration: BoxDecoration(
+                    color: Constants.errorColorDark,
+                    borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10,
+                        spreadRadius: 0,
+                        offset: Offset(0,0),
+                        color: Colors.black.withOpacity(0.5),
+                      )
+                    ]
+                ),
+                child: Center(
+                  child: Text("Brak połączenia z internetem"),
+                ),
+              ),
+              builder: (context, isOnline) {
+                return SizedBox(
+                );
+              },
             ),
           )
         ],

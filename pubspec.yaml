@@ -54,7 +54,7 @@ dependencies:
   koin_flutter: ^0.6.3
   flutter_statusbarcolor: ^0.2.3
   animations: ^1.1.1
-  connectivity: ^0.4.9
+  connectivity_widget: ^0.1.7
 
   cupertino_icons: ^0.1.3
 

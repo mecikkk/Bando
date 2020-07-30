@@ -54,10 +54,8 @@ class _MemberHomePageState extends State<MemberHomePage> {
 
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) async {
-
-        if(state is HomeInitialState) {
+        if (state is HomeInitialState) {
           _homeContentWidget = LoadingWidget();
-          await loadFilesList();
         }
 
         if (state is HomeReadyState) {
@@ -97,7 +95,6 @@ class _MemberHomePageState extends State<MemberHomePage> {
         if (state is HomeUploadSongbookSuccessState) {
           print("Uploading success");
           _homeContentWidget = _buildMainContent(_scaffoldContext);
-          // TODO : Print all files from BandoSongbook
         }
       },
       child: BlocBuilder<HomeBloc, HomeState>(
@@ -128,20 +125,21 @@ class _MemberHomePageState extends State<MemberHomePage> {
   }
 
   Widget _buildMainContent(BuildContext context) {
-    if(songbook.isEmpty) loadFilesList();
+    if (songbook.isEmpty) loadFilesList();
 
-    return (songbook.isEmpty) ? _buildLibraryConfigurationView() :
-     Container(
-      child: ListView.builder(
-          itemCount: songbook.length,
-          itemBuilder: (BuildContext context, int index) {
-            return new EntryFileItem(songbook[index], context, onClick : (file) {
-              // TODO : on file click reaction
-              print("Click");
-            },
-            onLongClick: () {},);
-          }),
-    );
+    return (songbook.isEmpty)
+        ? _buildLibraryConfigurationView()
+        : Container(
+            child: ListView.builder(
+              itemCount: songbook.length,
+              itemBuilder: (BuildContext context, int index) {
+                return new EntryFileItem(songbook[index], context, onClick: (file) {
+                  // TODO : on file click reaction
+                  print("Click");
+                }, onLongClick: () {});
+              },
+            ),
+          );
   }
 
   loadFilesList() async {

@@ -3,6 +3,7 @@ import 'package:bando/utils/consts.dart';
 import 'package:bando/utils/validator.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';
+import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,6 +22,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   bool isEmailValid = true;
   bool isPasswordValid = true;
@@ -101,7 +103,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     controller: _usernameController,
                     labelText: 'Nazwa użytkownika',
                     icon: Icons.person_outline,
-                    passwordMode: false,
+                    obscureText: false,
                     isValid: isUsernameValid,
                     validator: (_) {
                       return !isUsernameValid ? 'Pole jest puste' : null;
@@ -114,7 +116,7 @@ class _RegisterFormState extends State<RegisterForm> {
                   icon: Icons.mail_outline,
                   inputType: TextInputType.emailAddress,
                   isValid: isEmailValid,
-                  passwordMode: false,
+                  obscureText: false,
                   validator: (_) {
                     return !isEmailValid ? 'Niepoprawny Email' : null;
                   },
@@ -125,7 +127,9 @@ class _RegisterFormState extends State<RegisterForm> {
                     controller: _passwordController,
                     labelText: 'Hasło',
                     icon: Icons.lock_outline,
-                    passwordMode: true,
+                    isPasswordFiled: true,
+                    obscureText: _obscurePassword,
+                    changePasswordVisibility: _changePasswordVisibility,
                     isValid: isPasswordValid,
                     validator: (_) {
                       return !isPasswordValid ? 'Minimum 8 znaków, w tym jedna cyfra' : null;
@@ -141,9 +145,6 @@ class _RegisterFormState extends State<RegisterForm> {
                     colors: [Constants.getEndGradientColor(context), Constants.getStartGradientColor(context)],
                     text: "Zarejestruj",
                     height: 45.0,
-//                    onPressed: () {
-//                      widget._pageController.animateToPage(1, duration: Duration(milliseconds: 600), curve: Curves.easeInOutQuad);
-//                    },
                     onPressed: isRegisterButtonEnabled(state) ? _onFormSubmitted : null,
                   ),
                 ),
@@ -153,6 +154,12 @@ class _RegisterFormState extends State<RegisterForm> {
         },
       ),
     );
+  }
+
+  void _changePasswordVisibility(){
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
   }
 
   Widget _buildHeader() {
@@ -200,13 +207,16 @@ class _RegisterFormState extends State<RegisterForm> {
     isUsernameValid = _usernameController.text.isNotEmpty;
   }
 
-  void _onFormSubmitted() {
-    _registerBloc.add(
-      RegisterSubmittedEvent(
-        email: _emailController.text,
-        password: _passwordController.text,
-        username: _usernameController.text,
-      ),
-    );
+  void _onFormSubmitted() async {
+    bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
+    if(isConnected) {
+      _registerBloc.add(
+        RegisterSubmittedEvent(
+          email: _emailController.text,
+          password: _passwordController.text,
+          username: _usernameController.text,
+        ),
+      );
+    }
   }
 }

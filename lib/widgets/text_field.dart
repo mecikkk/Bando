@@ -7,8 +7,10 @@ class RoundedTextField extends StatefulWidget {
   final String labelText;
   final IconData icon;
   final bool isValid;
-  final bool passwordMode;
+  final bool obscureText;
   final FormFieldValidator<String> validator;
+  bool isPasswordFiled;
+  Function changePasswordVisibility;
 
   RoundedTextField({
     @required this.controller,
@@ -16,8 +18,10 @@ class RoundedTextField extends StatefulWidget {
     @required this.labelText,
     @required this.icon,
     @required this.isValid,
-    @required this.passwordMode,
+    @required this.obscureText,
     @required this.validator,
+    this.changePasswordVisibility,
+    this.isPasswordFiled = false,
   });
 
   @override
@@ -40,23 +44,44 @@ class RoundedTextFieldState extends State<RoundedTextField> {
     return TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
-        decoration: InputDecoration(
-            border: buildOutlineInputBorder(),
-            focusedBorder: buildOutlineInputBorder(),
-            prefixIcon: Icon(
-              widget.icon,
-              color: widget.isValid ? _setColor() : Colors.redAccent,
-            ),
-            labelText: widget.labelText,
-            floatingLabelBehavior: FloatingLabelBehavior.never,
-            labelStyle: TextStyle(
-              color: _setColor(),
-            )),
+        decoration: _setDecoration(widget.isPasswordFiled),
         keyboardType: widget.inputType,
-        obscureText: widget.passwordMode,
+        obscureText: widget.obscureText,
         autovalidate: true,
         autocorrect: false,
         validator: widget.validator);
+  }
+
+  InputDecoration _setDecoration(bool passwordDecoration) {
+    return passwordDecoration ?
+    InputDecoration(
+        border: buildOutlineInputBorder(),
+        focusedBorder: buildOutlineInputBorder(),
+        prefixIcon: Icon(
+          widget.icon,
+          color: widget.isValid ? _setColor() : Colors.redAccent,
+        ),
+        labelText: widget.labelText,
+        suffixIcon: GestureDetector(
+          child: Icon(widget.obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.white,),
+          onTap: widget.changePasswordVisibility,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.never,
+        labelStyle: TextStyle(
+          color: _setColor(),
+        )) :
+    InputDecoration(
+        border: buildOutlineInputBorder(),
+        focusedBorder: buildOutlineInputBorder(),
+        prefixIcon: Icon(
+          widget.icon,
+          color: widget.isValid ? _setColor() : Colors.redAccent,
+        ),
+        labelText: widget.labelText,
+        floatingLabelBehavior: FloatingLabelBehavior.never,
+        labelStyle: TextStyle(
+          color: _setColor(),
+        ));
   }
 
   OutlineInputBorder buildOutlineInputBorder() {

@@ -38,9 +38,10 @@ class GroupEntity extends Equatable {
     return GroupEntity(
       snapshot.documentID,
       snapshot.data["name"],
-      List.from(snapshot.data["members"]),
+      List<Map<String, dynamic>>.from(snapshot.data['members']),
     );
   }
+
 
   Map<String, Object> toDocument() {
     return {

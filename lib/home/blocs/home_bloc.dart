@@ -56,7 +56,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       if(user.groupId != "") {
         Group group = await _groupRepository.getGroup(user.groupId);
-        await _storageRepository.getAllFiles(group.groupId);
+        //await _storageRepository.getAllFiles(group.groupId);
         yield HomeReadyState(group: group, user: user);
       } else {
         yield HomeNoGroupState(user: user);

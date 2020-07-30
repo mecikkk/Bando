@@ -6,6 +6,7 @@ import 'package:bando/auth/pages/register_page.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';
+import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,6 +18,7 @@ class LoginForm extends StatefulWidget {
 class _LoginFormState extends State<LoginForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   LoginBloc _loginBloc;
 
@@ -91,7 +93,7 @@ class _LoginFormState extends State<LoginForm> {
                     icon: Icons.mail_outline,
                     inputType: TextInputType.emailAddress,
                     isValid: state.isEmailValid,
-                    passwordMode: false,
+                    obscureText: false,
                     validator: (_) {
                       return !state.isEmailValid ? 'Niepoprawny Email' : null;
                     },
@@ -102,7 +104,9 @@ class _LoginFormState extends State<LoginForm> {
                       controller: _passwordController,
                       labelText: 'Hasło',
                       icon: Icons.lock_outline,
-                      passwordMode: true,
+                      isPasswordFiled: true,
+                      obscureText: _obscurePassword,
+                      changePasswordVisibility: _changePasswordVisibility,
                       isValid: state.isPasswordValid,
                       validator: (_) {
                         return !state.isPasswordValid ? 'Niepoprawne Hasło' : null;
@@ -227,6 +231,12 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
+  void _changePasswordVisibility(){
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -246,12 +256,15 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  void _onFormSubmitted() {
-    _loginBloc.add(
-      LoginWithEmailPressed(
-        email: _emailController.text,
-        password: _passwordController.text,
-      ),
-    );
+  void _onFormSubmitted() async {
+    bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
+    if(isConnected) {
+      _loginBloc.add(
+        LoginWithEmailPressed(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+      );
+    }
   }
 }

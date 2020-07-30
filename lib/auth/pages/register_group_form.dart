@@ -388,7 +388,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
               controller: controller,
               labelText: 'Nazwa grupy',
               icon: Icons.group,
-              passwordMode: false,
+              obscureText: false,
               isValid: _groupNameController.text.isNotEmpty,
               validator: (_) {
                 return _groupNameController.text.isEmpty ? 'Pole jest puste' : null;
