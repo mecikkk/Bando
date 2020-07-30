@@ -27,6 +27,17 @@ class HomeConfigureSongbookDirectoryEvent extends HomeEvent {
 class HomeUploadSongbookToCloudEvent extends HomeEvent {
 }
 
+class HomeOnSearchFileEvent extends HomeEvent {
+
+  final String fileName;
+  final List<FileModel> songbook;
+
+  HomeOnSearchFileEvent({@required this.fileName, @required this.songbook});
+
+  @override
+  List<Object> get props => [fileName, songbook];
+}
+
 class HomeGroupConfiguredEvent extends HomeEvent {
   final Group group;
 

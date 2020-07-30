@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/auth/pages/register_group_form.dart';
@@ -8,9 +9,12 @@ import 'package:bando/file_manager/utils/files_utils.dart';
 import 'package:bando/file_manager/widgets/file_item_widget.dart';
 import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
+import 'package:bando/home/widgets/songbook_listview.dart';
 import 'package:bando/utils/consts.dart';
+import 'package:bando/widgets/animated_opaticy_widget.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
+import 'package:bando/widgets/search_textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,10 +27,18 @@ class MemberHomePage extends StatefulWidget {
   _MemberHomePageState createState() => _MemberHomePageState();
 }
 
-class _MemberHomePageState extends State<MemberHomePage> {
+class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProviderStateMixin {
+  TextEditingController _searchController = TextEditingController();
+  AnimationController _animationController;
+  var searchAnimation;
+  var textAnimation;
+
+  final GlobalKey<SongbookListViewState> _songbookGlobalKey = GlobalKey();
+
   double _fullWidth;
   String _groupName = "------";
   String _userName = "user";
+  bool showSearchBar = false;
 
   HomeBloc _bloc;
 
@@ -39,11 +51,22 @@ class _MemberHomePageState extends State<MemberHomePage> {
   Future<void> initState() {
     super.initState();
     _bloc = BlocProvider.of<HomeBloc>(context);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    searchAnimation = Tween(begin: 0.0, end: 1.0).animate(
+        new CurvedAnimation(parent: _animationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
+
+    textAnimation = Tween(begin: 1.0, end: 0.0).animate(
+        new CurvedAnimation(parent: _animationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
   }
 
   @override
   void dispose() {
     super.dispose();
+    _searchController.dispose();
   }
 
   @override
@@ -96,6 +119,16 @@ class _MemberHomePageState extends State<MemberHomePage> {
           print("Uploading success");
           _homeContentWidget = _buildMainContent(_scaffoldContext);
         }
+        if (state is HomeSearchResultState) {
+
+          if(_searchController.text.isEmpty) _songbookGlobalKey.currentState.updateList(songbook);
+          else _songbookGlobalKey.currentState.updateList(state.searchResult);
+
+          print("Search for : ${_searchController.text}");
+          state.searchResult.forEach((element) {
+            print(element.getFileName());
+          });
+        }
       },
       child: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
@@ -130,16 +163,113 @@ class _MemberHomePageState extends State<MemberHomePage> {
     return (songbook.isEmpty)
         ? _buildLibraryConfigurationView()
         : Container(
-            child: ListView.builder(
-              itemCount: songbook.length,
-              itemBuilder: (BuildContext context, int index) {
-                return new EntryFileItem(songbook[index], context, onClick: (file) {
-                  // TODO : on file click reaction
-                  print("Click");
-                }, onLongClick: () {});
-              },
+            child: Stack(
+              children: <Widget>[
+                Positioned(
+                  top: 70,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SongbookListView(
+                    key: _songbookGlobalKey,
+                    songbook: songbook,
+                    onItemClick: (FileModel file) {
+                      print("Clicked : ${file.getFileName()}");
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: 30,
+                  left: 0,
+                  right: 0,
+                  height: 70,
+                  child: Material(
+                    elevation: 10.0,
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    shadowColor: Colors.black.withOpacity(0.5),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right : 20.0, left: 20.0),
+                      child: Row(
+                        children: <Widget>[
+                          Align(
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.check_circle,
+                              color: Constants.positiveGreenColor.withOpacity(0.8),
+                            ),
+                          ),
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                Align(
+                                  child: SearchTextField(
+                                    controller: _searchController,
+                                    labelText: "Szukaj tekstów..",
+                                    width: searchAnimation,
+                                    maxWidth: 260,
+                                    onChanged: onSearch,
+                                  ),
+                                  alignment: Alignment.center,
+                                ),
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: IconButton(
+                                    hoverColor: Colors.transparent,
+                                    icon: Icon(Icons.search, color: Colors.white),
+                                    onPressed: () {
+                                      showSearchBar = !showSearchBar;
+                                      if(!showSearchBar) FocusScope.of(context).unfocus();
+                                      showSearchBar
+                                          ? _animationController.forward(from: 0.0)
+                                          : _animationController.reverse(from: 1);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+/*                    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, boxShadow: [
+                      BoxShadow(
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: Offset(0, 0),
+                        color: Colors.black.withOpacity(0.3),
+                      )
+                    ]),*/
+                  ),
+                ),
+                Positioned(
+                  top: 30,
+                  left: 50,
+                  right: 0,
+                  height: 70,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedOpacityWidget(
+                      opacity: textAnimation,
+                      child: Text(
+                        "Pliki aktualne",
+                        style: TextStyle(
+                          color: Constants.positiveGreenColor.withOpacity(0.8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
+  }
+
+  onSearch(String query) {
+    _bloc.add(
+      HomeOnSearchFileEvent(fileName: query, songbook: songbook),
+    );
   }
 
   loadFilesList() async {
@@ -340,7 +470,7 @@ class _MemberHomePageState extends State<MemberHomePage> {
             gradient: Constants.getGradient(context, Alignment.centerLeft, Alignment.topRight),
             boxShadow: [
               BoxShadow(
-                color: Colors.black38,
+                color: Colors.black.withOpacity(0.5),
                 spreadRadius: 0,
                 blurRadius: 15,
                 offset: Offset(0, 1),

@@ -45,3 +45,13 @@ class HomeGroupConfiguredState extends HomeState {
 class HomeSelectedDirectoryMovedState extends HomeState {}
 
 class HomeFailureState extends HomeState {}
+
+class HomeSearchResultState extends HomeState {
+
+  final List<FileModel> searchResult;
+
+  HomeSearchResultState({@required this.searchResult});
+
+  @override
+  List<Object> get props => [searchResult];
+}

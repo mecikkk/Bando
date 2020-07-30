@@ -258,6 +258,7 @@ class _LoginFormState extends State<LoginForm> {
 
   void _onFormSubmitted() async {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
+    FocusScope.of(context).unfocus();
     if(isConnected) {
       _loginBloc.add(
         LoginWithEmailPressed(

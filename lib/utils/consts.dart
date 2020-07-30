@@ -12,6 +12,9 @@ class Constants {
   static Color positiveGreenColor = Color.fromRGBO(3, 252, 119, 1.0);
   static Color errorColorLight = Color.fromRGBO(230, 48, 75, 1.0);
   static Color errorColorDark = Color.fromRGBO(227, 57, 82, 1.0);
+  static Color darkerScaffoldColorDark = Color(0xff212121);
+  static Color darkerScaffoldColorLight = Color(0xffd4d5d9);
+
 
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
@@ -19,7 +22,7 @@ class Constants {
     scaffoldBackgroundColor: Color(0xfff3f4f9),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
-    dividerColor: Colors.black45,
+    dividerColor: Colors.black12,
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -28,9 +31,14 @@ class Constants {
     scaffoldBackgroundColor: Color(0xff2B2B2B),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
-    dividerColor: Colors.white38,
+    dividerColor: Colors.white10,
 
   );
+
+  static Color getDarkerScaffoldColor(BuildContext context) {
+    if(Theme.of(context).brightness == Brightness.light) return darkerScaffoldColorLight;
+    else return darkerScaffoldColorDark;
+  }
 
   static Color getErrorColor(BuildContext context) {
     if(Theme.of(context).brightness == Brightness.light) return errorColorLight;

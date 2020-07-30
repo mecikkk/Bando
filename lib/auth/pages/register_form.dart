@@ -209,6 +209,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   void _onFormSubmitted() async {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
+    FocusScope.of(context).unfocus();
     if(isConnected) {
       _registerBloc.add(
         RegisterSubmittedEvent(
