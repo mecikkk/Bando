@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/auth/models/user_model.dart';
-import 'package:bando/auth/repository/firestore_group_repository.dart';
-import 'package:bando/auth/repository/firestore_user_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';

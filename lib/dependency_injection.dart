@@ -1,6 +1,6 @@
-import 'package:bando/auth/repository/auth_repository.dart';
-import 'package:bando/auth/repository/firestore_group_repository.dart';
-import 'package:bando/auth/repository/firestore_user_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/auth_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:koin/koin.dart';

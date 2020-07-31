@@ -10,11 +10,13 @@ import 'package:bando/file_manager/widgets/file_item_widget.dart';
 import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
 import 'package:bando/home/widgets/songbook_listview.dart';
+import 'package:bando/home/widgets/status_info_widget.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bando/widgets/animated_opaticy_widget.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:bando/widgets/search_textfield.dart';
+import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +36,8 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   var textAnimation;
 
   final GlobalKey<SongbookListViewState> _songbookGlobalKey = GlobalKey();
+  final GlobalKey<StatusInfoWidgetState> _statusInfoGlobalKey = GlobalKey();
+
 
   double _fullWidth;
   String _groupName = "------";
@@ -113,6 +117,16 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
           _bloc.add(HomeUploadSongbookToCloudEvent());
         }
         if (state is HomeUploadingSongbookState) {
+          Scaffold.of(_scaffoldContext).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: <Widget>[
+                  Text("Dodaję pliki do biblioteki..."),
+                  CircularProgressIndicator(),
+                ],
+              ),
+            )
+          );
           _homeContentWidget = LoadingWidget();
         }
         if (state is HomeUploadSongbookSuccessState) {
@@ -191,13 +205,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                       padding: const EdgeInsets.only(right : 20.0, left: 20.0),
                       child: Row(
                         children: <Widget>[
-                          Align(
-                            alignment: Alignment.center,
-                            child: Icon(
-                              Icons.check_circle,
-                              color: Constants.positiveGreenColor.withOpacity(0.8),
-                            ),
-                          ),
+
                           Expanded(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -208,7 +216,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                                     controller: _searchController,
                                     labelText: "Szukaj tekstów..",
                                     width: searchAnimation,
-                                    maxWidth: 260,
+                                    maxWidth: MediaQuery.of(context).size.width - 100,
                                     onChanged: onSearch,
                                   ),
                                   alignment: Alignment.center,
@@ -233,37 +241,29 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                         ],
                       ),
                     ),
-/*                    decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, boxShadow: [
-                      BoxShadow(
-                        blurRadius: 20,
-                        spreadRadius: 0,
-                        offset: Offset(0, 0),
-                        color: Colors.black.withOpacity(0.3),
-                      )
-                    ]),*/
                   ),
                 ),
                 Positioned(
                   top: 30,
-                  left: 50,
+                  left: 20,
                   right: 0,
                   height: 70,
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: AnimatedOpacityWidget(
-                      opacity: textAnimation,
-                      child: Text(
-                        "Pliki aktualne",
-                        style: TextStyle(
-                          color: Constants.positiveGreenColor.withOpacity(0.8),
-                        ),
-                      ),
-                    ),
+                    child: _buildStatusInfo(),
                   ),
                 ),
               ],
             ),
           );
+  }
+
+  Widget _buildStatusInfo() {
+    return StatusInfoWidget(
+      key: _statusInfoGlobalKey,
+      opacityAnimation: textAnimation,
+    );
+
   }
 
   onSearch(String query) {

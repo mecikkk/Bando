@@ -4,8 +4,8 @@ import 'dart:math';
 
 import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/auth/models/user_model.dart';
-import 'package:bando/auth/repository/firestore_group_repository.dart';
-import 'package:bando/auth/repository/firestore_user_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/file_manager/models/file_model.dart';
 import 'package:bando/file_manager/utils/files_utils.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
@@ -151,8 +151,5 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
     }
 
-//    allFiles.reversed.forEach((element) async {
-//
-//    });
   }
 }

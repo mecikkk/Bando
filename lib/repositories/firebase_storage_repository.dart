@@ -13,8 +13,8 @@ class FirebaseStorageRepository {
   }
 
   Future<void> uploadFile(File file, {String subDir = ""}) async {
-    if (subDir != "") _storageReference = FirebaseStorage.instance.ref().child("$_groupId/$subDir/${basename(file.path)}");
-    else _storageReference = FirebaseStorage.instance.ref().child("$_groupId/${basename(file.path)}");
+    if (subDir != "") _storageReference = FirebaseStorage.instance.ref().child("$_groupId/songbook/$subDir/${basename(file.path)}");
+    else _storageReference = FirebaseStorage.instance.ref().child("$_groupId/songbook/${basename(file.path)}");
     print("repo upload file : ${file.path} | to : ${_storageReference.path}");
     StorageUploadTask task = _storageReference.putFile(file);
     await task.onComplete;

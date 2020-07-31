@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:bando/auth/repository/auth_repository.dart';
-import 'package:bando/auth/repository/firestore_user_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/auth_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/utils/validator.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';

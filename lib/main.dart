@@ -1,6 +1,6 @@
 import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/auth/pages/login_page.dart';
-import 'package:bando/auth/repository/auth_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/auth_repository.dart';
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/dependency_injection.dart';
 import 'package:bando/home/pages/home_page.dart';
