@@ -7,7 +7,6 @@ import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/simple_rounded_card.dart';
 import 'package:bando/widgets/text_field.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
@@ -37,8 +36,6 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
   String groupIdFromQrCode;
   Group groupFound;
 
-  Widget _joinToGroupWidget;
-
   @override
   void initState() {
     super.initState();
@@ -54,8 +51,6 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
   @override
   Widget build(BuildContext context) {
-    _joinToGroupWidget = _buildFirstQRScannerWidget();
-
     return BlocListener<GroupBloc, GroupState>(
       listener: (context, state) {
         // Hide Snackbar from previous page
@@ -133,7 +128,6 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
           disableTouch = false;
           setState(() {
-            _joinToGroupWidget = _buildSecondQRScannerWidget(groupFound.name);
           });
         }
 
@@ -574,7 +568,6 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
     _groupBloc.add(GroupConfigurationSubmittingEvent(
       configurationType: GroupConfigurationType.CREATING_GROUP,
       groupName: _groupNameController.text,
-      uid: (await FirebaseAuth.instance.currentUser()).uid,
     ));
   }
 
@@ -588,7 +581,6 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
     _groupBloc.add(GroupConfigurationSubmittingEvent(
       configurationType: GroupConfigurationType.JOINING_TO_GROUP,
       groupId: groupIdFromQrCode,
-      uid: (await FirebaseAuth.instance.currentUser()).uid,
     ));
   }
 }

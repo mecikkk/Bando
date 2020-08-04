@@ -1,22 +1,17 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/auth/pages/register_group_form.dart';
 import 'package:bando/file_manager/models/file_model.dart';
 import 'package:bando/file_manager/pages/library_chooser_page.dart';
 import 'package:bando/file_manager/utils/files_utils.dart';
-import 'package:bando/file_manager/widgets/file_item_widget.dart';
-import 'package:bando/file_manager/widgets/file_manager_list_view.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
 import 'package:bando/home/widgets/songbook_listview.dart';
 import 'package:bando/home/widgets/status_info_widget.dart';
 import 'package:bando/utils/consts.dart';
-import 'package:bando/widgets/animated_opaticy_widget.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:bando/widgets/search_textfield.dart';
-import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +32,6 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
 
   final GlobalKey<SongbookListViewState> _songbookGlobalKey = GlobalKey();
   final GlobalKey<StatusInfoWidgetState> _statusInfoGlobalKey = GlobalKey();
-
 
   double _fullWidth;
   String _groupName = "------";
@@ -82,65 +76,55 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) async {
         if (state is HomeInitialState) {
-          _homeContentWidget = LoadingWidget();
+          _homeContentWidget = LoadingWidget(text: "", loadingType: LoadingType.LOADING);
         }
 
         if (state is HomeReadyState) {
-          print("ready state !");
+          debugPrint("ready state !");
           _userName = state.user.username;
           _groupName = state.group.name;
           _homeContentWidget = _buildMainContent(_scaffoldContext);
         }
 
         if (state is HomeNoGroupState) {
-          print("No Group State !");
+          debugPrint("No Group State !");
           _userName = state.user.username;
           _homeContentWidget = _buildNoGroupInfoContent(_scaffoldContext);
         }
 
         if (state is HomeLoadingState) {
-          print("Loading state !");
-          _homeContentWidget = LoadingWidget();
+          debugPrint("Loading state !");
+          _homeContentWidget = LoadingWidget(text: "", loadingType: LoadingType.LOADING);
         }
 
         if (state is HomeFailureState) {
-          print("Failure State ! ");
+          debugPrint("Failure State ! ");
         }
 
         if (state is HomeGroupConfiguredState) {
-          print("Group Configured State ! ");
+          debugPrint("Group Configured State ! ");
           _groupName = state.group.name;
         }
 
         if (state is HomeSelectedDirectoryMovedState) {
-          print("Directory moved successful");
+          debugPrint("Directory moved successful");
           _bloc.add(HomeUploadSongbookToCloudEvent());
         }
         if (state is HomeUploadingSongbookState) {
-          Scaffold.of(_scaffoldContext).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: <Widget>[
-                  Text("Dodaję pliki do biblioteki..."),
-                  CircularProgressIndicator(),
-                ],
-              ),
-            )
-          );
-          _homeContentWidget = LoadingWidget();
+          _homeContentWidget = LoadingWidget(text: "Udostępniam pliki grupie...", loadingType: LoadingType.UPLOAD);
         }
         if (state is HomeUploadSongbookSuccessState) {
-          print("Uploading success");
+          debugPrint("Uploading success");
           _homeContentWidget = _buildMainContent(_scaffoldContext);
         }
         if (state is HomeSearchResultState) {
+          if (_searchController.text.isEmpty)
+            _songbookGlobalKey.currentState.updateList(songbook);
+          else
+            _songbookGlobalKey.currentState.updateList(state.searchResult);
 
-          if(_searchController.text.isEmpty) _songbookGlobalKey.currentState.updateList(songbook);
-          else _songbookGlobalKey.currentState.updateList(state.searchResult);
-
-          print("Search for : ${_searchController.text}");
           state.searchResult.forEach((element) {
-            print(element.getFileName());
+            debugPrint(element.getFileName());
           });
         }
       },
@@ -188,7 +172,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                     key: _songbookGlobalKey,
                     songbook: songbook,
                     onItemClick: (FileModel file) {
-                      print("Clicked : ${file.getFileName()}");
+                      debugPrint("Clicked : ${file.getFileName()}");
                     },
                   ),
                 ),
@@ -202,10 +186,9 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                     color: Theme.of(context).scaffoldBackgroundColor,
                     shadowColor: Colors.black.withOpacity(0.5),
                     child: Padding(
-                      padding: const EdgeInsets.only(right : 20.0, left: 20.0),
+                      padding: const EdgeInsets.only(right: 20.0, left: 20.0),
                       child: Row(
                         children: <Widget>[
-
                           Expanded(
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -228,7 +211,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                                     icon: Icon(Icons.search, color: Colors.white),
                                     onPressed: () {
                                       showSearchBar = !showSearchBar;
-                                      if(!showSearchBar) FocusScope.of(context).unfocus();
+                                      if (!showSearchBar) FocusScope.of(context).unfocus();
                                       showSearchBar
                                           ? _animationController.forward(from: 0.0)
                                           : _animationController.reverse(from: 1);
@@ -263,7 +246,6 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
       key: _statusInfoGlobalKey,
       opacityAnimation: textAnimation,
     );
-
   }
 
   onSearch(String query) {
@@ -273,15 +255,16 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   }
 
   loadFilesList() async {
-    print("Start Loading local songbook");
+    debugPrint("Start Loading local songbook");
     Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
-    FilesUtils.getFilesInPath(songbookDirectory.path).then((value) {
-      print("getting files ended");
-      songbook = value;
-      setState(() {
-        print("Update UI");
+    if (songbookDirectory.listSync().isNotEmpty)
+      FilesUtils.getFilesInPath(songbookDirectory.path).then((value) {
+        debugPrint("getting files ended");
+        songbook = value;
+        setState(() {
+          debugPrint("Update UI");
+        });
       });
-    });
   }
 
   Widget _buildLibraryConfigurationView() {
@@ -447,13 +430,13 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
         ),
       ),
     ).then((_) {
-      print("GROUP CONFIGURED ! Update UI");
+      debugPrint("GROUP CONFIGURED ! Update UI");
       _updateUI();
     });
   }
 
   void _updateUI() async {
-    _bloc.add(HomeInitialEvent(uid: (await FirebaseAuth.instance.currentUser()).uid));
+    _bloc.add(HomeInitialEvent());
   }
 
   Positioned buildHeader(BuildContext context) {
@@ -601,7 +584,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   void _loadCurrentUserInfo() async {
     FirebaseAuth.instance.currentUser().then((value) {
       _bloc.add(
-        HomeInitialEvent(uid: value.uid),
+        HomeInitialEvent(),
       );
     });
   }

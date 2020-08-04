@@ -1,6 +1,7 @@
 
 import 'dart:io';
-import 'package:path/path.dart';
+
+import 'package:bando/utils/util.dart';
 
 class FileModel {
 
@@ -13,7 +14,7 @@ class FileModel {
       _isDirectory = FileSystemEntity.isDirectorySync(_fileSystemEntity.path);
   }
 
-  String getFileName() => basename(_fileSystemEntity.path);
+  String getFileName() => _fileSystemEntity.name;
 
   FileSystemEntity get fileSystemEntity => _fileSystemEntity;
 

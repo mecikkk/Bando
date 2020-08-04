@@ -7,12 +7,6 @@ abstract class HomeEvent extends Equatable{
 }
 
 class HomeInitialEvent extends HomeEvent {
-  final String uid;
-
-  HomeInitialEvent({@required this.uid});
-
-  @override
-  List<Object> get props => [uid];
 }
 
 class HomeConfigureSongbookDirectoryEvent extends HomeEvent {

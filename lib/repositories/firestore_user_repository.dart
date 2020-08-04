@@ -33,6 +33,11 @@ class FirestoreUserRepository{
     return FirebaseAuth.instance.currentUser().then((value) => value.uid);
   }
 
+  Future<User> currentUser() async {
+    String uid = await currentUserId();
+    return await getUser(uid);
+  }
+
   Future<String> getUserGroupId() async {
     FirebaseUser user = await FirebaseAuth.instance.currentUser();
     DocumentSnapshot snapshot = await usersCollection.document(user.uid).get();

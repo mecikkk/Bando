@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/auth/models/user_model.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
-part 'group_event.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 
+part 'group_event.dart';
 part 'group_state.dart';
 
 class GroupBloc extends Bloc<GroupEvent, GroupState> {
@@ -35,7 +35,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     } else if (event is GroupQRCodeScannedEvent) {
       yield* _mapGroupQRCodeScannedEventToState(event.groupId);
     } else if (event is GroupConfigurationSubmittingEvent) {
-      yield* _mapGroupConfigurationSubmittingEventToState(event.configurationType, event.uid, event.groupId, event.groupName);
+      yield* _mapGroupConfigurationSubmittingEventToState(event.configurationType, event.groupId, event.groupName);
     }
   }
 
@@ -56,7 +56,6 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
 
   Stream<GroupState> _mapGroupConfigurationSubmittingEventToState(
     GroupConfigurationType configurationType,
-    String uid,
     String groupId,
     String groupName,
   ) async* {
@@ -65,10 +64,10 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     Group group;
 
     try {
-      User user = await _userRepository.getUser(uid);
+      User user = await _userRepository.currentUser();
 
       if(configurationType == GroupConfigurationType.JOINING_TO_GROUP) {
-        await _userRepository.addGroupToUser(uid, groupId);
+        await _userRepository.addGroupToUser(user.uid, groupId);
         group = await _groupRepository.addUserToGroup(groupId, user);
       } else {
 
@@ -76,7 +75,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
         String newGroupId = await _groupRepository.createNewGroup(newGroup);
         group = newGroup.copyWith(groupId: newGroupId);
 
-        await _userRepository.addGroupToUser(uid, newGroupId);
+        await _userRepository.addGroupToUser(user.uid, newGroupId);
       }
       yield GroupConfigurationSuccessState(configurationType: configurationType, group: group);
     } catch (_) {

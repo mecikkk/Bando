@@ -28,10 +28,9 @@ class GroupConfigurationSubmittingEvent extends GroupEvent {
   final GroupConfigurationType configurationType;
   final String groupName;
   final String groupId;
-  final String uid;
 
-  GroupConfigurationSubmittingEvent({@required this.configurationType, this.groupName = "", this.groupId = "", this.uid = ""});
+  GroupConfigurationSubmittingEvent({@required this.configurationType, this.groupName = "", this.groupId = ""});
 
   @override
-  List<Object> get props => [configurationType, groupName, groupId, uid];
+  List<Object> get props => [configurationType, groupName, groupId];
 }

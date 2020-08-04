@@ -42,6 +42,13 @@ class FirestoreGroupRepository {
     return;
   }
 
+  Future<void> setListOfUrls(List<String> downloadUrls, String groupId) {
+
+    return groupCollection.document(groupId).updateData({
+      'songbookUrls' : downloadUrls
+    });
+  }
+
   Future<bool> shouldUserUpdateSongbook(String uid, String groupId) async {
     bool shouldUpdate;
 

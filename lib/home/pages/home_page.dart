@@ -1,13 +1,15 @@
 import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
 import 'package:bando/home/pages/member_home_page.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
+import 'package:bando/repositories/realtime_database_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:koin_flutter/koin_flutter.dart';
+
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
@@ -49,6 +51,7 @@ class _HomePageState extends State<HomePage> {
                   groupRepository: get<FirestoreGroupRepository>(),
                   userRepository: get<FirestoreUserRepository>(),
                   storageRepository: get<FirebaseStorageRepository>(),
+                  databaseRepository: get<RealtimeDatabaseRepository>(),
                 )),
         BlocProvider<GroupBloc>(
             create: (context) => GroupBloc(
