@@ -13,6 +13,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
 import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
@@ -62,11 +63,42 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     yield HomeLoadingState();
 
     try {
-      User user = await _userRepository.currentUser();
+      final SharedPreferences _pref = await SharedPreferences.getInstance();
+      User user;
+
+      // Load user and group basic information from shared pref. if is set up
+      if (_pref.getString('username') == null || _pref.getString('uid') == null) {
+        debugPrint("Load USER info from firestore and store to shared pref");
+        user = await _userRepository.currentUser();
+        _pref.setString('username', user.username);
+        _pref.setString('uid', user.uid);
+        if (user.groupId != "") _pref.setString('groupId', user.groupId);
+      } else {
+        debugPrint("Load USER info from shared pref");
+
+        user = User(
+          _pref.getString('uid'),
+          username: _pref.getString('username'),
+          groupId: _pref.getString('groupId') ?? '',
+        );
+      }
 
       if (user.groupId != "") {
-        Group group = await _groupRepository.getGroup(user.groupId);
-        //await _storageRepository.getAllFiles(group.groupId);
+        Group group;
+        if (_pref.getString('groupId') == null || _pref.getString('groupName') == null) {
+          debugPrint("Load GROUP info from firestore and store to shared pref");
+
+          group = await _groupRepository.getGroup(user.groupId);
+          _pref.setString('groupName', group.name);
+          _pref.setString('groupId', group.groupId);
+        } else {
+          debugPrint("Load GROUP info from shared pref");
+
+          group = Group(
+            _pref.getString('groupId'),
+            name: _pref.getString('groupName'),
+          );
+        }
         yield HomeReadyState(group: group, user: user);
       } else {
         yield HomeNoGroupState(user: user);

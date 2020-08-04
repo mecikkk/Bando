@@ -57,6 +57,7 @@ dependencies:
   animations: ^1.1.1
   connectivity_widget: ^0.1.7
   lottie: any
+  shared_preferences: ^0.5.8
 
   cupertino_icons: ^0.1.3
 
