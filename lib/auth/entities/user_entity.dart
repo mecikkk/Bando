@@ -7,23 +7,25 @@ class UserEntity extends Equatable{
   final String username;
   final String groupId;
   final bool shouldUpdateFiles;
+  final int lastUpdate;
 
-  const UserEntity(this.uid, this.username, this.groupId, this.shouldUpdateFiles);
+  const UserEntity(this.uid, this.username, this.groupId, this.shouldUpdateFiles, this.lastUpdate);
 
   Map<String, Object> toJson() {
     return {
       "username" : username,
       "groupId" : groupId,
       "shouldUpdateFiles" : shouldUpdateFiles,
+      "lastUpdate" : lastUpdate
     };
   }
 
   @override
-  List<Object> get props => [uid, username, groupId, shouldUpdateFiles];
+  List<Object> get props => [uid, username, groupId, shouldUpdateFiles, lastUpdate];
 
   @override
   String toString() {
-    return 'UserModel(uid : $uid, username : $username, groupId : $groupId, shouldUpdateFiles : $shouldUpdateFiles';
+    return 'UserModel(uid : $uid, username : $username, groupId : $groupId, shouldUpdateFiles : $shouldUpdateFiles, lastUpdate : $lastUpdate)';
   }
 
   static UserEntity fromJson(Map<String, Object> json) {
@@ -32,6 +34,7 @@ class UserEntity extends Equatable{
       json["username"] as String,
       json["groupId"] as String,
       json["shouldUpdateFiles"] as bool,
+      json["lastUpdate"] as int
     );
   }
 
@@ -41,6 +44,7 @@ class UserEntity extends Equatable{
       snapshot.data["username"],
       snapshot.data["groupId"],
       snapshot.data["shouldUpdateFiles"],
+      snapshot.data["lastUpdate"]
     );
   }
 
@@ -48,7 +52,8 @@ class UserEntity extends Equatable{
     return {
       "username" : username,
       "groupId" : groupId,
-      "shouldUpdateFiles" : shouldUpdateFiles
+      "shouldUpdateFiles" : shouldUpdateFiles,
+      "lastUpdate" : lastUpdate
     };
   }
 
@@ -56,7 +61,8 @@ class UserEntity extends Equatable{
     return {
       "uid" : uid,
       "username" : username,
-      "shouldUpdateFiles" : shouldUpdateFiles
+      "shouldUpdateFiles" : shouldUpdateFiles,
+      "lastUpdate" : lastUpdate
     };
   }
 

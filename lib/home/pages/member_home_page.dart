@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:bando/auth/blocs/group_bloc/group_bloc.dart';
+import 'package:bando/auth/models/update_info_model.dart';
 import 'package:bando/auth/pages/register_group_form.dart';
 import 'package:bando/file_manager/models/file_model.dart';
 import 'package:bando/file_manager/pages/library_chooser_page.dart';
-import 'package:bando/file_manager/utils/files_utils.dart';
 import 'package:bando/home/blocs/home_bloc.dart';
 import 'package:bando/home/widgets/songbook_listview.dart';
 import 'package:bando/home/widgets/status_info_widget.dart';
@@ -12,12 +10,14 @@ import 'package:bando/utils/consts.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:bando/widgets/search_textfield.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MemberHomePage extends StatefulWidget {
   @override
@@ -36,6 +36,8 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   double _fullWidth;
   String _groupName = "------";
   String _userName = "user";
+  String _groupId = "";
+  bool _needToUpdate = false;
   bool showSearchBar = false;
 
   HomeBloc _bloc;
@@ -43,12 +45,14 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   Widget _homeContentWidget;
   BuildContext _scaffoldContext;
 
+  List<UpdateInfo> _updates = List();
   List<FileModel> songbook = List();
 
   @override
   Future<void> initState() {
     super.initState();
     _bloc = BlocProvider.of<HomeBloc>(context);
+    _bloc.add(HomeInitialEvent());
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -71,7 +75,6 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   Widget build(BuildContext context) {
     _fullWidth = MediaQuery.of(context).size.width;
     updateStatusbar();
-    _loadCurrentUserInfo();
 
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) async {
@@ -79,10 +82,77 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
           _homeContentWidget = LoadingWidget(text: "", loadingType: LoadingType.LOADING);
         }
 
-        if (state is HomeReadyState) {
-          debugPrint("ready state !");
+        if (state is HomeCheckSongbookState) {
           _userName = state.user.username;
           _groupName = state.group.name;
+          _groupId = state.group.groupId;
+
+          _homeContentWidget = LoadingWidget(text: "", loadingType: LoadingType.LOADING);
+          _bloc.add(HomeCheckSongbookEvent(groupId: state.group.groupId));
+        }
+
+        if (state is HomeReadyState) {
+          debugPrint("ready state !");
+
+          if (songbook.isEmpty)
+            _bloc.add(HomeLoadLocalSongbookEvent());
+          else
+            _homeContentWidget = _buildMainContent(_scaffoldContext);
+
+          // TODO : Check update
+          _bloc.add(HomeCheckSongbookUpdatesEvent(groupId: _groupId));
+        }
+
+        if (state is HomeNeedToUpdateSongbookState) {
+          _needToUpdate = true;
+          _updates = state.updates;
+          _statusInfoGlobalKey.currentState.updateInfoState(false);
+          Scaffold.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                content: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text('Potrzebna aktualizacja'),],
+                ),
+                action: SnackBarAction(
+                  label: "Aktualizuj",
+                  onPressed: () {
+                    _showConfirmUpdateDialog(_updates);
+                  },
+                ),
+                backgroundColor: Colors.orangeAccent,
+              ),
+            );
+        }
+
+        if(state is HomeSongbookUpdateSuccessState) {
+          songbook.clear();
+          if (songbook.isEmpty)
+            _bloc.add(HomeLoadLocalSongbookEvent());
+          else
+            _homeContentWidget = _buildMainContent(_scaffoldContext);
+        }
+
+        if (state is HomeDownloadingProgressState) {
+          _homeContentWidget =
+              LoadingWidget(text: "Pobieranie ${state.currentFile} / ${state.count}", loadingType: LoadingType.UPLOAD);
+        }
+
+        if (state is HomeNeedToDownloadFilesState) {
+          debugPrint("Need To Download Files State");
+          _homeContentWidget = _buildDownloadLibraryWidget();
+        }
+
+        if (state is HomeEmptyLibraryState) {
+          debugPrint("Empty Library State");
+          _homeContentWidget = _buildLibraryConfigurationView();
+        }
+
+        if (state is HomeLocalSongbookLoadedState) {
+          debugPrint("Local Songbook loaded");
+          songbook = List.from(state.songbook);
           _homeContentWidget = _buildMainContent(_scaffoldContext);
         }
 
@@ -111,11 +181,11 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
           _bloc.add(HomeUploadSongbookToCloudEvent());
         }
         if (state is HomeUploadingSongbookState) {
-          _homeContentWidget = LoadingWidget(text: "Udostępniam pliki grupie...", loadingType: LoadingType.UPLOAD);
+          _homeContentWidget = LoadingWidget(text: state.message, loadingType: LoadingType.UPLOAD);
         }
         if (state is HomeUploadSongbookSuccessState) {
           debugPrint("Uploading success");
-          _homeContentWidget = _buildMainContent(_scaffoldContext);
+          _bloc.add(HomeLoadLocalSongbookEvent());
         }
         if (state is HomeSearchResultState) {
           if (_searchController.text.isEmpty)
@@ -156,8 +226,6 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
   }
 
   Widget _buildMainContent(BuildContext context) {
-    if (songbook.isEmpty) loadFilesList();
-
     return (songbook.isEmpty)
         ? _buildLibraryConfigurationView()
         : Container(
@@ -184,7 +252,7 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                   child: Material(
                     elevation: 10.0,
                     color: Theme.of(context).scaffoldBackgroundColor,
-                    shadowColor: Colors.black.withOpacity(0.5),
+                    shadowColor: Colors.black.withOpacity(0.9),
                     child: Padding(
                       padding: const EdgeInsets.only(right: 20.0, left: 20.0),
                       child: Row(
@@ -245,6 +313,12 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
     return StatusInfoWidget(
       key: _statusInfoGlobalKey,
       opacityAnimation: textAnimation,
+      onUpdatePressed: () {
+        if (_needToUpdate) {
+          debugPrint("CLICK");
+          _showConfirmUpdateDialog(_updates);
+        }
+      },
     );
   }
 
@@ -252,19 +326,6 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
     _bloc.add(
       HomeOnSearchFileEvent(fileName: query, songbook: songbook),
     );
-  }
-
-  loadFilesList() async {
-    debugPrint("Start Loading local songbook");
-    Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
-    if (songbookDirectory.listSync().isNotEmpty)
-      FilesUtils.getFilesInPath(songbookDirectory.path).then((value) {
-        debugPrint("getting files ended");
-        songbook = value;
-        setState(() {
-          debugPrint("Update UI");
-        });
-      });
   }
 
   Widget _buildLibraryConfigurationView() {
@@ -347,6 +408,65 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
           padding: EdgeInsets.only(left: 20, right: 20),
           child: Text(
             "Zawartość zostanie przeniesiona do specjalnie utworzonego folderu, oraz umieszczona w chmurze.",
+            style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDownloadLibraryWidget() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+          child: Text(
+            "Pobierz teksty",
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              fontSize: 26.0,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 8.0),
+          child: Text(
+            "Grupa posiada w chmurze bibliotekę z tekstami. Pobierz pliki na swoje urządzenie, aby móc korzystać z aplikacji offline.",
+            textAlign: TextAlign.start,
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: RaisedButton(
+                  onPressed: () {
+                    _bloc.add(HomeDownloadAllSongbookFilesEvent());
+                  },
+                  child: Text(
+                    "Pobierz".toUpperCase(),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  color: Theme.of(context).accentColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 20, right: 20),
+          child: Text(
+            "Zawartość zostanie przeniesiona do specjalnie utworzonego folderu /BandoSongbook.",
             style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),
           ),
         ),
@@ -476,8 +596,8 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
                     ),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      FirebaseAuth.instance.signOut();
+                    onTap: ()  {
+                      _logout();
                     },
                     child: Padding(
                       padding: const EdgeInsets.only(top: 20.0, right: 20.0),
@@ -505,6 +625,13 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
         ),
       ),
     );
+  }
+
+  void _logout() async {
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.clear();
+
+    FirebaseAuth.instance.signOut();
   }
 
   void updateStatusbar() async {
@@ -581,11 +708,89 @@ class _MemberHomePageState extends State<MemberHomePage> with SingleTickerProvid
     );
   }
 
-  void _loadCurrentUserInfo() async {
-    FirebaseAuth.instance.currentUser().then((value) {
-      _bloc.add(
-        HomeInitialEvent(),
-      );
+  Future<void> _showConfirmUpdateDialog(List<UpdateInfo> updates) async {
+    List<String> filesNames = List();
+    List<String> dates = List();
+
+    updates.forEach((info) {
+      info.files.forEach((element) {
+        filesNames.add(element['name']);
+      });
+      var date = Timestamp.fromMillisecondsSinceEpoch(info.time).toDate();
+      dates.add("${date.day}.${date.month}.${date.year} ${date.hour}:${date.minute}");
     });
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: <Widget>[
+              Text(
+                'Nowe teksty',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyText1.color,
+                ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+          content: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height / 3,
+              width : MediaQuery.of(context).size.width / 1.5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pojawiły się nowe pliki w bibliotece',
+                    style: TextStyle(fontSize: 14.0),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        (dates.length > 1) ? '${dates[dates.length-1]} - ${dates[0]}' : '${dates[0]}',
+                        style: TextStyle(fontSize: 13.0, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top : 16.0, left: 8, right: 8),
+                      child: ListView.builder(
+                          itemCount: filesNames.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top : 8.0, bottom: 8.0),
+                              child: Text("- ${filesNames[index]}"),
+                            );
+                          }),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('ANULUJ'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('AKTUALIZUJ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orangeAccent),),
+              onPressed: () {
+//                _selectDir(fileModel);
+                _bloc.add(HomeUpdateSongbookEvent(updates : updates));
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

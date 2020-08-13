@@ -6,6 +6,8 @@ import 'package:bando/dependency_injection.dart';
 import 'package:bando/home/pages/home_page.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,9 +15,11 @@ import 'package:koin/koin.dart';
 
 import 'file_manager/utils/files_utils.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = SimpleBlocObserver();
+
+
 
   var koin = startKoin((app) {
     app.printLogger(level: Level.debug);

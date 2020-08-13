@@ -1,24 +1,35 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:bando/auth/entities/update_file_info_entity.dart';
 import 'package:bando/auth/models/group_model.dart';
 import 'package:bando/auth/models/update_file_info_model.dart';
+import 'package:bando/auth/models/update_info_model.dart';
 import 'package:bando/auth/models/user_model.dart';
 import 'package:bando/file_manager/models/file_model.dart';
 import 'package:bando/file_manager/utils/files_utils.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
 import 'package:bando/repositories/realtime_database_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
 import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
 
 part 'home_event.dart';
+
 part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
@@ -56,6 +67,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       yield* _mapHomeUploadSongbookToCloudEventToState();
     } else if (event is HomeOnSearchFileEvent) {
       yield* _mapHomeOnSearchFileEventToState(event.fileName, event.songbook);
+    } else if (event is HomeLoadLocalSongbookEvent) {
+      yield* _mapHomeLoadLocalSongbookEventToState();
+    } else if (event is HomeDownloadAllSongbookFilesEvent) {
+      yield* _mapHomeDownloadAllSongbookFilesEventToState();
+    } else if (event is HomeCheckSongbookEvent) {
+      yield* _mapHomeCheckSongbookEventToState(event.groupId);
+    } else if (event is HomeCheckSongbookUpdatesEvent) {
+      yield* _mapHomeCheckSongbookUpdatesEventToState(event.groupId);
+    } else if (event is HomeUpdateSongbookEvent) {
+      yield* _mapHomeUpdateSongbookEventToState(event.updates);
     }
   }
 
@@ -65,6 +86,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       final SharedPreferences _pref = await SharedPreferences.getInstance();
       User user;
+
+      // TODO : CLEAR SHARED PREFERENCES WHEN LOGOUT
 
       // Load user and group basic information from shared pref. if is set up
       if (_pref.getString('username') == null || _pref.getString('uid') == null) {
@@ -99,13 +122,115 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             name: _pref.getString('groupName'),
           );
         }
-        yield HomeReadyState(group: group, user: user);
+
+        yield HomeCheckSongbookState(user: user, group: group);
       } else {
         yield HomeNoGroupState(user: user);
       }
     } catch (_) {
       yield HomeFailureState();
     }
+  }
+
+  Stream<HomeState> _mapHomeCheckSongbookEventToState(String groupId) async* {
+    Directory localSongbookDir = await FilesUtils.getSongbookDirectory();
+    bool isLocalSongbookEmpty = localSongbookDir.listSync(recursive: true).isEmpty;
+
+    if (isLocalSongbookEmpty) {
+      var list = await _groupRepository.getAllLyricsFilesInfo(groupId);
+      if (list.isEmpty)
+        yield HomeEmptyLibraryState();
+      else
+        yield HomeNeedToDownloadFilesState();
+    } else {
+      yield HomeReadyState();
+    }
+  }
+
+  Stream<HomeState> _mapHomeDownloadAllSongbookFilesEventToState() async* {
+
+    yield HomeUploadingSongbookState(message: "Pobieram teksty z biblioteki...");
+    String groupId = await _userRepository.getUserGroupId();
+
+
+    var list = await _groupRepository.getAllLyricsFilesInfo(groupId);
+
+    int counter = 1;
+
+    for (var fileInfo in list) {
+      final Directory systemDir = await FilesUtils.getSongbookDirectory();
+      final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
+
+      await downloadFile(uri: fileInfo.downloadUrl, fullPath: fullPath, count: list.length, current: counter);
+      yield HomeDownloadingProgressState(count: list.length, currentFile: counter);
+
+      counter++;
+    }
+
+    await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
+
+    yield HomeReadyState();
+  }
+
+  Future<void> downloadFile({String uri, String fullPath, int count, int current}) async {
+    Dio dio = Dio();
+
+    String progress = "0";
+
+    await dio.download(
+      uri,
+      fullPath,
+      onReceiveProgress: (rcv, total) {
+        progress = ((rcv / total) * 100).toStringAsFixed(0);
+      },
+      deleteOnError: true,
+    ).then((_) {
+      if (progress == "100") {
+        debugPrint("DONE !");
+        return;
+      }
+    });
+  }
+
+  Stream<HomeState> _mapHomeCheckSongbookUpdatesEventToState(String groupId) async* {
+
+    final int lastUpdate = await _userRepository.getLastUpdateTime();
+    final List<UpdateInfo> updates = await _databaseRepository.getUpdatedFiles(groupId, lastUpdate);
+
+    if(updates.isNotEmpty) {
+      // TODO : need to update
+      yield HomeNeedToUpdateSongbookState(updates: updates);
+    }
+
+  }
+
+  Stream<HomeState> _mapHomeUpdateSongbookEventToState(List<UpdateInfo> updates) async* {
+    yield HomeUploadingSongbookState(message: "Pobieranie...");
+
+    List<DatabaseLyricsFileInfo> list = List();
+
+    updates.forEach((element) {
+      element.files.forEach((map) {
+        list.add(DatabaseLyricsFileInfo.fromEntity(DatabaseLyricsFileInfoEntity.fromMap(map)));
+      });
+    });
+
+    int counter = 1;
+
+    for (var fileInfo in list) {
+      final Directory systemDir = await FilesUtils.getSongbookDirectory();
+      final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
+
+      await downloadFile(uri: fileInfo.downloadUrl, fullPath: fullPath, count: list.length, current: counter);
+      yield HomeDownloadingProgressState(count: list.length, currentFile: counter);
+
+      counter++;
+    }
+
+    await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
+
+    yield HomeSongbookUpdateSuccessState();
+
   }
 
   Stream<HomeState> _mapHomeGroupConfiguredEventToState(Group group) async* {
@@ -146,31 +271,34 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
 
     result = allFiles.where((file) => file.getFileName().toLowerCase().contains(fileName.toLowerCase())).toList();
-    print("YIELD !");
+
     yield HomeSearchResultState(searchResult: result);
   }
 
   Stream<HomeState> _mapHomeUploadSongbookToCloudEventToState() async* {
-    yield HomeUploadingSongbookState();
+    yield HomeUploadingSongbookState(message: "Udostępniam pliki grupie...");
 
     try {
       User user = await _userRepository.currentUser();
 
       _storageRepository.setGroupId(user.groupId);
 
-      await _createReferenceList();
+      await _createReferenceListOfAllFilesInSongbookDir();
 
-      List<UpdateFileInfo> uploadedFilesInfo = await _storageRepository.uploadAllFiles();
-      List<String> downloadUrls = uploadedFilesInfo.map((e) => e.downloadUrl).toList();
+      List<DatabaseLyricsFileInfo> uploadedFilesInfo = await _storageRepository.uploadAllFiles();
 
       await _groupRepository.setGroupShouldUpdateSongbook(user.uid, user.groupId);
-      await _groupRepository.setListOfUrls(downloadUrls, user.groupId);
+      await _groupRepository.updateLyricsFilesInfo(uploadedFilesInfo, user.groupId);
 
       await _databaseRepository.addUpdateInfo(
         user.groupId,
         user.username,
-        uploadedFilesInfo.map((e) => {'name': e.fileName, 'downloadUrl': e.downloadUrl}).toList(),
+        uploadedFilesInfo
+            .map((e) => {'name': e.fileName, 'downloadUrl': e.downloadUrl, 'localPath': e.localPath})
+            .toList(),
       );
+
+      await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
       yield HomeUploadSongbookSuccessState();
     } catch (e) {
@@ -179,7 +307,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
-  Future _createReferenceList({Directory dir, String firebasePath = ""}) async {
+  Future _createReferenceListOfAllFilesInSongbookDir({Directory dir, String firebasePath = ""}) async {
     Directory songbookDir;
     String firebaseStoragePath = firebasePath;
 
@@ -197,11 +325,28 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         else
           firebaseStoragePath = "$firebaseStoragePath/${basename(element.path)}";
 
-        _createReferenceList(dir: Directory(element.path), firebasePath: firebaseStoragePath);
+        _createReferenceListOfAllFilesInSongbookDir(dir: Directory(element.path), firebasePath: firebaseStoragePath);
       } else {
 //        await _storageRepository.uploadFile(File(element.path), subDir: firebaseStoragePath);
         _storageRepository.addStorageReference(File(element.path), subDir: firebaseStoragePath);
       }
+    }
+  }
+
+  Stream<HomeState> _mapHomeLoadLocalSongbookEventToState() async* {
+    yield HomeLoadingState();
+    List<FileModel> songbook = List();
+
+    try {
+      debugPrint("Start Loading local songbook");
+      Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
+
+      if (songbookDirectory.listSync().isNotEmpty) songbook = await FilesUtils.getFilesInPath(songbookDirectory.path);
+
+      yield HomeLocalSongbookLoadedState(songbook: songbook);
+    } catch (e) {
+      debugPrint("Getting local songbook error : $e");
+      yield HomeFailureState();
     }
   }
 }

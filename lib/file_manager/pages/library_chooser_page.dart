@@ -97,7 +97,7 @@ class LibraryChooserState extends State<LibraryChooser> {
           itemCount: files.length,
           itemBuilder: (BuildContext context, int index) {
             return new EntryFileItem(files[index], context, onLongClick : (file) {
-              _showConfirmDialog(file);
+              //_showConfirmDialog(file);
             },
             onClick: (_) {},);
           }),

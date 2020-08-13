@@ -1,11 +1,12 @@
 import 'package:bando/auth/entities/update_info_entity.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class UpdateInfo {
-  final String time;
+  final int time;
   final String whoUpdated;
   final String operation;
-  final List<Map<String, dynamic>> files;
+  final List<Map<dynamic, dynamic>> files;
 
   UpdateInfo({
     @required this.time,
@@ -14,7 +15,7 @@ class UpdateInfo {
     @required this.files,
   });
 
-  UpdateInfo copyWith({String time, String whoUpdated, String operation, List<Map<String, dynamic>> files}) {
+  UpdateInfo copyWith({String time, String whoUpdated, String operation, List<Map<dynamic, dynamic>> files}) {
     return UpdateInfo(
       time: time ?? this.time,
       whoUpdated: whoUpdated ?? this.whoUpdated,
@@ -39,7 +40,7 @@ class UpdateInfo {
 
   @override
   String toString() {
-    return "UpdateInfo(time : $time, whoUpdated : $whoUpdated, operation : $operation, files : $files)";
+    return "UpdateInfo(time : $time (${Timestamp.fromMillisecondsSinceEpoch(time).toDate().toString()}), whoUpdated : $whoUpdated, operation : $operation, files : $files)";
   }
 
   UpdateInfoEntity toEntity() {

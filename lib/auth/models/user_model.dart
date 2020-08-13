@@ -6,15 +6,17 @@ class User {
   String groupId;
   final String username;
   final bool shouldUpdateFiles;
+  final int lastUpdate;
 
-  User(this.uid, {this.username = 'User', this.groupId = '', this.shouldUpdateFiles = false});
+  User(this.uid, {this.username = 'User', this.groupId = '', this.shouldUpdateFiles = false, this.lastUpdate = 0});
 
-  User copyWith({String uid, String username, String groupId, bool shouldUpdateFiles}) {
+  User copyWith({String uid, String username, String groupId, bool shouldUpdateFiles, int lastUpdate}) {
     return User(
       uid ?? this.uid,
       username : username ?? this.username,
       groupId: groupId ?? this.groupId,
       shouldUpdateFiles: shouldUpdateFiles ?? this.shouldUpdateFiles,
+      lastUpdate: lastUpdate ?? this.lastUpdate
     );
   }
 
@@ -30,16 +32,17 @@ class User {
         uid == other.uid &&
         username == other.username &&
         groupId == other.groupId &&
-        shouldUpdateFiles == other.shouldUpdateFiles;
+        shouldUpdateFiles == other.shouldUpdateFiles &&
+        lastUpdate == other.lastUpdate;
 
 
   @override
   String toString() {
-    return "User(uid : $uid, username : $username, groupId : $groupId, shouldUpdateFiles : $shouldUpdateFiles)";
+    return "User(uid : $uid, username : $username, groupId : $groupId, shouldUpdateFiles : $shouldUpdateFiles, lastUpdate : $lastUpdate)";
   }
 
   UserEntity toEntity() {
-    return UserEntity(uid, username, groupId, shouldUpdateFiles);
+    return UserEntity(uid, username, groupId, shouldUpdateFiles, lastUpdate);
   }
 
   static User fromEntity(UserEntity entity) {
@@ -47,7 +50,8 @@ class User {
       entity.uid,
       username : entity.username,
       groupId : entity.groupId,
-      shouldUpdateFiles: entity.shouldUpdateFiles
+      shouldUpdateFiles: entity.shouldUpdateFiles,
+      lastUpdate: entity.lastUpdate
     );
   }
 }

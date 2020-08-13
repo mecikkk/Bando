@@ -1,7 +1,11 @@
 import 'package:bando/auth/entities/group_entity.dart';
+import 'package:bando/auth/entities/update_file_info_entity.dart';
 import 'package:bando/auth/models/group_model.dart';
+import 'package:bando/auth/models/update_file_info_model.dart';
 import 'package:bando/auth/models/user_model.dart';
+import 'package:bando/file_manager/models/file_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 
 class FirestoreGroupRepository {
 
@@ -42,11 +46,28 @@ class FirestoreGroupRepository {
     return;
   }
 
-  Future<void> setListOfUrls(List<String> downloadUrls, String groupId) {
-
-    return groupCollection.document(groupId).updateData({
-      'songbookUrls' : downloadUrls
+  Future<void> updateLyricsFilesInfo(List<DatabaseLyricsFileInfo> downloadUrls, String groupId) async {
+    downloadUrls.forEach((element) async {
+      await groupCollection.document(groupId).collection('songbook').document().setData(
+        element.toEntity().toJson()
+      );
     });
+
+//
+//    return groupCollection.document(groupId).updateData({
+//      'songbookUrls' : downloadUrls
+//    });
+  }
+
+  Future<List<DatabaseLyricsFileInfo>> getAllLyricsFilesInfo(String groupId) async {
+    List<DatabaseLyricsFileInfo> lyricsFilesInfo = List();
+
+    QuerySnapshot querySnapshot = await groupCollection.document(groupId).collection('songbook').getDocuments();
+
+    for(var doc in querySnapshot.documents)
+      lyricsFilesInfo.add(DatabaseLyricsFileInfo.fromEntity(DatabaseLyricsFileInfoEntity.fromSnapshot(doc)));
+
+    return lyricsFilesInfo;
   }
 
   Future<bool> shouldUserUpdateSongbook(String uid, String groupId) async {

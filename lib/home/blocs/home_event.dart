@@ -21,6 +21,24 @@ class HomeConfigureSongbookDirectoryEvent extends HomeEvent {
 class HomeUploadSongbookToCloudEvent extends HomeEvent {
 }
 
+class HomeCheckSongbookUpdatesEvent extends HomeEvent {
+  final String groupId;
+
+  HomeCheckSongbookUpdatesEvent({@required this.groupId});
+
+  @override
+  List<Object> get props => [groupId];
+}
+
+class HomeUpdateSongbookEvent extends HomeEvent {
+  final List<UpdateInfo> updates;
+
+  HomeUpdateSongbookEvent({@required this.updates});
+
+  @override
+  List<Object> get props => [updates];
+}
+
 class HomeOnSearchFileEvent extends HomeEvent {
 
   final String fileName;
@@ -31,6 +49,19 @@ class HomeOnSearchFileEvent extends HomeEvent {
   @override
   List<Object> get props => [fileName, songbook];
 }
+
+class HomeCheckSongbookEvent extends HomeEvent {
+  final String groupId;
+
+  HomeCheckSongbookEvent({@required this.groupId});
+
+  @override
+  List<Object> get props => [groupId];
+}
+
+class HomeLoadLocalSongbookEvent extends HomeEvent {}
+
+class HomeDownloadAllSongbookFilesEvent extends HomeEvent {}
 
 class HomeGroupConfiguredEvent extends HomeEvent {
   final Group group;

@@ -9,7 +9,7 @@ class AuthRepository {
 
   AuthRepository({FirebaseAuth firebaseAuth, GoogleSignIn googleSignIn})
       : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ?? GoogleSignIn() ;
 
   Future<FirebaseUser> signInWithGoogle() async {
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
@@ -32,6 +32,7 @@ class AuthRepository {
   }
 
   Future<void> signUp({String email, String password}) async {
+
     return await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,

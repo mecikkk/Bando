@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 class StatusInfoWidget extends StatefulWidget {
 
   final dynamic opacityAnimation;
+  final Function onUpdatePressed;
 
-  StatusInfoWidget({this.opacityAnimation, key}) : super(key : key);
+  StatusInfoWidget({this.opacityAnimation, this.onUpdatePressed, key}) : super(key : key);
 
   @override
   State<StatefulWidget> createState() {
@@ -24,50 +25,53 @@ class StatusInfoWidgetState extends State<StatusInfoWidget> {
   Widget build(BuildContext context) {
     return AnimatedOpacityWidget(
       opacity: widget.opacityAnimation,
-      child: ConnectivityWidget(
-        showOfflineBanner: false,
-        builder: (context, isOnline) {
-          return isOnline ? Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(left : 8.0, right: 8.0),
-                child: Icon(
-                  isSongbookActual ? Icons.check_circle : Icons.error,
-                  color: isSongbookActual ? Constants.positiveGreenColor.withOpacity(0.8) : Colors.orangeAccent,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left : 8.0, right: 8.0),
-                child: Text(
-                  isSongbookActual ? "Pliki aktualne" : "Nowe pliki w bibliotece",
-                  style: TextStyle(
+      child: GestureDetector(
+        onTap: widget.onUpdatePressed,
+        child: ConnectivityWidget(
+          showOfflineBanner: false,
+          builder: (context, isOnline) {
+            return isOnline ? Row(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(left : 8.0, right: 8.0),
+                  child: Icon(
+                    isSongbookActual ? Icons.check_circle : Icons.error,
                     color: isSongbookActual ? Constants.positiveGreenColor.withOpacity(0.8) : Colors.orangeAccent,
                   ),
                 ),
-              ),
-            ],
-          ) : Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.portable_wifi_off,
-                  color: Colors.grey,
+                Padding(
+                  padding: const EdgeInsets.only(left : 8.0, right: 8.0),
+                  child: Text(
+                    isSongbookActual ? "Pliki aktualne" : "Nowe teksty w bibliotece",
+                    style: TextStyle(
+                      color: isSongbookActual ? Constants.positiveGreenColor.withOpacity(0.8) : Colors.orangeAccent,
+                    ),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  "Offline",
-                  style: TextStyle(
+              ],
+            ) : Row(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(
+                    Icons.portable_wifi_off,
                     color: Colors.grey,
                   ),
                 ),
-              ),
-            ],
-          )
-          ;
-        },
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    "Offline",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            )
+            ;
+          },
+        ),
       ),
     );
   }

@@ -1,5 +1,5 @@
 name: bando
-description:  An application for synchronizing work with lyrics for music bands.
+description:  Application to synchronize work with lyrics for music bands.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -28,6 +28,7 @@ dependencies:
   cloud_firestore: any
   firebase_database: any
   firebase_core: any
+  cloud_functions: ^0.5.0
   google_sign_in: any
   firebase_auth: any
   firebase_analytics: any
@@ -42,6 +43,8 @@ dependencies:
   qr_flutter: ^3.2.0
   esys_flutter_share: ^1.0.2
 
+  dio: ^3.0.10
+  http: ^0.12.2
   pdf_viewer_plugin: ^1.0.0+2
   bloc: ^5.0.1
   flutter_bloc: ^5.0.1
@@ -49,7 +52,7 @@ dependencies:
   path_provider: ^1.6.11
   open_file: ^3.0.1
   permission_handler: ^5.0.1+1
-  flutter_svg: ^0.17.4
+  flutter_svg: ^0.18.0
   smooth_page_indicator: ^0.1.5
   koin: ^0.10.0
   koin_flutter: ^0.6.3
@@ -72,7 +75,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - doc.svg
     - folder.svg
     - audio-doc.svg
     - logo_gradient.png

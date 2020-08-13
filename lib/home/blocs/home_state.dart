@@ -19,18 +19,62 @@ class HomeNoGroupState extends HomeState {
 
 class HomeLoadingState extends HomeState {}
 
-class HomeUploadingSongbookState extends HomeState {}
+class HomeUploadingSongbookState extends HomeState {
+  final String message;
 
-class HomeUploadSongbookSuccessState extends HomeState {}
+  HomeUploadingSongbookState({@required this.message});
 
-class HomeReadyState extends HomeState {
+  @override
+  List<Object> get props => [message];
+}
+
+class HomeCheckSongbookState extends HomeState {
   final Group group;
   final User user;
 
-  HomeReadyState({@required this.group, @required this.user});
+  HomeCheckSongbookState({@required this.group, @required this.user});
 
   @override
   List<Object> get props => [group, user];
+}
+
+class HomeNeedToUpdateSongbookState extends HomeState {
+  final List<UpdateInfo> updates;
+
+  HomeNeedToUpdateSongbookState({@required this.updates});
+
+  @override
+  List<Object> get props => [updates];
+}
+
+class HomeUploadSongbookSuccessState extends HomeState {}
+
+class HomeSongbookUpdateSuccessState extends HomeState {}
+
+class HomeNeedToDownloadFilesState extends HomeState {}
+
+class HomeLocalSongbookLoadedState extends HomeState {
+  final List<FileModel> songbook;
+
+  HomeLocalSongbookLoadedState({@required this.songbook});
+
+  @override
+  List<Object> get props => [songbook];
+}
+
+class HomeEmptyLibraryState extends HomeState {}
+
+class HomeReadyState extends HomeState {}
+
+class HomeDownloadingProgressState extends HomeState {
+  final int currentFile;
+  final int count;
+
+
+  HomeDownloadingProgressState({@required this.currentFile,@required this.count});
+
+  @override
+  List<Object> get props => [currentFile, count];
 }
 
 class HomeGroupConfiguredState extends HomeState {
