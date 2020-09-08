@@ -1,3 +1,4 @@
+import 'package:bando/utils/consts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -28,11 +29,11 @@ class GradientRaisedButton extends StatelessWidget {
               0.0),
           child: Ink(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: colors,
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
+              gradient: RadialGradient(
+                  radius: 7.5,
+                  stops: [0.001, 0.4, 1.0],
+                  center: Alignment.topRight,
+                  colors: [Constants.getSecondAccentColor(context), Constants.getAccentColor(context), Constants.getStartColor(context)]),
               borderRadius: BorderRadius.circular(
                   30.0),
 

@@ -32,7 +32,7 @@
        offset="0" />
     <stop
        id="stop4"
-       stop-color="#ffffff"
+       stop-color="#000000"
        offset="1" />
   </linearGradient>
   <linearGradient

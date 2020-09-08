@@ -63,7 +63,7 @@ class RoundedTextFieldState extends State<RoundedTextField> {
         ),
         labelText: widget.labelText,
         suffixIcon: GestureDetector(
-          child: Icon(widget.obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.white,),
+          child: Icon(widget.obscureText ? Icons.visibility_off : Icons.visibility, color: Theme.of(context).textTheme.bodyText1.color,),
           onTap: widget.changePasswordVisibility,
         ),
         floatingLabelBehavior: FloatingLabelBehavior.never,

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:bando/auth/models/update_file_info_model.dart';
-import 'package:bando/file_manager/models/file_model.dart';
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/models/file_model.dart';
+import 'package:bando/models/database_lyrics_file_info_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -31,7 +31,7 @@ class FirebaseStorageRepository {
 
         String downloadUrl = await task.ref.getDownloadURL();
         downloadUrls.add(new DatabaseLyricsFileInfo(
-          fileName: basename(fileTmp.path),
+          fileNameWithExtension: basename(fileTmp.path),
           downloadUrl: downloadUrl,
           localPath: localPath
         ));
@@ -42,6 +42,36 @@ class FirebaseStorageRepository {
       return downloadUrls;
     } catch (e) {
       print("StorageRepository error : $e");
+      return null;
+    }
+  }
+
+  Future<List<DatabaseLyricsFileInfo>> uploadFiles(List<Map<String, dynamic>> references) async {
+    List<DatabaseLyricsFileInfo> downloadUrls = List();
+
+    try {
+      for (var map in references) {
+        StorageReference ref = FirebaseStorage.instance.ref().child("${map['reference']}");
+        StorageTaskSnapshot task = await ref.putFile(map['file']).onComplete;
+
+        File fileTmp = (map['file'] as File);
+        String localPath = fileTmp.path.substring(fileTmp.path.lastIndexOf('/BandoSongbook') + 15);
+
+        debugPrint("LocalPath test : $localPath");
+
+        String downloadUrl = await task.ref.getDownloadURL();
+        downloadUrls.add(new DatabaseLyricsFileInfo(
+            fileNameWithExtension: basename(fileTmp.path),
+            downloadUrl: downloadUrl,
+            localPath: localPath
+        ));
+        print("UPLOADING | Add new download url : $downloadUrl");
+      }
+
+      print("End of uploading files");
+      return downloadUrls;
+    } catch (e) {
+      debugPrint("StorageRepository error : $e");
       return null;
     }
   }
@@ -67,6 +97,16 @@ class FirebaseStorageRepository {
       reference = "$_groupId/songbook/$subDir/${basename(file.path)}";
     else
       reference = "$_groupId/songbook/${basename(file.path)}";
+
+    print("Create new reference of file : ${file.path} | Storage ref : $reference}");
+
+    storageReferences.add({'reference': reference, 'file': file});
+  }
+
+  void addSingleStorageReference(File file, String path) {
+    String reference;
+
+    reference = "$_groupId/songbook/$path";
 
     print("Create new reference of file : ${file.path} | Storage ref : $reference}");
 

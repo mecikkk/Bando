@@ -1,7 +1,7 @@
-import 'package:bando/auth/entities/user_entity.dart';
-import 'package:bando/auth/models/user_model.dart';
+
+import 'package:bando/entities/user_entity.dart';
+import 'package:bando/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreUserRepository {
@@ -23,10 +23,10 @@ class FirestoreUserRepository {
     User user = await getUser(uid);
     user.groupId = groupId;
 
-    // Add groupId claim for firebase storage rules
-    await CloudFunctions.instance
-        .getHttpsCallable(functionName: "addGroupToken")
-        .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
+    // // Add groupId claim for firebase storage rules
+    // await CloudFunctions.instance
+    //     .getHttpsCallable(functionName: "addGroupToken")
+    //     .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
 
     return usersCollection.document(uid).updateData(user.toEntity().toDocument());
   }

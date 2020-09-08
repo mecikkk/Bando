@@ -1,5 +1,6 @@
-import 'package:bando/auth/entities/update_info_entity.dart';
-import 'package:bando/auth/models/update_info_model.dart';
+
+import 'package:bando/entities/deleted_files_entity.dart';
+import 'package:bando/models/deleted_files_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,17 +12,16 @@ class RealtimeDatabaseRepository {
     String dateId =
         "${currentDate.day}-${currentDate.month}-${currentDate.year}x${currentDate.hour}:${currentDate.minute}:${currentDate.second}";
 
-    return FirebaseDatabase.instance.reference().child(groupId).child("updates").child(dateId).set(new UpdateInfo(
+    return FirebaseDatabase.instance.reference().child(groupId).child("updates").child(dateId).set(new DeletedFiles(
           time: milliseconds,
           whoUpdated: userName,
-          operation: "ADD",
           files: updatedFiles,
         ).toEntity().toJson());
   }
 
-  Future<List<UpdateInfo>> getUpdatedFiles(String groupId, int lastUpdate) async {
+  Future<List<DeletedFiles>> getUpdatedFiles(String groupId, int lastUpdate) async {
     List<Map<dynamic, dynamic>> snapshots = List();
-    List<UpdateInfo> updates = List();
+    List<DeletedFiles> updates = List();
 
     await FirebaseDatabase.instance
         .reference()
@@ -36,7 +36,7 @@ class RealtimeDatabaseRepository {
       if (element != null) {
         element.values.toList().forEach((element) {
           Map<dynamic, dynamic> snap = element;
-          updates.add(UpdateInfo.fromEntity(UpdateInfoEntity.fromMap(snap)));
+          updates.add(DeletedFiles.fromEntity(DeletedFilesEntity.fromMap(snap)));
         });
       }
     });

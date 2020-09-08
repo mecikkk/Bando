@@ -1,25 +1,21 @@
-import 'package:bando/auth/blocs/auth_bloc/auth_bloc.dart';
-import 'package:bando/auth/pages/login_page.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/auth_repository.dart';
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/dependency_injection.dart';
-import 'package:bando/home/pages/home_page.dart';
+import 'package:bando/pages/auth_pages/login_page.dart';
+import 'package:bando/pages/home_pages/home_page.dart';
+import 'package:bando/repositories/auth_repository.dart';
 import 'package:bando/utils/consts.dart';
 import 'package:bloc/bloc.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:koin/koin.dart';
 
-import 'file_manager/utils/files_utils.dart';
+
+import 'blocs/auth_bloc/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = SimpleBlocObserver();
-
-
 
   var koin = startKoin((app) {
     app.printLogger(level: Level.debug);
@@ -37,8 +33,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FilesUtils.generateSongbookDirectory();
-
     Brightness _systemNavIcons;
     if (Theme.of(context).brightness == Brightness.light)
       _systemNavIcons = Brightness.dark;
@@ -61,12 +55,11 @@ class MyApp extends StatelessWidget {
       darkTheme: Constants.darkTheme,
       home: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
-
           swapPages(state);
 
           return AnimatedSwitcher(
-                  duration: Duration(milliseconds: 800),
-                  child: currentPage,
+            duration: Duration(milliseconds: 800),
+            child: currentPage,
           );
         },
       ),
@@ -75,15 +68,11 @@ class MyApp extends StatelessWidget {
 
   void swapPages(AuthState state) {
     if (state is Unauthenticated)
-      currentPage = LoginPage(
-      );
+      currentPage = LoginPage();
     else if (state is Authenticated) {
-      currentPage = HomePage(
-        title: "Bando",
-      );
+      currentPage = HomePage(title: "Bando");
     } else {
-      currentPage = _buildHeader(
-      );
+      currentPage = _buildHeader();
     }
   }
 

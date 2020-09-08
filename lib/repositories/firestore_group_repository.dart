@@ -1,11 +1,11 @@
-import 'package:bando/auth/entities/group_entity.dart';
-import 'package:bando/auth/entities/update_file_info_entity.dart';
-import 'package:bando/auth/models/group_model.dart';
-import 'package:bando/auth/models/update_file_info_model.dart';
-import 'package:bando/auth/models/user_model.dart';
-import 'package:bando/file_manager/models/file_model.dart';
+import 'package:bando/entities/database_lyrics_file_info_entity.dart';
+import 'package:bando/entities/group_entity.dart';
+import 'package:bando/models/database_lyrics_file_info_model.dart';
+import 'package:bando/models/group_model.dart';
+import 'package:bando/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreGroupRepository {
 
@@ -17,9 +17,21 @@ class FirestoreGroupRepository {
 
   Future<Group> addUserToGroup(String groupId, User user) async {
     Group group = await getGroup(groupId);
+
+    // Add groupId claim for firebase storage rules
+    HttpsCallableResult result = await CloudFunctions.instance
+        .getHttpsCallable(functionName: "addGroupToken")
+        .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
+
+
+    FirebaseUser fUser = await FirebaseAuth.instance.currentUser();
+
+    IdTokenResult tokenResult = await fUser.getIdToken(refresh: true);
+
     group.members.add(user.toEntity().toMap());
 
     await groupCollection.document(groupId).setData(group.toEntity().toDocument());
+
     return group;
   }
 

@@ -7,12 +7,14 @@ class SearchTextField extends AnimatedWidget {
   final String labelText;
   final double maxWidth;
   final Function onChanged;
+  final Color searchBarOutlineFocusColor;
 
   SearchTextField({
     @required this.controller,
     @required this.maxWidth,
     @required this.labelText,
     @required this.onChanged,
+    @required this.searchBarOutlineFocusColor,
     @required width,
   }) : super(listenable: width);
 
@@ -52,7 +54,7 @@ class SearchTextField extends AnimatedWidget {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(35.0),
       borderSide: BorderSide(
-        color: Colors.white,
+        color: searchBarOutlineFocusColor,
       ),
     );
   }

@@ -1,11 +1,12 @@
+import 'package:bando/repositories/auth_repository.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
+import 'package:bando/repositories/firestore_group_repository.dart';
+import 'package:bando/repositories/firestore_user_repository.dart';
 import 'package:bando/repositories/realtime_database_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:koin/koin.dart';
 
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/auth_repository.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_group_repository.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/repositories/firestore_user_repository.dart';
+
 
 var authModule = Module()
     ..single<AuthRepository>((scope) => AuthRepository(firebaseAuth: FirebaseAuth.instance))
