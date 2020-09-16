@@ -5,7 +5,8 @@ import 'package:bando/pages/auth_pages/register_group_form.dart';
 import 'package:bando/repositories/auth_repository.dart';
 import 'package:bando/repositories/firestore_group_repository.dart';
 import 'package:bando/repositories/firestore_user_repository.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
+import 'package:bando/utils/util.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Constants.updateNavBarTheme(context);
+    updateStatusbarAndNavBar(context, showWhiteStatusBarIcons: !AppThemes.isLightTheme(context));
 
     return Scaffold(
       body: Stack(
@@ -38,18 +39,8 @@ class RegisterPage extends StatelessWidget {
           Container(
             child: MultiBlocProvider(
               providers: [
-                BlocProvider<RegisterBloc>(
-                  create: (context) => RegisterBloc(
-                    authRepository: get<AuthRepository>(),
-                    userRepository: get<FirestoreUserRepository>(),
-                  ),
-                ),
-                BlocProvider<GroupBloc>(
-                  create: (context) => GroupBloc(
-                    userRepository: get<FirestoreUserRepository>(),
-                    groupRepository: get<FirestoreGroupRepository>(),
-                  ),
-                )
+                BlocProvider<RegisterBloc>(create: (context) => get<RegisterBloc>()),
+                BlocProvider<GroupBloc>(create: (context) => get<GroupBloc>())
               ],
               child: PageView(
                 physics: NeverScrollableScrollPhysics(),
@@ -77,7 +68,7 @@ class RegisterPage extends StatelessWidget {
                     paintStyle: PaintingStyle.stroke,
                     strokeWidth: 0,
                     dotColor: Colors.grey,
-                    activeDotColor: Constants.getSecondAccentColor(context)),
+                    activeDotColor: AppThemes.getSecondAccentColor(context)),
               ),
             ),
           ),
@@ -89,24 +80,22 @@ class RegisterPage extends StatelessWidget {
               offlineBanner: Container(
                 height: 34,
                 decoration: BoxDecoration(
-                    color: Constants.errorColorDark,
+                    color: AppThemes.errorColorDark,
                     borderRadius: BorderRadius.all(Radius.circular(15.0)),
                     boxShadow: [
                       BoxShadow(
                         blurRadius: 10,
                         spreadRadius: 0,
-                        offset: Offset(0,0),
+                        offset: Offset(0, 0),
                         color: Colors.black.withOpacity(0.5),
                       )
-                    ]
-                ),
+                    ]),
                 child: Center(
                   child: Text("Brak połączenia z internetem"),
                 ),
               ),
               builder: (context, isOnline) {
-                return SizedBox(
-                );
+                return SizedBox();
               },
             ),
           )

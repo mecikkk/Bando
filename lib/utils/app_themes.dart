@@ -5,7 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class Constants {
+class AppThemes {
   static Color lightAccentColor = Color(0xff7889eb);
   static Color darkAccentColor = Color(0xff5e77ff);
   static Color lightStartColor = Color(0xff72cbf7);
@@ -20,7 +20,7 @@ class Constants {
 
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    accentColor: Constants.lightAccentColor,
+    accentColor: AppThemes.lightAccentColor,
     scaffoldBackgroundColor: Color(0xfff3f4f9),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
@@ -29,7 +29,7 @@ class Constants {
 
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    accentColor: Constants.darkAccentColor,
+    accentColor: AppThemes.darkAccentColor,
     scaffoldBackgroundColor: Color(0xff27272b),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
@@ -49,20 +49,6 @@ class Constants {
 
   static bool isLightTheme(BuildContext context) {
     return (Theme.of(context).brightness == Brightness.light);
-  }
-
-  static updateNavBarTheme(BuildContext context) {
-    Brightness _systemNavIcons;
-    if(Theme.of(context).brightness == Brightness.light) _systemNavIcons = Brightness.dark;
-    else _systemNavIcons = Brightness.light;
-
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-          systemNavigationBarIconBrightness: _systemNavIcons
-      ),
-    );
   }
 
   static RadialGradient getGradient(BuildContext context, AlignmentGeometry begin, AlignmentGeometry end) {

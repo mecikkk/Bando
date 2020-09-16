@@ -1,7 +1,7 @@
 import 'package:bando/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/models/group_model.dart';
 import 'package:bando/pages/auth_pages/success_page.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/simple_rounded_card.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:koin_flutter/koin_flutter.dart';
 
 class RegisterGroupForm extends StatefulWidget {
   @override
@@ -21,7 +22,7 @@ class RegisterGroupForm extends StatefulWidget {
 
 class RegisterGroupFormState extends State<RegisterGroupForm> {
   //RegisterBloc _registerBloc;
-  GroupBloc _groupBloc;
+  GroupBloc _bloc;
   BuildContext scaffoldContext;
 
   final PageController _groupPageViewController = PageController();
@@ -38,12 +39,13 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
   @override
   void initState() {
     super.initState();
-    //_registerBloc = BlocProvider.of<RegisterBloc>(context);
+    _bloc = get<GroupBloc>();
   }
 
   @override
   void dispose() {
     super.dispose();
+    _bloc.close();
     _groupNameController.dispose();
     _groupPageViewController.dispose();
   }
@@ -157,7 +159,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [Text('Konfiguracja zakończona pomyślnie !'), Icon(Icons.check)],
                 ),
-                backgroundColor: Constants.getPositiveGreenColor(context),
+                backgroundColor: AppThemes.getPositiveGreenColor(context),
               ),
             );
 
@@ -178,19 +180,18 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
         if (state is GroupInitialState) {
           if (state.configurationType == GroupConfigurationType.CREATING_GROUP) {
-            _newGroupCardColor = Constants.getAccentColor(context);
+            _newGroupCardColor = AppThemes.getAccentColor(context);
             _joinToGroupCardColor = Colors.black12;
             _groupPageViewController.animateToPage(0, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
           } else {
             _newGroupCardColor = Colors.black12;
-            _joinToGroupCardColor = Constants.getSecondAccentColor(context);
+            _joinToGroupCardColor = AppThemes.getSecondAccentColor(context);
             _groupPageViewController.animateToPage(1, duration: Duration(milliseconds: 500), curve: Curves.easeOutCirc);
           }
         }
       },
       child: BlocBuilder<GroupBloc, GroupState>(
         builder: (context, state) {
-          _groupBloc = BlocProvider.of<GroupBloc>(context);
 
           return Scaffold(body: Builder(
             builder: (scaffold) {
@@ -210,7 +211,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                           children: <Widget>[
                             Expanded(
                               child: buildNewGroupCard(onTap: () {
-                                _groupBloc.add(
+                                _bloc.add(
                                   GroupConfigurationTypeChangeEvent(
                                       configurationType: GroupConfigurationType.CREATING_GROUP),
                                 );
@@ -218,7 +219,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                             ),
                             Expanded(
                               child: buildJoinToGroupCard(onTap: () {
-                                _groupBloc.add(
+                                _bloc.add(
                                   GroupConfigurationTypeChangeEvent(
                                       configurationType: GroupConfigurationType.JOINING_TO_GROUP),
                                 );
@@ -394,7 +395,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
                 child: GradientRaisedButton(
                   text: "Utwórz grupę",
                   height: 50.0,
-                  colors: [Constants.getAccentColor(context), Constants.getSecondAccentColor(context)],
+                  colors: [AppThemes.getAccentColor(context), AppThemes.getSecondAccentColor(context)],
                   onPressed: _groupNameController.text.isNotEmpty ? _onCreateGroupClick : null,
                 )),
           ),
@@ -446,7 +447,7 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
             padding: EdgeInsets.only(left: 20, right: 20, top: 20),
             child: GradientRaisedButton(
               text: "SKANUJ",
-              colors: [Constants.getAccentColor(context), Constants.getSecondAccentColor(context)],
+              colors: [AppThemes.getAccentColor(context), AppThemes.getSecondAccentColor(context)],
               height: 50,
               onPressed: () {
                 scanQRCode().then((value) {
@@ -491,44 +492,14 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
           ),
           Align(
             alignment: Alignment.center,
-            child: GestureDetector(
-              onTap: () {
+            child: GradientRaisedButton(
+              text: "Dołącz do grupy",
+              height: 40,
+              width: 250.0,
+              colors: [AppThemes.getStartColor(context), AppThemes.getSecondAccentColor(context), AppThemes.getSecondAccentColor(context)],
+              onPressed: () {
                 _onJoinToGroupClick();
               },
-              child: Container(
-                height: 50,
-                width: 170,
-                decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(70),
-                    border: Border.all(color: Constants.getPositiveGreenColor(context)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Constants.getPositiveGreenColor(context),
-                        blurRadius: 15,
-                        spreadRadius: 1,
-                        offset: Offset(0, 0),
-                      )
-                    ]),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      Icons.check,
-                      color: Constants.getPositiveGreenColor(context),
-                      size: 30,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8, right: 8),
-                      child: Text(
-                        "Dołącz".toUpperCase(),
-                        style: TextStyle(fontSize: 18.0, color: Constants.getPositiveGreenColor(context)),
-                      ),
-                    )
-                  ],
-                ),
-              ),
             ),
           ),
           Align(
@@ -563,20 +534,20 @@ class RegisterGroupFormState extends State<RegisterGroupForm> {
 
   void _onCreateGroupClick() async {
     print("PAGE onCreateGroupClick...");
-    _groupBloc.add(GroupConfigurationSubmittingEvent(
+    _bloc.add(GroupConfigurationSubmittingEvent(
       configurationType: GroupConfigurationType.CREATING_GROUP,
       groupName: _groupNameController.text,
     ));
   }
 
   void _onQRScanSuccess() {
-    _groupBloc.add(GroupQRCodeScannedEvent(
+    _bloc.add(GroupQRCodeScannedEvent(
       groupId: groupIdFromQrCode,
     ));
   }
 
   void _onJoinToGroupClick() async {
-    _groupBloc.add(GroupConfigurationSubmittingEvent(
+    _bloc.add(GroupConfigurationSubmittingEvent(
       configurationType: GroupConfigurationType.JOINING_TO_GROUP,
       groupId: groupIdFromQrCode,
     ));

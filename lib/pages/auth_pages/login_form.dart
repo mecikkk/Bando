@@ -2,13 +2,14 @@
 import 'package:bando/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
 import 'package:bando/pages/auth_pages/register_page.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:koin_flutter/koin_flutter.dart';
 
 class LoginForm extends StatefulWidget {
   State<LoginForm> createState() => _LoginFormState();
@@ -19,7 +20,7 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  LoginBloc _loginBloc;
+  LoginBloc _bloc;
 
   bool get isLoginFieldsValid => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
 
@@ -30,7 +31,7 @@ class _LoginFormState extends State<LoginForm> {
   @override
   void initState() {
     super.initState();
-    _loginBloc = BlocProvider.of<LoginBloc>(context);
+    _bloc = get<LoginBloc>();
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
   }
@@ -71,7 +72,7 @@ class _LoginFormState extends State<LoginForm> {
         }
         if (state.isSuccess) {
           print("state SUCCESS and GROUP CONFIGURED");
-          BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
+          get<AuthBloc>().add(AuthLoggedIn());
         }
 
       },
@@ -121,7 +122,7 @@ class _LoginFormState extends State<LoginForm> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
                         GradientRaisedButton(
-                          colors: [Constants.getSecondAccentColor(context), Constants.getAccentColor(context)],
+                          colors: [AppThemes.getSecondAccentColor(context), AppThemes.getAccentColor(context)],
                           text: "Zaloguj",
                           height: 45.0,
                           onPressed: isLoginButtonEnabled(state) ? _onFormSubmitted : null,
@@ -238,19 +239,20 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void dispose() {
+    super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    super.dispose();
+    _bloc.close();
   }
 
   void _onEmailChanged() {
-    _loginBloc.add(
+    _bloc.add(
       LoginEmailChanged(email: _emailController.text),
     );
   }
 
   void _onPasswordChanged() {
-    _loginBloc.add(
+    _bloc.add(
       LoginPasswordChanged(password: _passwordController.text),
     );
   }
@@ -259,7 +261,7 @@ class _LoginFormState extends State<LoginForm> {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
     FocusScope.of(context).unfocus();
     if(isConnected) {
-      _loginBloc.add(
+      _bloc.add(
         LoginWithEmailPressed(
           email: _emailController.text,
           password: _passwordController.text,

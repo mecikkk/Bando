@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:bando/utils/files_utils.dart';
 import 'package:bando/utils/util.dart';
 
 class FileModel {
@@ -15,6 +16,8 @@ class FileModel {
   }
 
   String fileName() => _fileSystemEntity.name;
+
+  String get localPath => FilesUtils.getSongbookFilePath(fileSystemEntity.path);
 
   FileSystemEntity get fileSystemEntity => _fileSystemEntity;
 

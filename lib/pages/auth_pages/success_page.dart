@@ -3,22 +3,18 @@ import 'dart:ui';
 
 import 'package:bando/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/models/group_model.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:esys_flutter_share/esys_flutter_share.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:koin_flutter/koin_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-
-//import 'package:share/share.dart';
-//import 'package:qr_flutter/qr_flutter.dart';
 
 class SuccessPage extends StatefulWidget {
   final ConfigurationType configurationType;
@@ -33,7 +29,6 @@ class SuccessPage extends StatefulWidget {
 }
 
 class SuccessPageState extends State<SuccessPage> {
-
   GlobalKey globalKey = new GlobalKey();
 
   @override
@@ -43,7 +38,7 @@ class SuccessPageState extends State<SuccessPage> {
 
   @override
   Widget build(BuildContext context) {
-    Constants.updateNavBarTheme(context);
+    updateStatusbarAndNavBar(context);
 
     return Scaffold(
         body: (widget.configurationType == ConfigurationType.NEW_GROUP) ? _newGroupContent() : _joinToGroupContent());
@@ -77,7 +72,9 @@ class SuccessPageState extends State<SuccessPage> {
 
   _joinToGroupContent() {
     return Container(
-      decoration: BoxDecoration(gradient: Constants.getGradient(context, Alignment.centerLeft, Alignment.topRight)),
+      decoration: BoxDecoration(
+        gradient: AppThemes.getGradient(context, Alignment.centerLeft, Alignment.topRight),
+      ),
       child: ListView(
         padding: EdgeInsets.all(20),
         children: <Widget>[
@@ -90,7 +87,7 @@ class SuccessPageState extends State<SuccessPage> {
           ),
           SizedBox(height: 25),
           Padding(
-            padding: const EdgeInsets.only(left : 20.0, top : 20.0, right : 20.0),
+            padding: const EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0),
             child: Text(
               "Gratulujemy dołączenia do grupy ${widget.group.name} !",
               textAlign: TextAlign.center,
@@ -106,7 +103,7 @@ class SuccessPageState extends State<SuccessPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left : 20.0, right : 20.0),
+            padding: const EdgeInsets.only(left: 20.0, right: 20.0),
             child: Text(
               "Zaktualizuj swoją bibliotekę tekstów, lub dodaj własne i ciesz się z możliwości, jakie daje Bando :)",
               textAlign: TextAlign.center,
@@ -120,19 +117,19 @@ class SuccessPageState extends State<SuccessPage> {
                 child: Align(
                   alignment: Alignment.center,
                   child: RoundedColoredShadowButton(
-                      onTap: () {
-                        _onGoToAppClick();
-                      },
-                      text : "Przejdź do aplikacji",
+                    onTap: () {
+                      _onGoToAppClick();
+                    },
+                    text: "Przejdź do aplikacji",
                     width: 270,
                     height: 40,
                     iconSize: 25,
                     fontSize: 16,
                     icon: Icons.check,
-                    textColor: Constants.getPositiveGreenColor(context),
+                    textColor: Colors.white,
                     shadowColor: Colors.transparent,
-                    borderColor: Constants.getPositiveGreenColor(context),
-                    iconColor: Constants.getPositiveGreenColor(context),
+                    borderColor: Colors.white,
+                    iconColor: Colors.white,
                   ),
                 ),
               )
@@ -143,10 +140,9 @@ class SuccessPageState extends State<SuccessPage> {
     );
   }
 
-
   _newGroupContent() {
     return Container(
-      decoration: BoxDecoration(gradient: Constants.getGradient(context, Alignment.centerLeft, Alignment.topRight)),
+      decoration: BoxDecoration(gradient: AppThemes.getGradient(context, Alignment.centerLeft, Alignment.topRight)),
       child: ListView(
         padding: EdgeInsets.all(20),
         children: <Widget>[
@@ -243,7 +239,7 @@ class SuccessPageState extends State<SuccessPage> {
   }
 
   void _onGoToAppClick() {
-    BlocProvider.of<AuthBloc>(context).add(AuthLoggedIn());
+    get<AuthBloc>().add(AuthLoggedIn());
 
     Future.delayed(Duration(milliseconds: 500), () {
       Navigator.of(context).popUntil((route) => route.isFirst);

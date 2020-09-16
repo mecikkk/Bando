@@ -21,7 +21,7 @@ class AuthRepository {
     );
 
     await _firebaseAuth.signInWithCredential(credential);
-    return _firebaseAuth.currentUser();
+    return await _firebaseAuth.currentUser();
   }
 
   Future<AuthResult> signInWithEmail(String email, String password) async {

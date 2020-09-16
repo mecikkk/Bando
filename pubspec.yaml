@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+
 # Firebase
   cloud_firestore: any
   firebase_database: any
@@ -47,6 +48,7 @@ dependencies:
   http: ^0.12.2
   pdf_viewer_plugin: ^1.0.0+2
   bloc: ^5.0.1
+  flutter_riverpod: ^0.10.1
   flutter_bloc: ^5.0.1
   equatable: ^1.2.0
   path_provider: ^1.6.11
@@ -96,6 +98,8 @@ flutter:
     - upload_download.svg
     - local_storage.svg
     - cloud.svg
+    - audio-doc_deleted.svg
+    - no_group_animation.json
 
 
   fonts:

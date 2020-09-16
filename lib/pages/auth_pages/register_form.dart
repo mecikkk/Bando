@@ -1,11 +1,12 @@
 import 'package:bando/blocs/register_bloc/register_bloc.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/validator.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:koin_flutter/koin_flutter.dart';
 
 class RegisterForm extends StatefulWidget {
 
@@ -28,7 +29,7 @@ class _RegisterFormState extends State<RegisterForm> {
   bool isPasswordValid = true;
   bool isUsernameValid = true;
 
-  RegisterBloc _registerBloc;
+  RegisterBloc _bloc;
 
   bool get isRegisterFieldsValid => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty && _usernameController.text.isNotEmpty;
 
@@ -39,7 +40,7 @@ class _RegisterFormState extends State<RegisterForm> {
   @override
   void initState() {
     super.initState();
-    _registerBloc = BlocProvider.of<RegisterBloc>(context);
+    _bloc = get<RegisterBloc>();
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
     _usernameController.addListener(_onUsernameChanged);
@@ -142,7 +143,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
                   child: GradientRaisedButton(
-                    colors: [Constants.getSecondAccentColor(context), Constants.getAccentColor(context)],
+                    colors: [AppThemes.getSecondAccentColor(context), AppThemes.getAccentColor(context)],
                     text: "Zarejestruj",
                     height: 45.0,
                     onPressed: isRegisterButtonEnabled(state) ? _onFormSubmitted : null,
@@ -188,10 +189,11 @@ class _RegisterFormState extends State<RegisterForm> {
 
   @override
   void dispose() {
+    super.dispose();
+    _bloc.close();
     _emailController.dispose();
     _passwordController.dispose();
     _usernameController.dispose();
-    super.dispose();
   }
 
 
@@ -211,7 +213,7 @@ class _RegisterFormState extends State<RegisterForm> {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
     FocusScope.of(context).unfocus();
     if(isConnected) {
-      _registerBloc.add(
+      _bloc.add(
         RegisterSubmittedEvent(
           email: _emailController.text,
           password: _passwordController.text,

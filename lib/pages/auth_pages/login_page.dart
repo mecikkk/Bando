@@ -1,6 +1,6 @@
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
-import 'package:bando/repositories/auth_repository.dart';
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
+import 'package:bando/utils/util.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,8 @@ import 'login_form.dart';
 class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    Constants.updateNavBarTheme(context);
+
+    updateStatusbarAndNavBar(context);
 
     return Scaffold(
       body: Stack(
@@ -31,7 +32,7 @@ class LoginPage extends StatelessWidget {
           ),
           Container(
             child: BlocProvider<LoginBloc>(
-              create: (context) => LoginBloc(authRepository: get<AuthRepository>()),
+              create: (context) => get<LoginBloc>(),
               child: LoginForm(),
             ),
           ),
@@ -43,7 +44,7 @@ class LoginPage extends StatelessWidget {
               offlineBanner: Container(
                 height: 34,
                 decoration: BoxDecoration(
-                    color: Constants.errorColorDark,
+                    color: AppThemes.errorColorDark,
                     borderRadius: BorderRadius.all(Radius.circular(15.0)),
                     boxShadow: [
                       BoxShadow(
@@ -68,4 +69,5 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+
 }

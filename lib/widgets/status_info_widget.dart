@@ -1,4 +1,4 @@
-import 'package:bando/utils/consts.dart';
+import 'package:bando/utils/app_themes.dart';
 import 'package:bando/widgets/animated_opaticy_widget.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -36,7 +36,7 @@ class StatusInfoWidgetState extends State<StatusInfoWidget> {
                   padding: const EdgeInsets.only(left : 8.0, right: 8.0),
                   child: Icon(
                     isSongbookActual ? Icons.check_circle : Icons.error,
-                    color: isSongbookActual ? Constants.getPositiveGreenColor(context).withOpacity(0.8) : Colors.orangeAccent,
+                    color: isSongbookActual ? AppThemes.getPositiveGreenColor(context).withOpacity(0.8) : Colors.orangeAccent,
                   ),
                 ),
                 Padding(
@@ -44,7 +44,7 @@ class StatusInfoWidgetState extends State<StatusInfoWidget> {
                   child: Text(
                     isSongbookActual ? "Pliki aktualne" : "Potrzebna aktualizacja",
                     style: TextStyle(
-                      color: isSongbookActual ? Constants.getPositiveGreenColor(context).withOpacity(0.8) : Colors.orangeAccent,
+                      color: isSongbookActual ? AppThemes.getPositiveGreenColor(context).withOpacity(0.8) : Colors.orangeAccent,
                     ),
                   ),
                 ),

@@ -1,5 +1,3 @@
-
-import 'package:bando/entities/user_entity.dart';
 import 'package:bando/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +6,7 @@ class FirestoreUserRepository {
   final usersCollection = Firestore.instance.collection("users");
 
   Future<void> addNewUser(User user) {
-    return usersCollection.document(user.uid).setData(user.toEntity().toDocument());
+    return usersCollection.document(user.uid).setData(user.toDocument());
   }
 
   Future<void> deleteUser(User user) {
@@ -16,7 +14,7 @@ class FirestoreUserRepository {
   }
 
   Future<void> updateUser(User user) {
-    return usersCollection.document(user.uid).updateData(user.toEntity().toDocument());
+    return usersCollection.document(user.uid).updateData(user.toDocument());
   }
 
   Future<void> addGroupToUser(String uid, String groupId) async {
@@ -28,11 +26,22 @@ class FirestoreUserRepository {
     //     .getHttpsCallable(functionName: "addGroupToken")
     //     .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
 
-    return usersCollection.document(uid).updateData(user.toEntity().toDocument());
+    return usersCollection.document(uid).updateData(user.toDocument());
+  }
+
+  Future<String> getCurrentUserName() async {
+    User u = await currentUser();
+    return u.username;
+  }
+
+  Future<String> getCurrentUserGroupId() async {
+    FirebaseUser user = await FirebaseAuth.instance.currentUser();
+    IdTokenResult token = await user.getIdToken();
+    return token.claims["groupId"];
   }
 
   Future<User> getUser(String uid) async {
-    return User.fromEntity(UserEntity.fromSnapshot(await usersCollection.document(uid).get()));
+    return User.fromSnapshot(await usersCollection.document(uid).get());
   }
 
   Future<String> currentUserId() async {
@@ -45,6 +54,7 @@ class FirestoreUserRepository {
     return await usersCollection.document(uid).updateData(
       {"lastUpdate" : lastUpdate}
     );
+
   }
 
   Future<int> getLastUpdateTime() async {
@@ -57,12 +67,6 @@ class FirestoreUserRepository {
   Future<User> currentUser() async {
     String uid = await currentUserId();
     return await getUser(uid);
-  }
-
-  Future<String> getUserGroupId() async {
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    DocumentSnapshot snapshot = await usersCollection.document(user.uid).get();
-    return snapshot.data["groupId"];
   }
 
   Future<bool> isUserGroupConfigured(String uid) async {

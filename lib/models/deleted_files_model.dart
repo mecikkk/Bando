@@ -1,28 +1,29 @@
-import 'package:bando/entities/deleted_files_entity.dart';
+import 'package:bando/utils/files_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class DeletedFiles {
   final int time;
-  final String whoUpdated;
+  final String whoDeleted;
   final List<Map<dynamic, dynamic>> files;
 
   DeletedFiles({
     @required this.time,
-    @required this.whoUpdated,
+    @required this.whoDeleted,
     @required this.files,
   });
 
   DeletedFiles copyWith({String time, String whoUpdated, List<Map<dynamic, dynamic>> files}) {
     return DeletedFiles(
       time: time ?? this.time,
-      whoUpdated: whoUpdated ?? this.whoUpdated,
+      whoDeleted: whoUpdated ?? this.whoDeleted,
       files: files ?? this.files,
     );
   }
 
+
   @override
-  int get hashCode => time.hashCode ^ whoUpdated.hashCode ^ files.hashCode;
+  int get hashCode => time.hashCode ^ whoDeleted.hashCode ^ files.hashCode;
 
   @override
   bool operator ==(other) =>
@@ -30,24 +31,35 @@ class DeletedFiles {
       other is DeletedFiles &&
           runtimeType == other.runtimeType &&
           time == other.time &&
-          whoUpdated == other.whoUpdated &&
+          whoDeleted == other.whoDeleted &&
           files == other.files
   ;
 
   @override
   String toString() {
-    return "UpdateInfo(time : $time (${Timestamp.fromMillisecondsSinceEpoch(time).toDate().toString()}), whoUpdated : $whoUpdated, files : $files)";
+    return "DeletedFiles(time : $time (${Timestamp.fromMillisecondsSinceEpoch(time).toDate().toString()}), whoUpdated : $whoDeleted, files : $files)";
   }
 
-  DeletedFilesEntity toEntity() {
-    return DeletedFilesEntity(time, whoUpdated, files);
+
+  Map<String, Object> toJson() {
+    return {
+      "time": time,
+      "whoDeleted": whoDeleted,
+      "files": files
+    };
   }
 
-  static DeletedFiles fromEntity(DeletedFilesEntity entity) {
+  static DeletedFiles fromMap(Map<dynamic, dynamic> json) {
+    List<dynamic> files = json["files"] as List<dynamic>;
+    List<Map<dynamic, dynamic>> allFiles = List();
+    files.forEach((element) {
+      allFiles.add(element);
+    });
+
     return DeletedFiles(
-      time: entity.time,
-      whoUpdated: entity.whoUpdated,
-      files: entity.files,
+        time: json["time"] as int,
+        whoDeleted: json["whoDeleted"] as String,
+        files: allFiles
     );
   }
 }

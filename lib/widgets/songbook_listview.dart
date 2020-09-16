@@ -1,12 +1,14 @@
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/models/file_model.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/widgets/file_item_widget.dart';
+
+import 'package:bando/models/file_model.dart';
+import 'package:bando/widgets/file_item_widget.dart';
 import 'package:flutter/cupertino.dart';
 
 class SongbookListView extends StatefulWidget {
   final List<FileModel> songbook;
   final Function onItemClick;
+  final Function onItemLongClick;
 
-  SongbookListView({Key key, @required this.songbook, @required this.onItemClick}) : super(key : key);
+  SongbookListView({Key key, @required this.songbook, @required this.onItemClick, @required this.onItemLongClick}) : super(key : key);
 
   @override
   State<StatefulWidget> createState() {
@@ -30,6 +32,11 @@ class SongbookListViewState extends State<SongbookListView> {
     });
   }
 
+  void clearSelections() {
+    setState(() {
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -39,7 +46,7 @@ class SongbookListViewState extends State<SongbookListView> {
             files[index],
             context,
             onClick: widget.onItemClick,
-            onLongClick: () {},
+            onLongClick: widget.onItemLongClick,
           );
         });
   }

@@ -6,26 +6,26 @@ import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
 part 'auth_event.dart';
+
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
 
-  AuthBloc({@required AuthRepository authRepository}) :
-        _authRepository = authRepository, super(AuthInitial());
-
+  AuthBloc({@required AuthRepository authRepository})
+      : _authRepository = authRepository,
+        super(AuthInitial());
 
   @override
   Stream<AuthState> mapEventToState(
     AuthEvent event,
   ) async* {
-    if(event is AuthStarted) {
+    if (event is AuthStarted) {
       yield* _mapAuthStartedToState();
     } else if (event is AuthLoggedIn) {
       yield* _mapAuthLoggedInToState();
-    } else if(event is AuthLoggedOut) {
-      yield* _mapAuthLoggedOutToState(
-      );
+    } else if (event is AuthLoggedOut) {
+      yield* _mapAuthLoggedOutToState();
     }
   }
 
@@ -34,7 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final isSignedIn = await _authRepository.isSignedIn();
     print("After checking");
 
-    if(isSignedIn) {
+    if (isSignedIn) {
       yield Authenticated(await _authRepository.getLoggedInUserId());
     } else {
       yield Unauthenticated();
@@ -49,5 +49,4 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     yield Unauthenticated();
     _authRepository.signOut();
   }
-
 }

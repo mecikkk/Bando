@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/models/file_model.dart';
+import 'package:bando/models/file_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -85,6 +85,36 @@ class FilesUtils {
     }
   }
 
+  static Future<int> deleteFile({String fullPath}) async {
+
+    try {
+
+      var file;
+
+      file = File("$fullPath");
+
+      debugPrint("Deleting file : ${file?.path}");
+
+      file.deleteSync(recursive: true);
+
+      return 1;
+
+    } catch (e) {
+      debugPrint("-- FileUtils | Deleting file error : $e");
+      return -1;
+    }
+
+  }
+
+  static String getFirestoreReferenceFromFileModel(FileModel fileModel) {
+    String path = fileModel.fileSystemEntity.path;
+    return path.substring(path.indexOf('BandoSongbook') + 14);
+  }
+
+  static String getSongbookFilePath(String path) {
+    return path.substring(path.indexOf('BandoSongbook') + 14);
+  }
+
   static Future<bool> moveSelectedDirToBandoDir(String selectedDirPath, {Directory destinationDir}) async {
     try {
       List<Directory> listOfStorages = await getStorageList();
@@ -96,7 +126,6 @@ class FilesUtils {
         appDir = destinationDir;
 
       List<FileSystemEntity> selectedDirFiles = Directory(selectedDirPath).listSync();
-      print("Start loop !");
       selectedDirFiles.forEach((element) async {
         var isDirectory = FileSystemEntity.isDirectorySync(element.path);
         if(isDirectory) {
@@ -111,7 +140,6 @@ class FilesUtils {
       return true;
     } catch (e) {
       print(e);
-      print("Returning false");
       return false;
     }
   }

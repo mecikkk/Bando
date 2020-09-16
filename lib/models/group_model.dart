@@ -1,5 +1,5 @@
 
-import 'package:bando/entities/group_entity.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Group {
 
@@ -36,15 +36,35 @@ class Group {
     return "Group(name : $name, groupId : $groupId, members : $members)";
   }
 
-  GroupEntity toEntity() {
-    return GroupEntity(groupId, name, members);
+
+  Map<String, Object> toJson() {
+    return {
+      "name" : name,
+      "members" : members,
+    };
   }
 
-  static Group fromEntity(GroupEntity entity) {
+  static Group fromJson(Map<String, Object> json) {
     return Group(
-        entity.groupId,
-        name : entity.name,
-        members: entity.members,
+      json["groupId"] as String,
+      name : json["name"] as String,
+      members: json["members"] as List<Map<String, dynamic>>,
     );
+  }
+
+  static Group fromSnapshot(DocumentSnapshot snapshot) {
+    return Group(
+      snapshot.documentID,
+      name : snapshot.data["name"],
+      members : List<Map<String, dynamic>>.from(snapshot.data['members']),
+    );
+  }
+
+
+  Map<String, Object> toDocument() {
+    return {
+      "name" : name,
+      "members" : members
+    };
   }
 }

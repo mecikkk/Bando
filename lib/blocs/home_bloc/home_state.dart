@@ -17,16 +17,6 @@ class HomeNoGroupState extends HomeState {
   List<Object> get props => [user];
 }
 
-class HomeBasicInfoLoadedState extends HomeState {
-  final Group group;
-  final User user;
-
-  HomeBasicInfoLoadedState({@required this.group, @required this.user});
-
-  @override
-  List<Object> get props => [group, user];
-}
-
 class HomeShowLoadingState extends HomeState {
   final String message;
   final LoadingType loadingType;
@@ -37,43 +27,67 @@ class HomeShowLoadingState extends HomeState {
   List<Object> get props => [message, loadingType];
 }
 
-class HomeNeedToUpdateSongbookState extends HomeState {
+class HomeNeedToDeleteFilesLocallyState extends HomeState {
   final List<DeletedFiles> updates;
 
-  HomeNeedToUpdateSongbookState({@required this.updates});
+  HomeNeedToDeleteFilesLocallyState({@required this.updates});
 
   @override
   List<Object> get props => [updates];
 }
 
-class HomeUploadSongbookSuccessState extends HomeState {}
-
-class HomeSongbookUpdateSuccessState extends HomeState {}
-
-class HomeNeedToDownloadTheEntireSongbookState extends HomeState {}
-
-class HomeLocalSongbookLoadedState extends HomeState {
+class HomeReloadSongbookAndHideUpdatesInfo extends HomeState {
   final List<FileModel> songbook;
 
-  HomeLocalSongbookLoadedState({@required this.songbook});
+  HomeReloadSongbookAndHideUpdatesInfo({@required this.songbook});
 
   @override
   List<Object> get props => [songbook];
 }
 
-class HomeNeedToUploadLocalSongbookToCloudState extends HomeState {}
+class HomeStartCheckingUpdatesState extends HomeState {}
 
-class HomeReadyState extends HomeState {}
+class HomeUploadSongbookSuccessState extends HomeState {}
 
-class HomeGroupConfiguredState extends HomeState {
+class HomeNeedToDownloadTheEntireSongbookState extends HomeState {
+  final User user;
   final Group group;
 
-  HomeGroupConfiguredState({@required this.group});
+  HomeNeedToDownloadTheEntireSongbookState({@required this.user, @required this.group});
 
   @override
-  List<Object> get props => [group];
+  List<Object> get props => [user, group];
 }
 
+class HomeNeedToUploadLocalSongbookToCloudState extends HomeState {
+  final User user;
+  final Group group;
+
+  HomeNeedToUploadLocalSongbookToCloudState({@required this.user, @required this.group});
+
+  @override
+  List<Object> get props => [user, group];
+}
+
+class HomeReadyState extends HomeState {
+  final List<FileModel> songbook;
+  final User user;
+  final Group group;
+
+  HomeReadyState({@required this.songbook, @required this.user, @required this.group});
+
+  @override
+  List<Object> get props => [songbook, user, group];
+}
+
+class HomeReloadSongbook extends HomeState {
+  final List<FileModel> songbook;
+
+  HomeReloadSongbook({this.songbook});
+
+  @override
+  List<Object> get props => [songbook];
+}
 
 class HomeFailureState extends HomeState {
   final String message;
@@ -85,7 +99,6 @@ class HomeFailureState extends HomeState {
 }
 
 class HomeSearchResultState extends HomeState {
-
   final List<FileModel> searchResult;
 
   HomeSearchResultState({@required this.searchResult});
@@ -95,7 +108,6 @@ class HomeSearchResultState extends HomeState {
 }
 
 class HomeCheckingSongbookCompleteState extends HomeState {
-
   final List<FileModel> newLocalFiles;
   final List<DatabaseLyricsFileInfo> newCloudFiles;
 

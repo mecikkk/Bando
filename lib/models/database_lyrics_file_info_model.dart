@@ -1,5 +1,5 @@
 
-import 'package:bando/entities/database_lyrics_file_info_entity.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class DatabaseLyricsFileInfo {
@@ -35,18 +35,31 @@ class DatabaseLyricsFileInfo {
 
   @override
   String toString() {
-    return "UpdateInfo(fileName : $fileNameWithExtension, downloadUrl : $downloadUrl, localPath : $localPath)";
+    return "DatabaseLyricsFileInfo(fileName : $fileNameWithExtension, downloadUrl : $downloadUrl, localPath : $localPath)";
   }
 
-  DatabaseLyricsFileInfoEntity toEntity() {
-    return DatabaseLyricsFileInfoEntity(fileNameWithExtension, downloadUrl, localPath);
+  Map<String, Object> toJson() {
+    return {
+      "fileName" : fileNameWithExtension,
+      "downloadUrl" : downloadUrl,
+      "localPath" : localPath
+    };
   }
 
-  static DatabaseLyricsFileInfo fromEntity(DatabaseLyricsFileInfoEntity entity) {
+
+  static DatabaseLyricsFileInfo fromMap(Map<dynamic, dynamic> json) {
     return DatabaseLyricsFileInfo(
-      downloadUrl : entity.downloadUrl,
-      fileNameWithExtension: entity.fileName,
-      localPath: entity.localPath
+        fileNameWithExtension : json["fileName"] as String,
+        downloadUrl : json["downloadUrl"] as String,
+        localPath : json["localPath"] as String
+    );
+  }
+
+  static DatabaseLyricsFileInfo fromSnapshot(DocumentSnapshot snapshot) {
+    return DatabaseLyricsFileInfo(
+        fileNameWithExtension : snapshot.data["fileName"] as String,
+        downloadUrl : snapshot.data["downloadUrl"] as String,
+        localPath : snapshot.data["localPath"] as String
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:bando/utils/util.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
 
@@ -72,9 +73,18 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
         group = await _groupRepository.addUserToGroup(groupId, user);
       } else {
 
-        Group newGroup = Group("", name: groupName, members: [user.toEntity().toMap()]);
+        Group newGroup = Group("", name: groupName, members: [user.toMap()]);
         String newGroupId = await _groupRepository.createNewGroup(newGroup);
         group = newGroup.copyWith(groupId: newGroupId);
+
+        // Add groupId claim for firebase storage rules
+        HttpsCallableResult result = await CloudFunctions.instance
+            .getHttpsCallable(functionName: "addGroupToken")
+            .call(<String, dynamic>{"groupId": newGroupId, "uid": user.uid});
+
+        FirebaseUser fUser = await FirebaseAuth.instance.currentUser();
+
+        IdTokenResult tokenResult = await fUser.getIdToken(refresh: true);
 
         await _userRepository.addGroupToUser(user.uid, newGroupId);
       }

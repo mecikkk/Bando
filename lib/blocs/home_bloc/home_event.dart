@@ -9,36 +9,27 @@ abstract class HomeEvent extends Equatable{
 class HomeInitialEvent extends HomeEvent {
 }
 
-class HomeConfigureSongbookDirectoryEvent extends HomeEvent {
-  final FileModel directoryToMove;
+class HomeDeleteLocalFilesEvent extends HomeEvent {
+  final List<DeletedFiles> deletedFiles;
 
-  HomeConfigureSongbookDirectoryEvent({@required this.directoryToMove});
+  HomeDeleteLocalFilesEvent({@required this.deletedFiles});
 
   @override
-  List<Object> get props => [directoryToMove];
+  List<Object> get props => [deletedFiles];
 }
 
-class HomeUploadSongbookToCloudEvent extends HomeEvent {
-}
-
-class HomeCheckForNewLocalFilesEvent extends HomeEvent {}
+class HomeCheckForAnyUpdatesEvent extends HomeEvent {}
 
 class HomeCheckForDeletedFilesEvent extends HomeEvent {
-  final String groupId;
-
-  HomeCheckForDeletedFilesEvent({@required this.groupId});
-
-  @override
-  List<Object> get props => [groupId];
 }
 
-class HomeUpdateSongbookEvent extends HomeEvent {
-  final List<DeletedFiles> updates;
+class HomeDeleteFilesFromCloudEvent extends HomeEvent {
+  final List<FileModel> deletedFiles;
 
-  HomeUpdateSongbookEvent({@required this.updates});
+  HomeDeleteFilesFromCloudEvent({@required this.deletedFiles});
 
   @override
-  List<Object> get props => [updates];
+  List<Object> get props => [deletedFiles];
 }
 
 class HomeOnSearchFileEvent extends HomeEvent {
@@ -52,27 +43,7 @@ class HomeOnSearchFileEvent extends HomeEvent {
   List<Object> get props => [fileName, songbook];
 }
 
-class HomeCheckSongbookEvent extends HomeEvent {
-  final String groupId;
-
-  HomeCheckSongbookEvent({@required this.groupId});
-
-  @override
-  List<Object> get props => [groupId];
-}
-
-class HomeLoadLocalSongbookEvent extends HomeEvent {}
-
 class HomeDownloadTheEntireSongbookEvent extends HomeEvent {}
-
-class HomeGroupConfiguredEvent extends HomeEvent {
-  final Group group;
-
-  HomeGroupConfiguredEvent({@required this.group});
-
-  @override
-  List<Object> get props => [group];
-}
 
 class HomeUploadFilesToCloudEvent extends HomeEvent {
   final List<FileModel> newLocalFiles;

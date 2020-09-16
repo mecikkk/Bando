@@ -1,28 +1,26 @@
 
-import 'package:bando/entities/user_entity.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class User {
 
   String uid;
   String groupId;
   final String username;
-  final bool shouldUpdateFiles;
   final int lastUpdate;
 
-  User(this.uid, {this.username = 'User', this.groupId = '', this.shouldUpdateFiles = false, this.lastUpdate = 0});
+  User(this.uid, {this.username = 'User', this.groupId = '', this.lastUpdate = 0});
 
   User copyWith({String uid, String username, String groupId, bool shouldUpdateFiles, int lastUpdate}) {
     return User(
       uid ?? this.uid,
       username : username ?? this.username,
       groupId: groupId ?? this.groupId,
-      shouldUpdateFiles: shouldUpdateFiles ?? this.shouldUpdateFiles,
       lastUpdate: lastUpdate ?? this.lastUpdate
     );
   }
 
   @override
-  int get hashCode => uid.hashCode ^ username.hashCode ^ groupId.hashCode ^ shouldUpdateFiles.hashCode;
+  int get hashCode => uid.hashCode ^ username.hashCode ^ groupId.hashCode;
 
 
   @override
@@ -33,26 +31,53 @@ class User {
         uid == other.uid &&
         username == other.username &&
         groupId == other.groupId &&
-        shouldUpdateFiles == other.shouldUpdateFiles &&
         lastUpdate == other.lastUpdate;
 
 
   @override
   String toString() {
-    return "User(uid : $uid, username : $username, groupId : $groupId, shouldUpdateFiles : $shouldUpdateFiles, lastUpdate : $lastUpdate)";
+    return "User(uid : $uid, username : $username, groupId : $groupId, lastUpdate : $lastUpdate)";
   }
 
-  UserEntity toEntity() {
-    return UserEntity(uid, username, groupId, shouldUpdateFiles, lastUpdate);
+  Map<String, Object> toJson() {
+    return {
+      "username" : username,
+      "groupId" : groupId,
+      "lastUpdate" : lastUpdate
+    };
   }
 
-  static User fromEntity(UserEntity entity) {
+  static User fromJson(Map<String, Object> json) {
     return User(
-      entity.uid,
-      username : entity.username,
-      groupId : entity.groupId,
-      shouldUpdateFiles: entity.shouldUpdateFiles,
-      lastUpdate: entity.lastUpdate
+        json["uid"] as String,
+        username : json["username"] as String,
+        groupId : json["groupId"] as String,
+        lastUpdate: json["lastUpdate"] as int
     );
+  }
+
+  static User fromSnapshot(DocumentSnapshot snapshot) {
+    return User(
+        snapshot.documentID,
+        username : snapshot.data["username"],
+        groupId : snapshot.data["groupId"],
+        lastUpdate : snapshot.data["lastUpdate"]
+    );
+  }
+
+  Map<String, Object> toDocument() {
+    return {
+      "username" : username,
+      "groupId" : groupId,
+      "lastUpdate" : lastUpdate
+    };
+  }
+
+  Map<String, Object> toMap() {
+    return {
+      "uid" : uid,
+      "username" : username,
+      "lastUpdate" : lastUpdate
+    };
   }
 }

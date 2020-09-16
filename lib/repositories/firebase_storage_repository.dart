@@ -1,14 +1,13 @@
 import 'dart:io';
 
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/models/file_model.dart';
 import 'package:bando/models/database_lyrics_file_info_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:bando/models/file_model.dart';
+import 'package:bando/utils/files_utils.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
 class FirebaseStorageRepository {
-  StorageReference _storageReference;
   String _groupId;
   List<Map<String, dynamic>> storageReferences = List();
 
@@ -31,10 +30,7 @@ class FirebaseStorageRepository {
 
         String downloadUrl = await task.ref.getDownloadURL();
         downloadUrls.add(new DatabaseLyricsFileInfo(
-          fileNameWithExtension: basename(fileTmp.path),
-          downloadUrl: downloadUrl,
-          localPath: localPath
-        ));
+            fileNameWithExtension: basename(fileTmp.path), downloadUrl: downloadUrl, localPath: localPath));
         print("UPLOADING | Add new download url : $downloadUrl");
       }
 
@@ -61,10 +57,7 @@ class FirebaseStorageRepository {
 
         String downloadUrl = await task.ref.getDownloadURL();
         downloadUrls.add(new DatabaseLyricsFileInfo(
-            fileNameWithExtension: basename(fileTmp.path),
-            downloadUrl: downloadUrl,
-            localPath: localPath
-        ));
+            fileNameWithExtension: basename(fileTmp.path), downloadUrl: downloadUrl, localPath: localPath));
         print("UPLOADING | Add new download url : $downloadUrl");
       }
 
@@ -75,20 +68,6 @@ class FirebaseStorageRepository {
       return null;
     }
   }
-
-/*  Future<void> uploadFile(File file, {String subDir = ""}) async {
-    if (subDir != "")
-      _storageReference = FirebaseStorage.instance.ref().child("$_groupId/songbook/$subDir/${basename(file.path)}");
-    else
-      _storageReference = FirebaseStorage.instance.ref().child("$_groupId/songbook/${basename(file.path)}");
-    print("repo upload file : ${file.path} | to : ${_storageReference.path}");
-    StorageUploadTask task = _storageReference.putFile(file);
-    await task.onComplete;
-
-    String downloadUrl = await _storageReference.getDownloadURL();
-
-    downloadUrls.add(downloadUrl);
-  }*/
 
   void addStorageReference(File file, {String subDir = ""}) {
     String reference;
@@ -113,65 +92,68 @@ class FirebaseStorageRepository {
     storageReferences.add({'reference': reference, 'file': file});
   }
 
-//  Future<List<dynamic>> getAllFiles(String groupId) async {
-//    _storageReference = FirebaseStorage.instance
-//        .ref()
-//        .child(groupId).child('songbook');
-//    return await _storageReference.listAll();
-//  }
+  Future<List<Map<String, dynamic>>> deleteFilesFromCloud(List<FileModel> deletedFiles, String groupId) async {
 
-  Future<List<FileModel>> getAllFiles(String groupId) async {
-    print("start getting all files");
-    List<FileModel> allFiles = List();
+    List<Map<String, dynamic>> deletionInfo = List();
 
-    _storageReference = FirebaseStorage.instance
-        .ref()
-        .child(groupId).child('songbook');
+    try {
+      for (var file in deletedFiles) {
+        debugPrint("$groupId/songbook/${FilesUtils.getFirestoreReferenceFromFileModel(file)}");
+        String reference = "$groupId/songbook/${FilesUtils.getFirestoreReferenceFromFileModel(file)}";
 
-    _storageReference.listAll().then((value) {
-      if(value != null) {
-        Map<dynamic, dynamic> map1 = value;
-        map1.forEach((key, value) {
-//          print("All elements : $key | $value");
-
-          if(key == "prefixes") {
-            // Directories
-            Map<dynamic, dynamic> map2 = value;
-            map2.forEach((key, value) {
-              Map<dynamic, dynamic> fileInfo = value;
-              fileInfo.forEach((key, value) {
-                debugPrint("Directories : $key | $value");
-              });
-            });
-          }
-
-          if(key == "items") {
-            // Files
-            Map<dynamic, dynamic> map2 = value;
-            map2.forEach((key, value) {
-              Map<dynamic, dynamic> fileInfo = value;
-              fileInfo.forEach((key, value) async {
-                debugPrint("Items : $key | $value");
-                if(key == "path") {
-                  debugPrint("Storage item : ${await FirebaseStorage.instance.ref().child(value).getDownloadURL()}");
-                }
-              });
-            });
-          }
-
+        deletionInfo.add({
+          'name' : file.fileName(),
+          'localPath' : file.fileSystemEntity.path,
+          'storageReference' : reference,
         });
 
-
+        if(file.isDirectory)
+          await _deleteFolderContents(reference);
+        else
+          await FirebaseStorage.instance.ref().child(reference).delete();
 
       }
-      // Zaglebienie mozna zrobic na podstawie rozszerzenia sciezki. Jak na koncu .pdf - to plik, jak nic - to folder
-    });
 
-    // TODO : Tutaj value wyrzuca Jsona z plikami, ale nie zaglebia sie w foldery..
-    // TODO : Trzeba w momecie wrzucania wszystkiego do storage zapisywać downloadUrl do bazy danych (np. kolekcji grupy)
-
-    print("getting all files end");
+      return deletionInfo;
+    } catch (e) {
+      print("-- StorageRepository | Deleting file error : $e");
+      return null;
+    }
   }
 
+  Future _deleteFolderContents(String reference) async {
+    StorageReference ref = FirebaseStorage.instance.ref().child(reference);
+
+    ref.listAll().then((value) async {
+      Map<dynamic, dynamic> allData = value;
+
+      allData.forEach((key, value) {
+
+        Map<dynamic, dynamic> directories;
+        Map<dynamic, dynamic> files;
+
+        if(key == 'prefixes') directories = value;
+        if(key == 'items') files = value;
+
+        directories?.forEach((key, value) async {
+          debugPrint("Directory : $key | ${value['path']}");
+          await _deleteFolderContents(value['path']);
+        });
+
+        files?.forEach((key, value) async {
+          debugPrint("File : $key | ${value['path']}");
+          await _deleteFile(value['path']);
+        });
+      });
+    });
+
+    return;
+  }
+
+  Future _deleteFile(String filePath) async {
+    debugPrint("DELETE FROM STORAGE: $filePath");
+
+    return await FirebaseStorage.instance.ref().child(filePath).delete();
+  }
 
 }

@@ -1,31 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bando/entities/database_lyrics_file_info_entity.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/models/file_model.dart';
-import 'file:///D:/Android/Bando/FlutterProject/bando/lib/utils/files_utils.dart';
 import 'package:bando/models/database_lyrics_file_info_model.dart';
 import 'package:bando/models/deleted_files_model.dart';
+import 'package:bando/models/file_model.dart';
 import 'package:bando/models/group_model.dart';
 import 'package:bando/models/user_model.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
 import 'package:bando/repositories/firestore_group_repository.dart';
 import 'package:bando/repositories/firestore_user_repository.dart';
 import 'package:bando/repositories/realtime_database_repository.dart';
+import 'package:bando/utils/files_utils.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:meta/meta.dart';
-import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'home_event.dart';
-
 part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
@@ -54,107 +49,112 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     HomeEvent event,
   ) async* {
     if (event is HomeInitialEvent) {
-      yield* _mapHomeInitialEventToState();
-    } else if (event is HomeGroupConfiguredEvent) {
-      yield* _mapHomeGroupConfiguredEventToState(event.group);
-      // }
-      // else if (event is HomeConfigureSongbookDirectoryEvent) {
-      //   yield* _mapHomeConfigureSongbookDirectoryEventToState(event.directoryToMove);
-    } else if (event is HomeUploadSongbookToCloudEvent) {
-      yield* _mapHomeUploadSongbookToCloudEventToState();
+      yield* _mapHomeInitAppEventToState();
     } else if (event is HomeOnSearchFileEvent) {
       yield* _mapHomeOnSearchFileEventToState(event.fileName, event.songbook);
-    } else if (event is HomeLoadLocalSongbookEvent) {
-      yield* _mapHomeLoadLocalSongbookEventToState();
     } else if (event is HomeDownloadTheEntireSongbookEvent) {
       yield* _mapHomeDownloadTheEntireSongbookEventToState();
-    } else if (event is HomeCheckSongbookEvent) {
-      yield* _mapHomeCheckSongbookEventToState(event.groupId);
     } else if (event is HomeCheckForDeletedFilesEvent) {
-      yield* _mapHomeCheckForDeletedFilesEventToState(event.groupId);
-    } else if (event is HomeUpdateSongbookEvent) {
-      yield* _mapHomeUpdateSongbookEventToState(event.updates);
-    } else if (event is HomeCheckForNewLocalFilesEvent) {
-      yield* _mapHomeCheckForNewLocalFilesEventToState();
+      yield* _mapHomeCheckForDeletedFilesEventToState();
+    } else if (event is HomeCheckForAnyUpdatesEvent) {
+      yield* _mapHomeCheckForAnyUpdatesEventToState();
     } else if (event is HomeUploadFilesToCloudEvent) {
       yield* _mapHomeUploadFilesToCloudEventToState(event.newLocalFiles);
     } else if (event is HomeDownloadMissingFilesFilesEvent) {
       yield* _mapHomeDownloadMissingFilesFilesEventToState(event.newCloudFiles);
+    } else if (event is HomeDeleteLocalFilesEvent) {
+      yield* _mapHomeDeleteLocalFilesEventToState(event.deletedFiles);
+    } else if (event is HomeDeleteFilesFromCloudEvent) {
+      yield* _mapHomeDeleteFilesFromCloudEventToState(event.deletedFiles);
     }
   }
 
-  Stream<HomeState> _mapHomeInitialEventToState() async* {
+  Stream<HomeState> _mapHomeInitAppEventToState() async* {
     yield HomeShowLoadingState(loadingType: LoadingType.LOADING);
 
     try {
+
+// Loading User personal info
       final SharedPreferences _pref = await SharedPreferences.getInstance();
       User user;
-
-      // TODO : CLEAR SHARED PREFERENCES WHEN LOGOUT
-
+      Group group;
       // Load user and group basic information from shared pref. if is set up
-      if (_pref.getString('username') == null || _pref.getString('uid') == null) {
-        debugPrint("Load USER info from firestore and store to shared pref");
-        user = await _userRepository.currentUser();
-        _pref.setString('username', user.username);
-        _pref.setString('uid', user.uid);
-        if (user.groupId != "") _pref.setString('groupId', user.groupId);
-      } else {
-        debugPrint("Load USER info from shared pref");
+      user = await _getUserInfo(_pref);
+      group = await _getGroupInfo(_pref, groupId: user.groupId);
 
-        user = User(
-          _pref.getString('uid'),
-          username: _pref.getString('username'),
-          groupId: _pref.getString('groupId') ?? '',
-        );
-      }
-
-      if (user.groupId != "") {
-        Group group;
-        if (_pref.getString('groupId') == null || _pref.getString('groupName') == null) {
-          debugPrint("Load GROUP info from firestore and store to shared pref");
-
-          group = await _groupRepository.getGroup(user.groupId);
-          _pref.setString('groupName', group.name);
-          _pref.setString('groupId', group.groupId);
-        } else {
-          debugPrint("Load GROUP info from shared pref");
-
-          group = Group(
-            _pref.getString('groupId'),
-            name: _pref.getString('groupName'),
-          );
-        }
-
-        yield HomeBasicInfoLoadedState(user: user, group: group);
-      } else {
+      if (user.groupId == '')
         yield HomeNoGroupState(user: user);
+      else {
+
+// Checking local songbook state
+        List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+
+        if (songbook.isEmpty) {
+          var list = await _groupRepository.getAllLyricsFilesInfo(group.groupId);
+          if (list.isEmpty)
+            yield HomeNeedToUploadLocalSongbookToCloudState(user: user, group: group);
+          else
+            yield HomeNeedToDownloadTheEntireSongbookState(user: user, group: group);
+        } else {
+          yield HomeReadyState(songbook : songbook, user : user, group: group);
+        }
       }
-    } catch (_) {
+    } catch (e) {
       yield HomeFailureState();
+      debugPrint("--- HomeInitAppEvent | Error in initial event : $e");
     }
   }
 
-  Stream<HomeState> _mapHomeCheckSongbookEventToState(String groupId) async* {
-    Directory localSongbookDir = await FilesUtils.getSongbookDirectory();
-    bool isLocalSongbookEmpty = localSongbookDir.listSync(recursive: true).isEmpty;
+  Future<User> _getUserInfo(SharedPreferences pref) async {
+    User user;
 
-    if (isLocalSongbookEmpty) {
-      var list = await _groupRepository.getAllLyricsFilesInfo(groupId);
-      if (list.isEmpty)
-        yield HomeNeedToUploadLocalSongbookToCloudState();
-      else
-        yield HomeNeedToDownloadTheEntireSongbookState();
+    if (pref.getString('username') == null || pref.getString('uid') == null) {
+      debugPrint("Load USER info from firestore and store to shared pref");
+      user = await _userRepository.currentUser();
+      await pref.setString('username', user.username);
+      await pref.setString('uid', user.uid);
+      if (user.groupId != "") pref.setString('groupId', user.groupId);
     } else {
-      yield HomeReadyState();
+      debugPrint("Load USER info from shared pref");
+
+      user = User(
+        pref.getString('uid'),
+        username: pref.getString('username'),
+        groupId: pref.getString('groupId') ?? '',
+      );
     }
+
+    return user;
+  }
+
+  Future<Group> _getGroupInfo(SharedPreferences pref, {String groupId = ""}) async {
+    Group group;
+    if (groupId != '') {
+      if (pref.getString('groupId') == null || pref.getString('groupName') == null) {
+        debugPrint("Load GROUP info from firestore and store to shared pref");
+
+        group = await _groupRepository.getGroup(groupId);
+        pref.setString('groupName', group.name);
+        pref.setString('groupId', group.groupId);
+      } else {
+        debugPrint("Load GROUP info from shared pref");
+
+        group = Group(
+          pref.getString('groupId'),
+          name: pref.getString('groupName'),
+        );
+      }
+    } else
+      group = Group('');
+
+    return group;
   }
 
   Stream<HomeState> _mapHomeDownloadTheEntireSongbookEventToState() async* {
     yield HomeShowLoadingState(message: "Pobieram teksty z biblioteki...", loadingType: LoadingType.CLOUD_PROGRESS);
 
     try {
-      String groupId = await _userRepository.getUserGroupId();
+      String groupId = await _userRepository.getCurrentUserGroupId();
 
       var list = await _groupRepository.getAllLyricsFilesInfo(groupId);
 
@@ -174,7 +174,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      yield HomeReadyState();
+      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+
+      yield HomeReloadSongbook(songbook: songbook);
     } catch (e) {
       debugPrint("-- HomeBloc | Downloading the entire songbook error : $e");
       yield HomeFailureState(message: "Błąd podczas pobierania plików");
@@ -200,7 +202,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      yield HomeReadyState();
+      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+
+      yield HomeReloadSongbook(songbook: songbook);
     } catch (e) {
       debugPrint("-- HomeBloc | Downloading missing files error : $e");
       yield HomeFailureState(message: "Błąd podczas pobierania plików");
@@ -227,54 +231,94 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
   }
 
-  Stream<HomeState> _mapHomeCheckForDeletedFilesEventToState(String groupId) async* {
-    // final int lastUpdate = await _userRepository.getLastUpdateTime();
-    // final List<UpdateInfo> updates = await _databaseRepository.getUpdatedFiles(groupId, lastUpdate);
-    //
-    // if (updates.isNotEmpty) {
-    //   yield HomeNeedToUpdateSongbookState(updates: updates);
-    // }
-
-    // TODO : Check for deleted files, and delete them locally
-  }
-
-  Stream<HomeState> _mapHomeUpdateSongbookEventToState(List<DeletedFiles> updates) async* {
-    yield HomeShowLoadingState(message: "Pobieranie...", loadingType: LoadingType.CLOUD_PROGRESS);
-
+  Stream<HomeState> _mapHomeCheckForDeletedFilesEventToState() async* {
     try {
-      List<DatabaseLyricsFileInfo> list = List();
+      final int lastUpdate = await _userRepository.getLastUpdateTime();
+      User user = await _userRepository.currentUser();
 
-      updates.forEach((element) {
-        element.files.forEach((map) {
-          list.add(DatabaseLyricsFileInfo.fromEntity(DatabaseLyricsFileInfoEntity.fromMap(map)));
-        });
+      List<DeletedFiles> deletedCloudFiles = await _databaseRepository.getDeletedFiles(user.groupId, lastUpdate);
+      List<DeletedFiles> filesToDelete = List();
+
+
+      deletedCloudFiles.forEach((element) {
+        debugPrint("DELETES FROM REALTIME DB : ${element.whoDeleted} | ${element.files}");
       });
 
-      int fileNum = 1;
-      int count = list.length;
+      List<FileModel> localFiles = await FilesUtils.getBandoSongbookFiles();
 
-      for (var fileInfo in list) {
-        final Directory systemDir = await FilesUtils.getSongbookDirectory();
-        final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
+      List<String> localFilesPaths = _getLocalSongbookFilesPaths(localFiles);
 
-        await downloadFile(uri: fileInfo.downloadUrl, fullPath: fullPath, count: count, current: fileNum);
+      deletedCloudFiles = List.from(deletedCloudFiles.where((element) => (element.whoDeleted != user.username)));
 
-        yield HomeShowLoadingState(message: "Pobieranie $fileNum / $count", loadingType: LoadingType.CLOUD_PROGRESS);
+      deletedCloudFiles.forEach((deletedFile) {
+        List<Map<dynamic, dynamic>> files = List();
 
-        fileNum++;
+        deletedFile.files.forEach((file) {
+          debugPrint("CloudDeletedFile : ${file['localPath']}");
+          if (localFilesPaths.contains(file['localPath'])) files.add(file);
+        });
+
+        filesToDelete.add(DeletedFiles(time: deletedFile.time, whoDeleted: deletedFile.whoDeleted, files: files));
+      });
+
+
+      if (filesToDelete.isNotEmpty) {
+        yield HomeNeedToDeleteFilesLocallyState(updates: filesToDelete);
+      } else
+        yield HomeStartCheckingUpdatesState();
+    } catch (e) {
+      debugPrint("-- HomeBloc | Checking for deleted files error : $e");
+    }
+  }
+
+  Stream<HomeState> _mapHomeDeleteLocalFilesEventToState(List<DeletedFiles> deletedFiles) async* {
+    yield HomeShowLoadingState(loadingType: LoadingType.LOADING);
+
+    try {
+      for (var deletedDetails in deletedFiles) {
+        for (var file in deletedDetails.files) {
+          await FilesUtils.deleteFile(fullPath: file['localPath']);
+        }
       }
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      yield HomeSongbookUpdateSuccessState();
+      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+
+      yield HomeReloadSongbookAndHideUpdatesInfo(songbook : songbook);
     } catch (e) {
-      debugPrint("-- HomeBloc | Updating songbook error : $e");
-      yield HomeFailureState(message: "Błąd podczas aktualizacji śpiewnika");
+      debugPrint("-- HomeBloc | Deleting files error : $e");
+      yield HomeFailureState(message: "Problem podczas usuwania zbędnych tekstów");
     }
   }
 
-  Stream<HomeState> _mapHomeGroupConfiguredEventToState(Group group) async* {
-    yield HomeGroupConfiguredState(group: group);
+  Stream<HomeState> _mapHomeDeleteFilesFromCloudEventToState(List<FileModel> deletedFiles) async* {
+    yield HomeShowLoadingState(message: "Usuwam pliki...", loadingType: LoadingType.CLOUD_PROGRESS);
+
+    String groupId = await _userRepository.getCurrentUserGroupId();
+    User user = await _userRepository.currentUser();
+
+    List<Map<String, dynamic>> deletionInfo = List();
+    try {
+      deletionInfo = await _storageRepository.deleteFilesFromCloud(deletedFiles, groupId);
+
+      await _groupRepository.deleteLyricsFilesInfo(deletedFiles, groupId);
+
+      await _databaseRepository.addDeletionInfo(groupId, user.username, deletionInfo);
+
+      for (var file in deletedFiles) {
+        await FilesUtils.deleteFile(fullPath: file.fileSystemEntity.path);
+      }
+
+      await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
+
+      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+
+      yield HomeReloadSongbook(songbook: songbook);
+    } catch (e) {
+      debugPrint("-- HomeBloc | Deleting files from cloud error : $e");
+      yield HomeFailureState(message: "Problem podczas usuwania tekstów w chmurze");
+    }
   }
 
 
@@ -302,37 +346,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     yield HomeSearchResultState(searchResult: result);
   }
 
-  Stream<HomeState> _mapHomeUploadSongbookToCloudEventToState() async* {
-    yield HomeShowLoadingState(message: "Udostępniam pliki grupie...", loadingType: LoadingType.CLOUD_PROGRESS);
-
-    try {
-      User user = await _userRepository.currentUser();
-
-      _storageRepository.setGroupId(user.groupId);
-
-      await _createReferenceListOfAllFilesInSongbookDir();
-
-      List<DatabaseLyricsFileInfo> uploadedFilesInfo = await _storageRepository.uploadAllFiles();
-
-      await _groupRepository.setGroupShouldUpdateSongbook(user.uid, user.groupId);
-      await _groupRepository.updateLyricsFilesInfo(uploadedFilesInfo, user.groupId);
-
-      await _databaseRepository.addUpdateInfo(
-        user.groupId,
-        user.username,
-        uploadedFilesInfo
-            .map((e) => {'name': e.fileNameWithExtension, 'downloadUrl': e.downloadUrl, 'localPath': e.localPath})
-            .toList(),
-      );
-
-      await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
-
-      yield HomeUploadSongbookSuccessState();
-    } catch (e) {
-      debugPrint("-- HomeBloc | Uploading the entire songbook error : $e");
-      yield HomeFailureState(message : "Udostępnianie śpiewnika nie powiodło się");
-    }
-  }
 
   Stream<HomeState> _mapHomeUploadFilesToCloudEventToState(List<FileModel> newFiles) async* {
     yield HomeShowLoadingState(message: "Udostępniam pliki grupie...", loadingType: LoadingType.CLOUD_PROGRESS);
@@ -345,27 +358,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       List<Map<String, dynamic>> storageReferences =
           await _createReferenceList(newLocalFiles: newFiles, groupId: user.groupId);
 
-      //_storageRepository.storageReferences.forEach((element) {debugPrint("StorageReference : ${element.keys}");});
-
       List<DatabaseLyricsFileInfo> uploadedFilesInfo = await _storageRepository.uploadFiles(storageReferences);
 
-      await _groupRepository.setGroupShouldUpdateSongbook(user.uid, user.groupId);
       await _groupRepository.updateLyricsFilesInfo(uploadedFilesInfo, user.groupId);
-
-      await _databaseRepository.addUpdateInfo(
-        user.groupId,
-        user.username,
-        uploadedFilesInfo
-            .map((e) => {'name': e.fileNameWithExtension, 'downloadUrl': e.downloadUrl, 'localPath': e.localPath})
-            .toList(),
-      );
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
       yield HomeUploadSongbookSuccessState();
     } catch (e) {
       debugPrint("-- HomeBloc | Uploading files error : $e");
-      yield HomeFailureState(message : "Wystąpił problem z udostępnieniem plików");
+      yield HomeFailureState(message: "Wystąpił problem z udostępnieniem plików");
     }
   }
 
@@ -383,7 +385,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       firebaseStoragePath = "$dir";
 
-
       String reference;
 
       reference = "$groupId/songbook/$dir";
@@ -396,54 +397,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     return storageReferences;
   }
 
-  Future _createReferenceListOfAllFilesInSongbookDir({Directory dir, String firebasePath = ""}) async {
-    Directory songbookDir;
-    String firebaseStoragePath = firebasePath;
-
-    if (dir == null)
-      songbookDir = await FilesUtils.getSongbookDirectory();
-    else
-      songbookDir = dir;
-
-    List<FileSystemEntity> allFiles = FilesUtils.sortList(songbookDir.listSync());
-
-    for (var element in allFiles.reversed) {
-      if (FileSystemEntity.isDirectorySync(element.path)) {
-        if (firebasePath == "")
-          firebaseStoragePath = "${basename(element.path)}";
-        else
-          firebaseStoragePath = "$firebaseStoragePath/${basename(element.path)}";
-
-        _createReferenceListOfAllFilesInSongbookDir(dir: Directory(element.path), firebasePath: firebaseStoragePath);
-      } else {
-        _storageRepository.addStorageReference(File(element.path), subDir: firebaseStoragePath);
-      }
-    }
-  }
-
-  Stream<HomeState> _mapHomeLoadLocalSongbookEventToState() async* {
-    yield HomeShowLoadingState(loadingType: LoadingType.LOADING);
-
-
-    List<FileModel> songbook = List();
-
-    try {
-      debugPrint("Start Loading local songbook");
-      Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
-
-      if (songbookDirectory.listSync().isNotEmpty) songbook = await FilesUtils.getFilesInPath(songbookDirectory.path);
-
-      yield HomeLocalSongbookLoadedState(songbook: songbook);
-    } catch (e) {
-      debugPrint("-- HomeBloc | Getting local files error : $e");
-      yield HomeFailureState(message : "Nie można załadować plików...");
-    }
-  }
-
-  Stream<HomeState> _mapHomeCheckForNewLocalFilesEventToState() async* {
+  Stream<HomeState> _mapHomeCheckForAnyUpdatesEventToState() async* {
     List<FileModel> localSongbook = List();
-    List<String> localNewFilesNames = List();
-    List<String> cloudNewFilesNames = List();
+    List<String> localNewFilesPaths = List();
+    List<String> cloudNewFilesPaths = List();
 
     List<FileModel> localSongbookNewFiles = List();
     List<DatabaseLyricsFileInfo> cloudSongbookNewFiles = List();
@@ -451,25 +408,25 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     List<String> localFiles = List();
     List<String> cloudFiles = List();
 
-    String groupId = await _userRepository.getUserGroupId();
+    String groupId = await _userRepository.getCurrentUserGroupId();
 
     localSongbook = await FilesUtils.getBandoSongbookFiles();
     List<DatabaseLyricsFileInfo> cloudSongbook = await _groupRepository.getAllLyricsFilesInfo(groupId);
 
-    localFiles = _getLocalSongbookFilesNames(localSongbook);
+    localFiles = _getLocalSongbookAsCloudPaths(localSongbook);
+
     cloudSongbook.forEach((element) {
-      cloudFiles.add(element.fileNameWithExtension);
+      cloudFiles.add(element.localPath);
     });
 
-    localNewFilesNames = localFiles.where((element) => !cloudFiles.contains(element)).toList();
-    cloudNewFilesNames = cloudFiles.where((element) => !localFiles.contains(element)).toList();
+    localNewFilesPaths = localFiles.where((element) => !cloudFiles.contains(element)).toList();
+    cloudNewFilesPaths = cloudFiles.where((element) => !localFiles.contains(element)).toList();
 
-    localSongbookNewFiles = _getNewLocalFiles(localNewFilesNames, localSongbook);
+    localSongbookNewFiles = _getNewLocalFiles(localNewFilesPaths, localSongbook);
     cloudSongbookNewFiles =
-        cloudSongbook.where((element) => cloudNewFilesNames.contains(element.fileNameWithExtension)).toList();
+        cloudSongbook.where((element) => cloudNewFilesPaths.contains(element.localPath)).toList();
 
-    debugPrint("localFiles : $localFiles");
-    debugPrint("cloudFiles : $cloudFiles");
+
     localSongbookNewFiles.forEach((element) {
       debugPrint("localSongbookNewFiles : ${element.fileSystemEntity.path}");
     });
@@ -486,21 +443,37 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     localSongbook.forEach((element) {
       if (element.children.isNotEmpty) localSongbookNewFiles.addAll(_getNewLocalFiles(newFiles, element.children));
 
-      if (!element.isDirectory && newFiles.contains(element.fileName())) localSongbookNewFiles.add(element);
+      if (!element.isDirectory && newFiles.contains(FilesUtils.getSongbookFilePath(element.fileSystemEntity.path)))
+        localSongbookNewFiles.add(element);
     });
 
     return localSongbookNewFiles;
   }
 
-  List<String> _getLocalSongbookFilesNames(List<FileModel> localSongbook) {
+
+  List<String> _getLocalSongbookFilesPaths(List<FileModel> localSongbook) {
     List<String> allFilesNames = List();
 
     localSongbook.forEach((element) {
       if (element.children.isNotEmpty) {
-        List<String> children = _getLocalSongbookFilesNames(element.children);
+        List<String> children = _getLocalSongbookFilesPaths(element.children);
         allFilesNames.addAll(children);
       }
-      if (!element.isDirectory) allFilesNames.add(element.fileName());
+      if (!element.isDirectory) allFilesNames.add(element.fileSystemEntity.path);
+    });
+
+    return allFilesNames;
+  }
+
+  List<String> _getLocalSongbookAsCloudPaths(List<FileModel> localSongbook) {
+    List<String> allFilesNames = List();
+
+    localSongbook.forEach((element) {
+      if (element.children.isNotEmpty) {
+        List<String> children = _getLocalSongbookAsCloudPaths(element.children);
+        allFilesNames.addAll(children);
+      }
+      if (!element.isDirectory) allFilesNames.add(FilesUtils.getSongbookFilePath(element.fileSystemEntity.path));
     });
 
     return allFilesNames;
