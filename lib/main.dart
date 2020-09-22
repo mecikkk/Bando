@@ -1,24 +1,18 @@
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/dependency_injection.dart';
 import 'package:bando/pages/auth_pages/login_page.dart';
-import 'package:bando/pages/auth_pages/success_page.dart';
-import 'package:bando/pages/home_pages/home_page.dart';
+import 'package:bando/pages/home/home_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
-import 'package:bando/widgets/gradient_raised_button.dart';
-import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/all.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:koin/koin.dart';
-import 'package:lottie/lottie.dart';
 
 import 'blocs/auth_bloc/auth_bloc.dart';
 import 'blocs/group_bloc/group_bloc.dart';
 import 'blocs/home_bloc/home_bloc.dart';
-import 'models/group_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,28 +44,31 @@ class BandoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppThemes.lightTheme,
       darkTheme: AppThemes.darkTheme,
+      themeMode: ThemeMode.system,
       home: BlocBuilder<AuthBloc, AuthState>(
+
         builder: (context, state) {
           return AnimatedSwitcher(
             duration: Duration(milliseconds: 800),
-            child: swapPages(state, context),
+            child: _swapPages(state, context),
           );
         },
+
       ),
     );
   }
 
-  Widget swapPages(AuthState state, BuildContext context) {
+  Widget _swapPages(AuthState state, BuildContext context) {
     if (state is Unauthenticated)
       return LoginPage();
     else if (state is Authenticated) {
       return _buildHomePage();
     } else {
-      return _buildHeader(context);
+      return _buildSplashScreen(context);
     }
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildSplashScreen(BuildContext context) {
     return Scaffold(
       body: Container(
         width: MediaQuery.of(context).size.width,

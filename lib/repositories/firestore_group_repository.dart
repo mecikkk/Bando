@@ -17,13 +17,12 @@ class FirestoreGroupRepository {
     Group group = await getGroup(groupId);
 
     // Add groupId claim for firebase storage rules
-    HttpsCallableResult result = await CloudFunctions.instance
+    await CloudFunctions.instance
         .getHttpsCallable(functionName: "addGroupToken")
         .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
 
     FirebaseUser fUser = await FirebaseAuth.instance.currentUser();
-
-    IdTokenResult tokenResult = await fUser.getIdToken(refresh: true);
+    await fUser.getIdToken(refresh: true);
 
     group.members.add(user.toMap());
 
@@ -45,7 +44,6 @@ class FirestoreGroupRepository {
   Future<void> deleteLyricsFilesInfo(List<FileModel> deletedFiles, String groupId) async {
     for (var file in deletedFiles) {
       if (file.isDirectory) {
-
         QuerySnapshot snapshot = await groupCollection
             .document(groupId)
             .collection('songbook')
@@ -53,16 +51,19 @@ class FirestoreGroupRepository {
                 isGreaterThanOrEqualTo: file.fileName(), isLessThanOrEqualTo: "${file.fileName()}\uf8ff")
             .getDocuments();
 
-        for (DocumentSnapshot doc in snapshot.documents) doc.reference.delete();
-
+        for (DocumentSnapshot doc in snapshot.documents) {
+          await doc.reference.delete();
+        }
       } else {
         QuerySnapshot snapshot = await groupCollection
             .document(groupId)
             .collection('songbook')
-            .where('fileName', isEqualTo: file.fileName())
+            .where('localPath', isEqualTo: file.localPath)
             .getDocuments();
 
-        for (DocumentSnapshot doc in snapshot.documents) doc.reference.delete();
+        for (DocumentSnapshot doc in snapshot.documents) {
+          await doc.reference.delete();
+        }
       }
     }
   }
@@ -72,8 +73,7 @@ class FirestoreGroupRepository {
 
     QuerySnapshot querySnapshot = await groupCollection.document(groupId).collection('songbook').getDocuments();
 
-    for (var doc in querySnapshot.documents)
-      lyricsFilesInfo.add(DatabaseLyricsFileInfo.fromSnapshot(doc));
+    for (var doc in querySnapshot.documents) lyricsFilesInfo.add(DatabaseLyricsFileInfo.fromSnapshot(doc));
 
     return lyricsFilesInfo;
   }

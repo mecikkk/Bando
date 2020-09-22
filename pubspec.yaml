@@ -100,6 +100,7 @@ flutter:
     - cloud.svg
     - audio-doc_deleted.svg
     - no_group_animation.json
+    - empty_animation.json
 
 
   fonts:

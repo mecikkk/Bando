@@ -12,7 +12,8 @@ enum GroupConfigurationType {CREATING_GROUP, JOINING_TO_GROUP}
 
 extension FileSystemEntityExtention on FileSystemEntity{
   String get name {
-    return this?.path?.split(Platform.pathSeparator)?.last;
+    String withExt = this?.path?.split(Platform.pathSeparator)?.last;
+    return withExt.replaceAll('.pdf', '');
   }
 }
 
@@ -22,9 +23,11 @@ extension FileExtention on File{
   }
 }
 
-void updateStatusbarAndNavBar(BuildContext context, {bool showWhiteStatusBarIcons = true}) async {
+Future updateStatusbarAndNavBar(BuildContext context, {bool showWhiteStatusBarIcons = true}) async {
   await FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
-  FlutterStatusbarcolor.setStatusBarWhiteForeground(showWhiteStatusBarIcons);
-  FlutterStatusbarcolor.setNavigationBarColor(Theme.of(context).scaffoldBackgroundColor);
-  FlutterStatusbarcolor.setNavigationBarWhiteForeground(!AppThemes.isLightTheme(context));
+  await FlutterStatusbarcolor.setStatusBarWhiteForeground(showWhiteStatusBarIcons);
+  await FlutterStatusbarcolor.setNavigationBarColor(Theme.of(context).scaffoldBackgroundColor);
+  await  FlutterStatusbarcolor.setNavigationBarWhiteForeground(!AppThemes.isLightTheme(context));
+
+  return;
 }

@@ -84,32 +84,22 @@ class EntryFileItemState extends State<EntryFileItem> {
     return (extension(root.fileSystemEntity.path) == '.pdf');
   }
 
-  Widget _fileOrEmptyDirectoryWidget(FileModel root) => Container(
-        width: MediaQuery.of(_context).size.width - 50,
-        child: Padding(
-            padding: const EdgeInsets.only(left: 4.0),
-            child: FileListTile(
-              svgAsset: root.isDirectory ? _getDirectoryIcon() : _getLyricsPageIcon(),
-              fileName: root.fileName(),
-            )
-
-            // ListTile(
-            //   leading: SvgPicture.asset(
-            //     root.isDirectory ? _getDirectoryIcon() : _getLyricsPageIcon(),
-            //     width: 35.0,
-            //     height: 35.0,
-            //   ),
-            //   title: Text(root.fileName()),
-            // ),
-            ),
-      );
+  Widget _fileOrEmptyDirectoryWidget(FileModel root) => Padding(
+      padding: const EdgeInsets.only(left: 4.0),
+      child: FileListTile(
+        key: Key(root.localPath),
+        svgAsset: root.isDirectory ? _getDirectoryIcon() : _getLyricsPageIcon(),
+        fileName: root.fileName(),
+      ));
 
   Widget _directoryWidget(FileModel root) => Padding(
         padding: const EdgeInsets.only(left: 4.0),
         child: FileListExpandableTile(
+            key: Key(root.localPath),
             svgAsset: root.isDirectory ? _getDirectoryIcon() : _getLyricsPageIcon(),
-            fileName: root.fileName(),
-            children: root.children.map(_buildTiles).toList()),
+            file: root,
+            children: root.children.map(_buildTiles).toList(),
+        ),
       );
 
   String _getDirectoryIcon() =>
@@ -123,7 +113,7 @@ class FileListTile extends StatelessWidget {
   final String svgAsset;
   final String fileName;
 
-  FileListTile({@required this.svgAsset, @required this.fileName});
+  FileListTile({Key key, @required this.svgAsset, @required this.fileName}) : super(key : key);
 
   @override
   Widget build(BuildContext context) {
@@ -140,11 +130,14 @@ class FileListTile extends StatelessWidget {
               height: 35.0,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              fileName,
-              style: TextStyle(fontSize: 17.0),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                fileName,
+                overflow: TextOverflow.fade,
+                style: TextStyle(fontSize: 17.0),
+              ),
             ),
           )
         ],
@@ -155,10 +148,11 @@ class FileListTile extends StatelessWidget {
 
 class FileListExpandableTile extends StatelessWidget {
   final String svgAsset;
-  final String fileName;
+  final FileModel file;
   final List<Widget> children;
 
-  FileListExpandableTile({@required this.svgAsset, @required this.fileName, @required this.children, Key key})
+
+  FileListExpandableTile({Key key, @required this.svgAsset, @required this.file, @required this.children})
       : super(key: key);
 
   @override
@@ -166,7 +160,7 @@ class FileListExpandableTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ExpandablePanel(
-        iconColor: AppThemes.isLightTheme(context) ? Colors.black45 : Colors.white,
+          iconColor: AppThemes.isLightTheme(context) ? Colors.black45 : Colors.white,
           header: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -178,21 +172,21 @@ class FileListExpandableTile extends StatelessWidget {
                   height: 35.0,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  fileName,
-                  style: TextStyle(fontSize: 17.0),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    file.fileName(),
+                    overflow: TextOverflow.fade,
+                    style: TextStyle(fontSize: 17.0),
+                  ),
                 ),
               )
             ],
           ),
-          expanded: Container(
-            width: MediaQuery.of(context).size.width,
-            height: (65.0 * (children.length)) + (2 * children.length),
-            child: Column(
-              children: children,
-            ),
+          expanded: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: children,
           )),
     );
   }

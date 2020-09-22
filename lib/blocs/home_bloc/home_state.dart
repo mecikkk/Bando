@@ -49,21 +49,21 @@ class HomeStartCheckingUpdatesState extends HomeState {}
 
 class HomeUploadSongbookSuccessState extends HomeState {}
 
-class HomeNeedToDownloadTheEntireSongbookState extends HomeState {
+class HomeEmptyLocalAndCloudSongbookState extends HomeState {
   final User user;
   final Group group;
 
-  HomeNeedToDownloadTheEntireSongbookState({@required this.user, @required this.group});
+  HomeEmptyLocalAndCloudSongbookState({this.user, this.group});
 
   @override
   List<Object> get props => [user, group];
 }
 
-class HomeNeedToUploadLocalSongbookToCloudState extends HomeState {
+class HomeNeedToDownloadTheEntireSongbookState extends HomeState {
   final User user;
   final Group group;
 
-  HomeNeedToUploadLocalSongbookToCloudState({@required this.user, @required this.group});
+  HomeNeedToDownloadTheEntireSongbookState({this.user, this.group});
 
   @override
   List<Object> get props => [user, group];
@@ -74,7 +74,7 @@ class HomeReadyState extends HomeState {
   final User user;
   final Group group;
 
-  HomeReadyState({@required this.songbook, @required this.user, @required this.group});
+  HomeReadyState({@required this.songbook, this.user, this.group});
 
   @override
   List<Object> get props => [songbook, user, group];

@@ -21,11 +21,6 @@ class FirestoreUserRepository {
     User user = await getUser(uid);
     user.groupId = groupId;
 
-    // // Add groupId claim for firebase storage rules
-    // await CloudFunctions.instance
-    //     .getHttpsCallable(functionName: "addGroupToken")
-    //     .call(<String, dynamic>{"groupId": groupId, "uid": user.uid});
-
     return usersCollection.document(uid).updateData(user.toDocument());
   }
 

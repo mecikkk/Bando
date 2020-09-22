@@ -18,6 +18,8 @@ class HomeDeleteLocalFilesEvent extends HomeEvent {
   List<Object> get props => [deletedFiles];
 }
 
+class HomeRefreshLocalAndCloudSongbookEvent extends HomeEvent {}
+
 class HomeCheckForAnyUpdatesEvent extends HomeEvent {}
 
 class HomeCheckForDeletedFilesEvent extends HomeEvent {

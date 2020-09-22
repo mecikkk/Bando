@@ -4,6 +4,7 @@ import 'package:bando/models/database_lyrics_file_info_model.dart';
 import 'package:bando/models/deleted_files_model.dart';
 import 'package:bando/models/file_model.dart';
 import 'package:bando/pages/auth_pages/register_group_form.dart';
+import 'package:bando/pages/home/lyrics_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/files_utils.dart';
 import 'package:bando/utils/global_keys.dart';
@@ -11,13 +12,13 @@ import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/animated_opaticy_widget.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/loading_widget.dart';
-import 'package:bando/widgets/rounded_colored_shadow_button.dart';
 import 'package:bando/widgets/search_textfield.dart';
 import 'package:bando/widgets/songbook_listview.dart';
 import 'package:bando/widgets/songbook_update_modal_bottom_sheet.dart';
 import 'package:bando/widgets/status_info_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/all.dart';
 import 'package:flutter_svg/svg.dart';
@@ -37,13 +38,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   AnimationController _statusAndSearchAnimationController;
   AnimationController _deletingModeAnimationController;
-  AnimationController _loadingWidgetAnimationController;
 
   Animation searchFieldAnimation;
   Animation updateStatusInfoAnimation;
   Animation showHideDeletingModeAnimation;
   Animation showHideStatusInfoAnimation;
-  Animation _loadingWidgetAnimation;
 
   double _fullWidth;
   String _groupName = "------";
@@ -66,10 +65,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return false;
   });
 
-  final _loadingWidgetVisibilityProvider = StateProvider<bool>((ref) {
-    return true;
-  });
-
   final _songbookListProvider = StateProvider<List<FileModel>>((ref) {
     return List();
   });
@@ -90,10 +85,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _loadingWidgetAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
 
     searchFieldAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _statusAndSearchAnimationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
@@ -107,22 +98,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showHideStatusInfoAnimation = Tween(begin: 1.0, end: 0.0).animate(new CurvedAnimation(
         parent: _deletingModeAnimationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
 
-    _loadingWidgetAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
-        parent: _loadingWidgetAnimationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
-
     showHideDeletingModeAnimation.addStatusListener((status) {
       if (status == AnimationStatus.reverse)
         context.read(_deletingBarVisibilityProvider).state = false;
       else if (status == AnimationStatus.forward) context.read(_deletingBarVisibilityProvider).state = true;
-    });
-
-    _loadingWidgetAnimation.addStatusListener((status) {
-      if (status == AnimationStatus.forward) context.read(_loadingWidgetVisibilityProvider).state = true;
-
-      if (status == AnimationStatus.dismissed) context.read(_loadingWidgetVisibilityProvider).state = false;
-
-      debugPrint(
-          "LoadingANimState : ${status} | loadingVisibility : ${context.read(_loadingWidgetVisibilityProvider).state}");
     });
 
     return null;
@@ -140,13 +119,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     debugPrint('HomeBuild');
-    _fullWidth = MediaQuery.of(context).size.width;
+
     updateStatusbarAndNavBar(context);
+
+
+    _fullWidth = MediaQuery.of(context).size.width;
     _statusInfoWidget = _buildStatusInfo();
 
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) async {
-        if (state is HomeInitialState) await _checkStoragePermission();
+        if (state is HomeInitialState) {
+          await _checkStoragePermission();
+
+        }
 
         if (state is HomeReadyState) {
           _filesToDelete.clear();
@@ -155,8 +140,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           context.read(_songbookListProvider).state.clear();
           context.read(_songbookListProvider).state = state.songbook;
 
-          _userName = state.user.username;
-          _groupName = state.group.name;
+          _userName = state.user?.username;
+          _groupName = state.group?.name;
 
           _bloc.add(HomeCheckForDeletedFilesEvent());
         }
@@ -178,6 +163,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
 
         if (state is HomeNeedToDeleteFilesLocallyState) {
+
           _needToUpdate = true;
           _deletedFiles = state.updates;
           GlobalKeys.homeStatusInfo.currentState.updateInfoState(songbookActual: false);
@@ -185,13 +171,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
 
         if (state is HomeNeedToDownloadTheEntireSongbookState) {
-          _userName = state.user.username;
-          _groupName = state.group.name;
+          if(state.user != null && state.group != null) {
+            _userName = state.user.username;
+            _groupName = state.group.name;
+          }
         }
 
-        if (state is HomeNeedToUploadLocalSongbookToCloudState) {
-          _userName = state.user.username;
-          _groupName = state.group.name;
+        if (state is HomeEmptyLocalAndCloudSongbookState) {
+          if(state.user != null && state.group != null) {
+            _userName = state.user.username;
+            _groupName = state.group.name;
+          }
         }
 
         if (state is HomeStartCheckingUpdatesState) {
@@ -251,12 +241,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         builder: (context, state) {
           debugPrint("_____________ Build whole ui");
           return Scaffold(
-            body: Builder(builder: (scaffoldContext) {
-              _scaffoldContext = scaffoldContext;
+            body: Builder(builder: (context) {
               return Stack(
                 children: <Widget>[
                   Positioned(top: 190, left: 0, right: 0, bottom: 0, child: _buildMainContent(context, state)),
-                  buildHeader(scaffoldContext),
+                  buildHeader(context),
                 ],
               );
             }),
@@ -276,7 +265,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       return _buildNoGroupInfoContent(_scaffoldContext);
     } else if (state is HomeNeedToDownloadTheEntireSongbookState)
       return _buildDownloadTheEntireSongbookWidget();
-    else if (state is HomeNeedToUploadLocalSongbookToCloudState)
+    else if (state is HomeEmptyLocalAndCloudSongbookState)
       return _buildEmptyLocalAndCloudSongbookWidget();
     else
       return SongbookListView(
@@ -284,9 +273,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         songbook: context.read(_songbookListProvider).state,
         onItemClick: (FileModel file) {
           debugPrint("Clicked : ${file.fileName()}");
-          _filesToDelete.forEach((element) {
-            debugPrint("${element.fileName()}");
-          });
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => LyricsPage(fileModel: file)));
         },
         onItemLongClick: (FileModel file, bool isSelected) {
           debugPrint("Long clicked : ${file.fileName()} selected ? $isSelected");
@@ -574,7 +561,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           padding: const EdgeInsets.only(left: 20.0, right: 20.0),
           child: Text(
             "Śpiewnik jest pusty",
-            textAlign: TextAlign.left,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 26.0,
             ),
@@ -592,28 +579,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
         Padding(
-          padding: EdgeInsets.only(top: 20, bottom: 20, left: 30, right: 30),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              RaisedButton(
-                onPressed: () {
-                  _bloc.add(HomeCheckForAnyUpdatesEvent());
-                },
-                child: Text(
-                  "Odśwież".toUpperCase(),
-                  style: TextStyle(color: Colors.white),
-                ),
-                color: Theme.of(context).accentColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.only(top : 20.0, bottom: 10.0),
+          child: Center(
+            child: Lottie.asset(
+              "assets/empty_animation.json",
+              repeat: true,
+              width: 150,
+              height: 150,
+            ),
           ),
         ),
+
         Padding(
-          padding: EdgeInsets.only(right: 20, left: 20),
+          padding: EdgeInsets.only(right: 20, left: 20, top : 20),
           child: Text(
             "Zawartość folderu zostanie umieszczona w chmurze i udostępniona wszystkim członkom grupy.",
             style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),

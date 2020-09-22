@@ -82,7 +82,9 @@ class UpdateSongbookBottomSheetState extends State<UpdateSongbookBottomSheet> {
                 Padding(
                   padding: const EdgeInsets.only(top: 24.0, bottom: 16.0),
                   child: Text(
-                    (widget.updateType == SongbookUpdateType.DELETED_FILES) ? "Usunięto pliki z grupowej bazy danych w chmurze. Czy chcesz zaktualizować pliki na urządzeniu ?": widget.message,
+                    (widget.updateType == SongbookUpdateType.DELETED_FILES)
+                        ? "Usunięto pliki z grupowej bazy danych w chmurze. Czy chcesz zaktualizować pliki na urządzeniu ?"
+                        : widget.message,
                     style: TextStyle(fontSize: 16.0),
                   ),
                 ),
@@ -154,104 +156,110 @@ class UpdateSongbookBottomSheetState extends State<UpdateSongbookBottomSheet> {
     }
   }
 
-  Widget _buildNewFilesExpandableView(List<dynamic> files, String message, String iconAssetPath) => Padding(
-        padding: const EdgeInsets.only(top: 16, bottom: 16.0),
-        child: ExpandablePanel(
-          iconColor: Theme.of(context).textTheme.bodyText1.color,
-          header: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SvgPicture.asset(
-                iconAssetPath,
-                height: 30,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 12.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("$message (${files.length})"),
-                ),
-              ),
-            ],
+  Widget _buildNewFilesExpandableView(List<dynamic> files, String message, String iconAssetPath) {
+
+    List<Widget> _items = List();
+    files.forEach((element) {
+      _items.add(
+
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0, left: 16.0, right: 16.0),
+          child: Text(
+            "✓ ${element.localPath}",
+            style: TextStyle(fontSize: 16.0, color: AppThemes.getPositiveGreenColor(context)),
           ),
-          expanded: Container(
-            height: (25 * files.length).toDouble() + 25,
-            child: ListView.builder(
-              physics: NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, left: 16.0, right: 16.0),
-                child: Text(
-                  "✓ ${files[index].localPath}",
-                  style: TextStyle(fontSize: 16.0, color: AppThemes.getPositiveGreenColor(context)),
-                ),
-              ),
-              itemCount: files.length,
-            ),
-          ),
-        ),
+        )
+
       );
-
-  Widget _buildDeletedFilesExpandableView() {
-
-    List<Map<String, String>> deletedFiles = List();
-
-    widget.deletedCloudFiles.forEach((details) {
-      details.files.forEach((file) {
-        deletedFiles.add({
-          'name' : file['name'],
-          'whoDeleted' : details.whoDeleted
-        });
-      });
     });
 
     return Padding(
       padding: const EdgeInsets.only(top: 16, bottom: 16.0),
-      child: Column(
-        children: [
-          ExpandablePanel(
-            iconColor: Theme.of(context).textTheme.bodyText1.color,
-            header: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SvgPicture.asset(
-                  'assets/audio-doc_deleted.svg',
-                  height: 30,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 12.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text("Usunięte teksty i/lub foldery (${deletedFiles.length})"),
-                  ),
-                ),
-              ],
+      child: ExpandablePanel(
+        iconColor: Theme.of(context).textTheme.bodyText1.color,
+        header: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SvgPicture.asset(
+              iconAssetPath,
+              height: 30,
             ),
-            expanded: Container(
-              height: (50 * deletedFiles.length).toDouble() + 25,
-              child: ListView.builder(
-                physics: NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0, left: 16.0, right: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "✖  ${deletedFiles[index]['name']}",
-                        style: TextStyle(color: Colors.redAccent, fontSize: 15.0),
-                      ),
-                      Text(
-                        "      Usunięte przez członka grupy - ${deletedFiles[index]['whoDeleted']} ",
-                        style: TextStyle(color: Colors.redAccent.withOpacity(0.5), fontSize: 13.0),
-                      ),
-                    ],
-                  ),
-                ),
-                itemCount: deletedFiles.length,
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text("$message (${files.length})"),
               ),
             ),
+          ],
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.only(top : 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _items,
           ),
-        ],
-      )
+        )
+      ),
     );
+  }
+
+  Widget _buildDeletedFilesExpandableView() {
+    List<Widget> _items = List();
+
+    widget.deletedCloudFiles.forEach((details) {
+      details.files.forEach((file) {
+        _items.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "✖  ${file['name']}",
+                style: TextStyle(color: Colors.redAccent, fontSize: 15.0),
+              ),
+              Text(
+                "      Usunięte przez członka grupy - ${details.whoDeleted} ",
+                style: TextStyle(color: Colors.redAccent.withOpacity(0.5), fontSize: 13.0),
+              ),
+            ],
+          ),
+        );
+      });
+    });
+
+    return Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 16.0),
+        child: Column(
+          children: [
+            ExpandablePanel(
+              iconColor: Theme.of(context).textTheme.bodyText1.color,
+              header: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SvgPicture.asset(
+                    'assets/audio-doc_deleted.svg',
+                    height: 30,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("Usunięte teksty i/lub foldery (${_items.length})"),
+                    ),
+                  ),
+                ],
+              ),
+              expanded: Padding(
+                padding: const EdgeInsets.only(top : 16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _items,
+                ),
+              )
+            ),
+          ],
+        ));
   }
 }

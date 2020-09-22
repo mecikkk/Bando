@@ -1,5 +1,4 @@
 
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -21,6 +20,7 @@ class AppThemes {
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     accentColor: AppThemes.lightAccentColor,
+    backgroundColor: Color(0xfff3f4f9),
     scaffoldBackgroundColor: Color(0xfff3f4f9),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
@@ -30,6 +30,7 @@ class AppThemes {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     accentColor: AppThemes.darkAccentColor,
+    backgroundColor: Color(0xff27272b),
     scaffoldBackgroundColor: Color(0xff27272b),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
