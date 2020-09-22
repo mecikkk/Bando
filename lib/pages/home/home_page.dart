@@ -5,12 +5,16 @@ import 'package:bando/models/deleted_files_model.dart';
 import 'package:bando/models/file_model.dart';
 import 'package:bando/pages/auth_pages/register_group_form.dart';
 import 'package:bando/pages/home/lyrics_page.dart';
+import 'package:bando/pages/home/widgets/deleting_alert_dialog.dart';
+import 'package:bando/pages/home/widgets/download_entire_songbook_widget.dart';
+import 'package:bando/pages/home/widgets/empty_songbook_widget.dart';
+import 'package:bando/pages/home/widgets/home_header_widget.dart';
+import 'package:bando/pages/home/widgets/no_group_widget.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/files_utils.dart';
 import 'package:bando/utils/global_keys.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/animated_opaticy_widget.dart';
-import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/loading_widget.dart';
 import 'package:bando/widgets/search_textfield.dart';
 import 'package:bando/widgets/songbook_listview.dart';
@@ -21,9 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/all.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:koin_flutter/koin_flutter.dart';
-import 'package:lottie/lottie.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,7 +46,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Animation showHideDeletingModeAnimation;
   Animation showHideStatusInfoAnimation;
 
-  double _fullWidth;
   String _groupName = "------";
   String _userName = "user";
   bool _needToUpdate = false;
@@ -85,7 +86,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       vsync: this,
     );
 
-
     searchFieldAnimation = Tween(begin: 0.0, end: 1.0).animate(new CurvedAnimation(
         parent: _statusAndSearchAnimationController, curve: Curves.easeOutCirc, reverseCurve: Curves.easeInCirc));
 
@@ -122,15 +122,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     updateStatusbarAndNavBar(context);
 
-
-    _fullWidth = MediaQuery.of(context).size.width;
     _statusInfoWidget = _buildStatusInfo();
 
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) async {
         if (state is HomeInitialState) {
           await _checkStoragePermission();
-
         }
 
         if (state is HomeReadyState) {
@@ -163,7 +160,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
 
         if (state is HomeNeedToDeleteFilesLocallyState) {
-
           _needToUpdate = true;
           _deletedFiles = state.updates;
           GlobalKeys.homeStatusInfo.currentState.updateInfoState(songbookActual: false);
@@ -171,14 +167,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
 
         if (state is HomeNeedToDownloadTheEntireSongbookState) {
-          if(state.user != null && state.group != null) {
+          if (state.user != null && state.group != null) {
             _userName = state.user.username;
             _groupName = state.group.name;
           }
         }
 
         if (state is HomeEmptyLocalAndCloudSongbookState) {
-          if(state.user != null && state.group != null) {
+          if (state.user != null && state.group != null) {
             _userName = state.user.username;
             _groupName = state.group.name;
           }
@@ -245,7 +241,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               return Stack(
                 children: <Widget>[
                   Positioned(top: 190, left: 0, right: 0, bottom: 0, child: _buildMainContent(context, state)),
-                  buildHeader(context),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    child: HomeHeaderWidget(
+                      groupName: _groupName,
+                      username: _userName,
+                      onProfileClick: () {
+                        _logout();
+                      },
+                    ),
+                  )
                 ],
               );
             }),
@@ -262,11 +268,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       return LoadingWidget(loadingType: LoadingType.LOADING);
     } else if (state is HomeNoGroupState) {
       _userName = state.user.username;
-      return _buildNoGroupInfoContent(_scaffoldContext);
+      return NoGroupWidget(
+        onConfigureGroupClick: () {
+          _showGroupForm(context);
+        },
+      );
     } else if (state is HomeNeedToDownloadTheEntireSongbookState)
-      return _buildDownloadTheEntireSongbookWidget();
+      return DownloadTheEntireSongbookWidget(
+        onDownloadClick: () {
+          _bloc.add(HomeDownloadTheEntireSongbookEvent());
+        },
+      );
     else if (state is HomeEmptyLocalAndCloudSongbookState)
-      return _buildEmptyLocalAndCloudSongbookWidget();
+      return EmptySongbookWidget();
     else
       return SongbookListView(
         key: GlobalKeys.homeSongbookListView,
@@ -407,7 +421,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   width: searchFieldAnimation,
                                   searchBarOutlineFocusColor: Theme.of(context).textTheme.bodyText1.color,
                                   maxWidth: MediaQuery.of(context).size.width - 100,
-                                  onChanged: onSearch,
+                                  onChanged: context.read(_songbookListProvider).state.isNotEmpty ? onSearch : null,
                                 ),
                                 alignment: Alignment.bottomRight,
                               ),
@@ -417,11 +431,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   hoverColor: Colors.transparent,
                                   icon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyText1.color),
                                   onPressed: () {
-                                    showSearchBar = !showSearchBar;
-                                    if (!showSearchBar) FocusScope.of(context).unfocus();
-                                    showSearchBar
-                                        ? _statusAndSearchAnimationController.forward(from: 0.0)
-                                        : _statusAndSearchAnimationController.reverse(from: 1);
+                                    if (context.read(_songbookListProvider).state.isNotEmpty) {
+                                      showSearchBar = !showSearchBar;
+                                      if (!showSearchBar) {
+                                        _searchController.clear();
+                                        FocusScope.of(context).unfocus();
+                                      }
+                                      showSearchBar
+                                          ? _statusAndSearchAnimationController.forward(from: 0.0)
+                                          : _statusAndSearchAnimationController.reverse(from: 1);
+                                    }
                                   },
                                 ),
                               ),
@@ -552,165 +571,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEmptyLocalAndCloudSongbookWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-          child: Text(
-            "Śpiewnik jest pusty",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 26.0,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 10.0),
-          child: Text(
-            "Na urządzeniu został utworzony nowy folder \"BandoSongbook\". Umieść w nim pliki PDF z tekstami. Pliki innego typu niż PDF będą pomijane.",
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.7),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top : 20.0, bottom: 10.0),
-          child: Center(
-            child: Lottie.asset(
-              "assets/empty_animation.json",
-              repeat: true,
-              width: 150,
-              height: 150,
-            ),
-          ),
-        ),
-
-        Padding(
-          padding: EdgeInsets.only(right: 20, left: 20, top : 20),
-          child: Text(
-            "Zawartość folderu zostanie umieszczona w chmurze i udostępniona wszystkim członkom grupy.",
-            style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDownloadTheEntireSongbookWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-          child: Text(
-            "Pobierz teksty",
-            textAlign: TextAlign.left,
-            style: TextStyle(
-              fontSize: 26.0,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 8.0),
-          child: Text(
-            "Grupa posiada w chmurze bibliotekę z tekstami. Pobierz pliki na swoje urządzenie, aby móc korzystać z aplikacji offline.",
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Colors.white70,
-            ),
-          ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: RaisedButton(
-                  onPressed: () {
-                    _bloc.add(HomeDownloadTheEntireSongbookEvent());
-                  },
-                  child: Text(
-                    "Pobierz".toUpperCase(),
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  color: Theme.of(context).accentColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.only(left: 20, right: 20),
-          child: Text(
-            "Pobrane pliki zostaną umieszczone w specjalnie utworzonym folderze \"BandoSongbook\".",
-            style: TextStyle(fontSize: 14.0, color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.5)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Padding _buildNoGroupInfoContent(BuildContext context) {
-    return Padding(
-      key: UniqueKey(),
-      padding: const EdgeInsets.only(top: 60.0),
-      child: Align(
-        alignment: Alignment.center,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.only(top: 20, right: 20, left: 20, bottom: 5),
-              child: Text(
-                "Nie należysz do żadnej grupy",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24.0),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(bottom: 15, right: 20, left: 20),
-              child: Text(
-                "Utwórz nową grupę, lub dołącz do istniejącej",
-                style: TextStyle(color: Theme.of(context).textTheme.bodyText1.color.withOpacity(0.7)),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 20),
-              child: Lottie.asset(
-                "assets/no_group_animation.json",
-                repeat: true,
-                width: 150,
-                height: 150,
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: GradientRaisedButton(
-                text: "Grupa",
-                height: 40,
-                width: 200.0,
-                colors: [AppThemes.getStartColor(context), AppThemes.getSecondAccentColor(context), AppThemes.getSecondAccentColor(context)],
-                onPressed: () {
-                  _showGroupForm(context);
-                },
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   _showGroupForm(BuildContext context) async {
     Navigator.push(
       context,
@@ -721,83 +581,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
     ).then((_) {
-      _updateUI();
+      _bloc.add(HomeInitialEvent());
     });
-  }
-
-  void _updateUI() async {
-    _bloc.add(HomeInitialEvent());
-  }
-
-  Positioned buildHeader(BuildContext context) {
-    return Positioned(
-      top: 0,
-      child: Container(
-        height: 220,
-        width: _fullWidth,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
-            gradient: AppThemes.getGradient(context, Alignment.centerLeft, Alignment.topRight),
-            boxShadow: [
-              BoxShadow(
-                color: (Theme.of(context).brightness == Brightness.light)
-                    ? Colors.black.withOpacity(0.4)
-                    : Colors.black.withOpacity(0.6),
-                spreadRadius: 0,
-                blurRadius: 15,
-                offset: Offset(0, 1),
-              ),
-            ]),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 20.0, left: 20.0),
-                      child: Text(
-                        _groupName,
-                        style: TextStyle(color: Colors.white, fontSize: 28.0),
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      _logout();
-                      WidgetsBinding.instance.drawFrame();
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 20.0, right: 20.0),
-                      child: Icon(Icons.account_circle, color: Colors.white),
-                    ),
-                  )
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 22.0),
-                child: Text(
-                  "Witaj $_userName",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ),
-              SizedBox(height: 40),
-              _buildSubtitle("Aktualny tekst"),
-              _buildCurrentSongTitleWidget(
-                context,
-                "W Krainieckiej dziewczynie każdy się cieszy, jak jo dotyko",
-                "śpiewnik/blok1",
-              )
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _logout() async {
@@ -807,150 +592,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     FirebaseAuth.instance.signOut();
   }
 
-  Widget _buildSubtitle(String text) {
-    return Container(
-      padding: EdgeInsets.only(left: 22.0, bottom: 8),
-      child: Text(
-        text,
-        textAlign: TextAlign.left,
-        style: TextStyle(color: Colors.white, fontSize: 14.0),
-      ),
-    );
-  }
-
-  Widget _buildCurrentSongTitleWidget(BuildContext context, String title, String directory) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: SvgPicture.asset(
-              "assets/audio-doc.svg",
-              height: 30,
-              color: Colors.white,
-            ),
-          ),
-          Expanded(
-            flex: 6,
-            child: Container(
-              width: _fullWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    // Song Title
-                    title,
-                    textAlign: TextAlign.left,
-                    overflow: TextOverflow.fade,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(color: Colors.white, fontSize: 16.0),
-                  ),
-                  SizedBox(
-                    height: 2,
-                  ),
-                  Row(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4.0),
-                        child: Icon(
-                          Icons.folder_open,
-                          color: Colors.white70,
-                          size: 16,
-                        ),
-                      ),
-                      Text(
-                        // Directory name
-                        directory,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(color: Colors.white70, fontSize: 14.0, fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showConfirmDeleteDialog() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Usuń pliki',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyText1.color,
-            ),
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-          content: SingleChildScrollView(
-            child: Container(
-              height: MediaQuery.of(context).size.height / 2.5,
-              width: MediaQuery.of(context).size.width / 1.2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Czy chcesz trwale usunąć teksty ? Zaznaczone pliki zostaną usunięte z twojego urządzenia, oraz z chmury.',
-                    style: TextStyle(fontSize: 14.0),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 16.0, left: 8, right: 8, bottom: 16.0),
-                      child: ListView.builder(
-                          itemCount: _filesToDelete.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                              child: Text(
-                                "✖ ${_filesToDelete[index].fileName()}",
-                                style: TextStyle(color: Colors.redAccent),
-                              ),
-                            );
-                          }),
-                    ),
-                  ),
-                  Text(
-                    'Członkowie zespołu otrzymają powiadomienie o usuniętych plikach, oraz zostaną poproszeni o zaktualizowanie swoich lokalnych plików.',
-                    style: TextStyle(fontSize: 13.0, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text('ANULUJ'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _filesToDelete.clear();
-                _deletingModeAnimationController.reverse(from: 1.0);
-                GlobalKeys.homeSongbookListView.currentState.clearSelections();
-              },
-            ),
-            FlatButton(
-              child: Text(
-                'USUŃ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppThemes.getStartColor(context)),
-              ),
-              onPressed: () {
-                _bloc.add(HomeDeleteFilesFromCloudEvent(deletedFiles: _filesToDelete));
+        return DeletingAlertDialog(
+          filesToDelete: _filesToDelete,
+          onCancel: () {
+            Navigator.of(context).pop();
+            _filesToDelete.clear();
+            _deletingModeAnimationController.reverse(from: 1.0);
+            GlobalKeys.homeSongbookListView.currentState.clearSelections();
+          },
+          onConfirm: () {
+            _bloc.add(HomeDeleteFilesFromCloudEvent(deletedFiles: _filesToDelete));
 
-                _deletingModeAnimationController.reverse(from: 1.0);
-                GlobalKeys.homeSongbookListView.currentState.clearSelections();
+            _deletingModeAnimationController.reverse(from: 1.0);
+            GlobalKeys.homeSongbookListView.currentState.clearSelections();
 
-                Navigator.pop(context);
-              },
-            ),
-          ],
+            Navigator.pop(context);
+          },
         );
       },
     );
