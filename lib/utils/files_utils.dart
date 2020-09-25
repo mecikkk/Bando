@@ -50,6 +50,20 @@ class FilesUtils {
     return files;
   }
 
+  static Future<List<FileModel>> getOnlyFilesFromLocalSongbook(List<FileModel> songbook) async {
+    List<FileModel> allFiles = List();
+
+    for(var file in songbook) {
+      if (file.children.isNotEmpty){
+        List<FileModel> children = await getOnlyFilesFromLocalSongbook(file.children);
+        allFiles.addAll(children);
+      }
+      if (!file.isDirectory) allFiles.add(file);
+    }
+
+    return allFiles;
+  }
+
   static bool isPdfFile(FileSystemEntity root) {
     return (extension(root.path) == '.pdf');
   }
@@ -76,7 +90,7 @@ class FilesUtils {
 
   static Future<File> moveFile(File sourceFile, String newPath) async {
     try {
-      print("Moving | source : ${sourceFile.path} | newPath : ${newPath}");
+      print("Moving | source : ${sourceFile.path} | newPath : $newPath");
       return await sourceFile.rename("$newPath/${basename(sourceFile.path)}");
     } on FileSystemException catch (_) {
       final newFile = await sourceFile.copy(newPath);

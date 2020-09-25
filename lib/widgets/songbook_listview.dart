@@ -7,8 +7,9 @@ class SongbookListView extends StatefulWidget {
   final List<FileModel> songbook;
   final Function onItemClick;
   final Function onItemLongClick;
+  final Color customColor;
 
-  SongbookListView({Key key, @required this.songbook, @required this.onItemClick, @required this.onItemLongClick}) : super(key : key);
+  SongbookListView({Key key, @required this.songbook, @required this.onItemClick, @required this.onItemLongClick, this.customColor}) : super(key : key);
 
   @override
   State<StatefulWidget> createState() {
@@ -47,6 +48,7 @@ class SongbookListViewState extends State<SongbookListView> {
             context,
             onClick: widget.onItemClick,
             onLongClick: widget.onItemLongClick,
+            customColor : widget.customColor,
           );
         });
   }

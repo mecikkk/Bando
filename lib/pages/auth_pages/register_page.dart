@@ -2,18 +2,14 @@ import 'package:bando/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/blocs/register_bloc/register_bloc.dart';
 import 'package:bando/pages/auth_pages/register_form.dart';
 import 'package:bando/pages/auth_pages/register_group_form.dart';
-import 'package:bando/repositories/auth_repository.dart';
-import 'package:bando/repositories/firestore_group_repository.dart';
-import 'package:bando/repositories/firestore_user_repository.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:koin_flutter/koin_flutter.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class RegisterPage extends StatelessWidget {
   final PageController _pageController = PageController();

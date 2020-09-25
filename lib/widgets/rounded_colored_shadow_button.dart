@@ -1,5 +1,3 @@
-import 'package:bando/utils/app_themes.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class RoundedColoredShadowButton extends StatelessWidget {

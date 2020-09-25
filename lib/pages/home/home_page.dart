@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     debugPrint('HomeBuild');
 
-    updateStatusbarAndNavBar(context);
+    updateStatusbarAndNavBar(context, showWhiteStatusBarIcons: false);
 
     _statusInfoWidget = _buildStatusInfo();
 
@@ -287,7 +287,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         songbook: context.read(_songbookListProvider).state,
         onItemClick: (FileModel file) {
           debugPrint("Clicked : ${file.fileName()}");
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => LyricsPage(fileModel: file)));
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => LyricsPage(songbook : context.read(_songbookListProvider).state ,fileModel: file)));
         },
         onItemLongClick: (FileModel file, bool isSelected) {
           debugPrint("Long clicked : ${file.fileName()} selected ? $isSelected");

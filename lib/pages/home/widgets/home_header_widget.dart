@@ -44,7 +44,7 @@ class HomeHeaderWidget extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 20.0, left: 20.0),
                     child: Text(
                       groupName,
-                      style: TextStyle(color: Colors.white, fontSize: 28.0),
+                      style: TextStyle(color: Colors.black87, fontSize: 28.0),
                     ),
                   ),
                 ),
@@ -52,7 +52,7 @@ class HomeHeaderWidget extends StatelessWidget {
                   onTap: onProfileClick,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 20.0, right: 20.0),
-                    child: Icon(Icons.account_circle, color: Colors.white),
+                    child: Icon(Icons.account_circle, color: Colors.black87),
                   ),
                 )
               ],
@@ -61,7 +61,7 @@ class HomeHeaderWidget extends StatelessWidget {
               padding: const EdgeInsets.only(left: 22.0),
               child: Text(
                 "Witaj $username",
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.black54),
               ),
             ),
             SizedBox(height: 40),
@@ -83,7 +83,7 @@ class HomeHeaderWidget extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.left,
-        style: TextStyle(color: Colors.white, fontSize: 14.0),
+        style: TextStyle(color: Colors.black87, fontSize: 14.0),
       ),
     );
   }
