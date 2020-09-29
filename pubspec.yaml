@@ -101,6 +101,7 @@ flutter:
     - audio-doc_deleted.svg
     - no_group_animation.json
     - empty_animation.json
+    - crown.svg
 
 
   fonts:

@@ -1,7 +1,7 @@
 import 'package:bando/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/blocs/register_bloc/register_bloc.dart';
-import 'package:bando/pages/auth_pages/register_form.dart';
-import 'package:bando/pages/auth_pages/register_group_form.dart';
+import 'package:bando/pages/auth/register_form.dart';
+import 'package:bando/pages/auth/register_group_form.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';

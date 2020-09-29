@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppThemes {
-  static Color lightAccentColor = Color(0xff7889eb);
-  static Color darkAccentColor = Color(0xff5e77ff);
-  static Color lightStartColor = Color(0xff72cbf7);
-  static Color darkStartColor = Color(0xff3abeff);
-  static Color lightSecondAccentColor = Color(0xfffa78ad);
-  static Color darkSecondAccentColor = Color(0xffff5d9f);
+  static Color lightAccentColor = Color(0xff925bde);
+  static Color darkAccentColor = Color(0xffa571f0);
+  static Color lightStartColor = Color(0xff5f74de);
+  static Color darkStartColor = Color(0xff677deb);
+  static Color lightSecondAccentColor = Color(0xffd9558a);
+  static Color darkSecondAccentColor = Color(0xfff26f99);
   static Color darkPositiveGreenColor = Color.fromRGBO(3, 252, 119, 1.0);
-  static Color lightPositiveGreenColor = Color(0xff3cc27a);
+  static Color lightPositiveGreenColor = Color(0xff29b369);
   static Color errorColorLight = Color.fromRGBO(230, 48, 75, 1.0);
   static Color errorColorDark = Color.fromRGBO(227, 57, 82, 1.0);
 

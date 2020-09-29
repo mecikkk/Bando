@@ -1,4 +1,6 @@
+import 'package:bando/models/file_model.dart';
 import 'package:bando/utils/app_themes.dart';
+import 'package:bando/utils/files_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,8 +10,10 @@ class HomeHeaderWidget extends StatelessWidget {
   final String groupName;
   final String username;
   final Function onProfileClick;
+  final FileModel lastLyricsFile;
+  final Function onLastLyricsFileClick;
 
-  HomeHeaderWidget({@required this.groupName, @required this.username, @required this.onProfileClick});
+  HomeHeaderWidget({@required this.groupName, @required this.username, @required this.onProfileClick, this.lastLyricsFile, @required this.onLastLyricsFileClick});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +48,7 @@ class HomeHeaderWidget extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 20.0, left: 20.0),
                     child: Text(
                       groupName,
-                      style: TextStyle(color: Colors.black87, fontSize: 28.0),
+                      style: TextStyle(color: Colors.white, fontSize: 28.0),
                     ),
                   ),
                 ),
@@ -52,7 +56,7 @@ class HomeHeaderWidget extends StatelessWidget {
                   onTap: onProfileClick,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 20.0, right: 20.0),
-                    child: Icon(Icons.account_circle, color: Colors.black87),
+                    child: Icon(Icons.account_circle, color: Colors.white),
                   ),
                 )
               ],
@@ -61,15 +65,18 @@ class HomeHeaderWidget extends StatelessWidget {
               padding: const EdgeInsets.only(left: 22.0),
               child: Text(
                 "Witaj $username",
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(color: Colors.white70),
               ),
             ),
             SizedBox(height: 40),
             _buildSubtitle("Aktualny tekst"),
-            _buildCurrentSongTitleWidget(
-              context,
-              "W Krainieckiej dziewczynie każdy się cieszy, jak jo dotyko",
-              "śpiewnik/blok1",
+            GestureDetector(
+              onTap: onLastLyricsFileClick,
+              child: _buildCurrentSongTitleWidget(
+                context,
+                (lastLyricsFile != null) ? lastLyricsFile.fileName() : "Wybierz tekst z listy",
+                (lastLyricsFile != null) ? FilesUtils.getOnlyDirectoriesFromFilePath(lastLyricsFile.localPath, lastLyricsFile.fileName()) : "",
+              ),
             )
           ],
         ),
@@ -83,7 +90,7 @@ class HomeHeaderWidget extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.left,
-        style: TextStyle(color: Colors.black87, fontSize: 14.0),
+        style: TextStyle(color: Colors.white, fontSize: 14.0),
       ),
     );
   }

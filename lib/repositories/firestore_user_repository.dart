@@ -1,6 +1,7 @@
 import 'package:bando/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirestoreUserRepository {
   final usersCollection = Firestore.instance.collection("users");
@@ -60,8 +61,24 @@ class FirestoreUserRepository {
   }
 
   Future<User> currentUser() async {
-    String uid = await currentUserId();
-    return await getUser(uid);
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    User user;
+
+    if (pref.getString('username') == null || pref.getString('uid') == null) {
+      String uid = await currentUserId();
+      User user = await getUser(uid);
+      await pref.setString('username', user.username);
+      await pref.setString('uid', user.uid);
+      if (user.groupId != "") pref.setString('groupId', user.groupId);
+    } else {
+      user = User(
+        pref.getString('uid'),
+        username: pref.getString('username'),
+        groupId: pref.getString('groupId') ?? '',
+      );
+    }
+
+    return user;
   }
 
   Future<bool> isUserGroupConfigured(String uid) async {

@@ -1,7 +1,7 @@
 
 import 'package:bando/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
-import 'package:bando/pages/auth_pages/register_page.dart';
+import 'package:bando/pages/auth/register_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
 import 'package:bando/widgets/text_field.dart';

@@ -31,9 +31,8 @@ class FirestoreGroupRepository {
     return group;
   }
 
-  Future<Group> getGroup(String groupId) async {
-    return Group.fromSnapshot(await groupCollection.document(groupId).get());
-  }
+  Future<Group> getGroup(String groupId) async => Group.fromSnapshot(await groupCollection.document(groupId).get());
+
 
   Future<void> updateLyricsFilesInfo(List<DatabaseLyricsFileInfo> downloadUrls, String groupId) async {
     downloadUrls.forEach((element) async {

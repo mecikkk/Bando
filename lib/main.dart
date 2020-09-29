@@ -1,6 +1,6 @@
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/dependency_injection.dart';
-import 'package:bando/pages/auth_pages/login_page.dart';
+import 'package:bando/pages/auth/login_page.dart';
 import 'package:bando/pages/home/home_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';

@@ -3,13 +3,14 @@ import 'package:bando/blocs/home_bloc/home_bloc.dart';
 import 'package:bando/models/database_lyrics_file_info_model.dart';
 import 'package:bando/models/deleted_files_model.dart';
 import 'package:bando/models/file_model.dart';
-import 'package:bando/pages/auth_pages/register_group_form.dart';
+import 'package:bando/pages/auth/register_group_form.dart';
 import 'package:bando/pages/home/lyrics_page.dart';
 import 'package:bando/pages/home/widgets/deleting_alert_dialog.dart';
 import 'package:bando/pages/home/widgets/download_entire_songbook_widget.dart';
 import 'package:bando/pages/home/widgets/empty_songbook_widget.dart';
 import 'package:bando/pages/home/widgets/home_header_widget.dart';
 import 'package:bando/pages/home/widgets/no_group_widget.dart';
+import 'package:bando/pages/profile/profile.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/files_utils.dart';
 import 'package:bando/utils/global_keys.dart';
@@ -61,6 +62,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<FileModel> newLocalFiles = List();
   List<DatabaseLyricsFileInfo> newCloudFiles = List();
   SongbookUpdateType songbookUpdateType;
+  FileModel _lastLyricsFile;
 
   final _deletingBarVisibilityProvider = StateProvider<bool>((ref) {
     return false;
@@ -120,7 +122,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     debugPrint('HomeBuild');
 
-    updateStatusbarAndNavBar(context, showWhiteStatusBarIcons: false);
+    updateStatusbarAndNavBar(context, showWhiteStatusBarIcons: true);
 
     _statusInfoWidget = _buildStatusInfo();
 
@@ -240,15 +242,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             body: Builder(builder: (context) {
               return Stack(
                 children: <Widget>[
-                  Positioned(top: 190, left: 0, right: 0, bottom: 0, child: _buildMainContent(context, state)),
+                  Positioned(
+                    top: 190,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _buildMainContent(context, state),
+                  ),
                   Positioned(
                     top: 0,
                     left: 0,
                     child: HomeHeaderWidget(
                       groupName: _groupName,
                       username: _userName,
+                      lastLyricsFile: _lastLyricsFile,
+                      onLastLyricsFileClick: () {
+                        if (_lastLyricsFile != null) _navigateToLyricsPage(_lastLyricsFile);
+                      },
                       onProfileClick: () {
-                        _logout();
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserProfile()));
                       },
                     ),
                   )
@@ -287,7 +299,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         songbook: context.read(_songbookListProvider).state,
         onItemClick: (FileModel file) {
           debugPrint("Clicked : ${file.fileName()}");
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => LyricsPage(songbook : context.read(_songbookListProvider).state ,fileModel: file)));
+          _lastLyricsFile = file;
+          _navigateToLyricsPage(file);
         },
         onItemLongClick: (FileModel file, bool isSelected) {
           debugPrint("Long clicked : ${file.fileName()} selected ? $isSelected");
@@ -299,6 +312,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _deletingModeAnimationController.reverse(from: 1.0);
         },
       );
+  }
+
+  void _navigateToLyricsPage(FileModel file) async {
+    _lastLyricsFile = await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => LyricsPage(songbook: context.read(_songbookListProvider).state, fileModel: file)));
   }
 
   void _showUpdateInfoBottomSheet(BuildContext context, SongbookUpdateType updateType) {

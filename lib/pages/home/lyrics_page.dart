@@ -55,159 +55,167 @@ class LyricsPageState extends State<LyricsPage> with SingleTickerProviderStateMi
       updateStatusbarAndNavBar(context, _isDarkMode);
     });
 
-    return _loading
-        ? LoadingWidget(loadingType: LoadingType.LOADING)
-        : Scaffold(
-            body: Stack(
-              children: [
-                Positioned(
-                  top: 24.0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _isDarkMode
-                      ? ColorFiltered(
-                          colorFilter: ColorFilter.matrix(widget.invertColors),
-                          child: AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: _pdfViewer),
-                        )
-                      : AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: _pdfViewer),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      debugPrint("Tapped");
-                      setState(() {
-                        _showOptions = !_showOptions;
-                      });
-                    },
-                  ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCirc,
-                  top: _showOptions ? 0 : -100,
-                  left: 0.0,
-                  right: 0.0,
-                  child: Container(
-                    height: 90,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 35.0, top: 45),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "${currentFile.fileName()}",
-                              overflow: TextOverflow.fade,
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(color: _isDarkMode ? Colors.white : Colors.black, fontSize: 24.0),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 16.0),
-                            child: IconButton(
-                              icon: Icon(
-                                _isDarkMode ? Icons.brightness_7 : Icons.brightness_3,
-                                color: _isDarkMode ? Colors.white : Colors.black,
-                              ),
-                              onPressed: () {
-                                _changeLyricsBrightnessMode();
-                              },
-                            ),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: _loading
+          ? LoadingWidget(loadingType: LoadingType.LOADING)
+          : Scaffold(
+              body: Stack(
+                children: [
+                  Positioned(
+                    top: 24.0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _isDarkMode
+                        ? ColorFiltered(
+                            colorFilter: ColorFilter.matrix(widget.invertColors),
+                            child: AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: _pdfViewer),
                           )
-                        ],
+                        : AnimatedSwitcher(duration: const Duration(milliseconds: 250), child: _pdfViewer),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        debugPrint("Tapped");
+                        setState(() {
+                          _showOptions = !_showOptions;
+                        });
+                      },
+                    ),
+                  ),
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCirc,
+                    top: _showOptions ? 0 : -100,
+                    left: 0.0,
+                    right: 0.0,
+                    child: Container(
+                      height: 90,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 35.0, top: 45),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "${currentFile.fileName()}",
+                                overflow: TextOverflow.fade,
+                                maxLines: 1,
+                                softWrap: false,
+                                style: TextStyle(color: _isDarkMode ? Colors.white : Colors.black, fontSize: 24.0),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: IconButton(
+                                icon: Icon(
+                                  _isDarkMode ? Icons.brightness_7 : Icons.brightness_3,
+                                  color: _isDarkMode ? Colors.white : Colors.black,
+                                ),
+                                onPressed: () {
+                                  _changeLyricsBrightnessMode();
+                                },
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 750),
-                  curve: Curves.easeOutCirc,
-                  bottom: _showOptions ? 0 : -110,
-                  left: 0.0,
-                  right: 0.0,
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 80,
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.only(topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black54 ,
-                              offset: Offset(0, -5),
-                              blurRadius: 45,
-                              spreadRadius: 1,
-                            )
-                          ],
-                          color: _isDarkMode ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  (previousFile != null)
-                                      ? QuickLyricsSwitcher(
-                                          position: SwitcherPosition.LEFT,
-                                          lyricsName: previousFile.fileName(),
-                                          color: _isDarkMode ? Colors.white : Colors.black,
-                                          onClick: () {
-                                            debugPrint("Previous lyrics <- ");
-                                            if (previousFile != null) {
-                                              currentFile = previousFile;
-                                              _reloadCurrentPreviousAndNextFile();
-                                            }
-                                          })
-                                      : SizedBox(),
-                                  (nextFile != null)
-                                      ? QuickLyricsSwitcher(
-                                          position: SwitcherPosition.RIGHT,
-                                          lyricsName: nextFile.fileName(),
-                                          color: _isDarkMode ? Colors.white : Colors.black,
-                                          onClick: () {
-                                            debugPrint("Next lyrics -> ");
-                                            if (nextFile != null) {
-                                              currentFile = nextFile;
-                                              _reloadCurrentPreviousAndNextFile();
-                                            }
-                                          })
-                                      : SizedBox(),
-                                ],
-                              ),
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 750),
+                    curve: Curves.easeOutCirc,
+                    bottom: _showOptions ? 0 : -110,
+                    left: 0.0,
+                    right: 0.0,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                BorderRadius.only(topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black54 ,
+                                offset: Offset(0, -5),
+                                blurRadius: 45,
+                                spreadRadius: 1,
+                              )
                             ],
+                            color: _isDarkMode ? Color(0xff27272b) : Colors.white,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    (previousFile != null)
+                                        ? QuickLyricsSwitcher(
+                                            position: SwitcherPosition.LEFT,
+                                            lyricsName: previousFile.fileName(),
+                                            color: _isDarkMode ? Colors.white : Colors.black,
+                                            onClick: () {
+                                              debugPrint("Previous lyrics <- ");
+                                              if (previousFile != null) {
+                                                currentFile = previousFile;
+                                                _reloadCurrentPreviousAndNextFile();
+                                              }
+                                            })
+                                        : SizedBox(),
+                                    (nextFile != null)
+                                        ? QuickLyricsSwitcher(
+                                            position: SwitcherPosition.RIGHT,
+                                            lyricsName: nextFile.fileName(),
+                                            color: _isDarkMode ? Colors.white : Colors.black,
+                                            onClick: () {
+                                              debugPrint("Next lyrics -> ");
+                                              if (nextFile != null) {
+                                                currentFile = nextFile;
+                                                _reloadCurrentPreviousAndNextFile();
+                                              }
+                                            })
+                                        : SizedBox(),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 850),
-                  curve: Curves.easeOutCirc,
-                  left: 0.0,
-                  right: 0.0,
-                  bottom: _showOptions ? 70 : 10,
-                  child: IconButton(
-                    icon: Icon(Icons.more_horiz, size: 30),
-                    color: _isDarkMode ? Colors.white : Colors.black,
-                    onPressed: () {
-                      _showBottomSheet(context);
-                    },
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 850),
+                    curve: Curves.easeOutCirc,
+                    left: 0.0,
+                    right: 0.0,
+                    bottom: _showOptions ? 70 : 10,
+                    child: IconButton(
+                      icon: Icon(Icons.more_horiz, size: 30),
+                      color: _isDarkMode ? Colors.white : Colors.black,
+                      onPressed: () {
+                        _showBottomSheet(context);
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          );
+    );
+  }
+
+  Future<bool> _onWillPop() async {
+    Navigator.of(context).pop(currentFile);
+    return true;
   }
 
   void _showBottomSheet(BuildContext context) {
@@ -250,6 +258,7 @@ class LyricsPageState extends State<LyricsPage> with SingleTickerProviderStateMi
                 onItemClick: (FileModel file) {
                   currentFile = file;
                   _reloadCurrentPreviousAndNextFile();
+                  Navigator.pop(context);
                 },
                 onItemLongClick: () {},
                 customColor: _isDarkMode ? Colors.white : Colors.black,
@@ -258,7 +267,7 @@ class LyricsPageState extends State<LyricsPage> with SingleTickerProviderStateMi
           ],
         ),
       ),
-      backgroundColor: _isDarkMode ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
+      backgroundColor: _isDarkMode ? Color(0xff27272b) : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(topRight: Radius.circular(25), topLeft: Radius.circular(25)),
       ),

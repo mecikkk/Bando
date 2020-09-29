@@ -18,7 +18,6 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -77,12 +76,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     try {
 // Loading User personal info
-      final SharedPreferences _pref = await SharedPreferences.getInstance();
       User user;
       Group group;
       // Load user and group basic information from shared pref. if is set up
-      user = await _getUserInfo(_pref);
-      group = await _getGroupInfo(_pref, groupId: user.groupId);
+      user = await _userRepository.currentUser();
+      group = await _groupRepository.getGroup(user.groupId);
 
       if (user.groupId == '')
         yield HomeNoGroupState(user: user);
@@ -124,51 +122,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     } else {
       yield HomeReadyState(songbook: localSongbook);
     }
-  }
-
-  Future<User> _getUserInfo(SharedPreferences pref) async {
-    User user;
-
-    if (pref.getString('username') == null || pref.getString('uid') == null) {
-      debugPrint("Load USER info from firestore and store to shared pref");
-      user = await _userRepository.currentUser();
-      await pref.setString('username', user.username);
-      await pref.setString('uid', user.uid);
-      if (user.groupId != "") pref.setString('groupId', user.groupId);
-    } else {
-      debugPrint("Load USER info from shared pref");
-
-      user = User(
-        pref.getString('uid'),
-        username: pref.getString('username'),
-        groupId: pref.getString('groupId') ?? '',
-      );
-    }
-
-    return user;
-  }
-
-  Future<Group> _getGroupInfo(SharedPreferences pref, {String groupId = ""}) async {
-    Group group;
-    if (groupId != '') {
-      if (pref.getString('groupId') == null || pref.getString('groupName') == null) {
-        debugPrint("Load GROUP info from firestore and store to shared pref");
-
-        group = await _groupRepository.getGroup(groupId);
-        pref.setString('groupName', group.name);
-        pref.setString('groupId', group.groupId);
-      } else {
-        debugPrint("Load GROUP info from shared pref");
-
-        group = Group(
-          pref.getString('groupId'),
-          name: pref.getString('groupName'),
-        );
-      }
-    } else
-      group = Group('');
-
-    return group;
   }
 
   Stream<HomeState> _mapHomeDownloadTheEntireSongbookEventToState() async* {

@@ -129,6 +129,11 @@ class FilesUtils {
     return path.substring(path.indexOf('BandoSongbook') + 14);
   }
 
+  static String getOnlyDirectoriesFromFilePath(String path, String fileName) {
+    String directories = path.substring(0, path.indexOf(fileName));
+    return (directories != "") ? directories : "Główny katalog";
+  }
+
   static Future<bool> moveSelectedDirToBandoDir(String selectedDirPath, {Directory destinationDir}) async {
     try {
       List<Directory> listOfStorages = await getStorageList();

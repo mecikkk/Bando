@@ -1,13 +1,37 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg"  version="1.1"
-    id="Layer_1" x="0px" y="0px" viewBox="0 2 98 98" style="enable-background:new 0 2 98 98;"
-    xml:space="preserve" width="512" height="512">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   height="512"
+   width="512"
+   xml:space="preserve"
+   style="enable-background:new 0 2 98 98;"
+   viewBox="0 2 98 98"
+   y="0px"
+   x="0px"
+   id="Layer_1"
+   version="1.1"><defs
+   id="defs12" />
 
-    <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="49" y1="19" x2="49" y2="83">
-	<stop offset="0" style="stop-color:#fa78ad" />
-        <stop offset="1" style="stop-color:#000000" />
+    <linearGradient
+   y2="83"
+   x2="49"
+   y1="19"
+   x1="49"
+   gradientUnits="userSpaceOnUse"
+   id="SVGID_1_">
+	<stop
+   id="stop2"
+   style="stop-color:#fa78ad"
+   offset="0" />
+        <stop
+   id="stop4"
+   style="stop-color:#000000"
+   offset="1" />
 </linearGradient>
-    <path class="st0"
-		fill="url(#SVGID_1_)"
-        d="M85.9,29.6H47.4l-4.3-8.9c-0.5-1-1.6-1.7-2.7-1.7H12.1c-1.7,0-3,1.3-3,3v58c0,1.7,1.3,3,3,3h73.8  c1.7,0,3-1.3,3-3V32.6C88.9,30.9,87.6,29.6,85.9,29.6z M82.9,77H15.1V25h23.4l4.3,8.9c0.5,1,1.6,1.7,2.7,1.7h37.4V77z" />
+    <path
+   style="fill:#d9558a;fill-opacity:1"
+   id="path7"
+   d="M85.9,29.6H47.4l-4.3-8.9c-0.5-1-1.6-1.7-2.7-1.7H12.1c-1.7,0-3,1.3-3,3v58c0,1.7,1.3,3,3,3h73.8  c1.7,0,3-1.3,3-3V32.6C88.9,30.9,87.6,29.6,85.9,29.6z M82.9,77H15.1V25h23.4l4.3,8.9c0.5,1,1.6,1.7,2.7,1.7h37.4V77z"
+   fill="url(#SVGID_1_)"
+   class="st0" />
 </svg>

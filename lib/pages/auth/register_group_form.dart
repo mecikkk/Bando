@@ -1,6 +1,6 @@
 import 'package:bando/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/models/group_model.dart';
-import 'package:bando/pages/auth_pages/success_page.dart';
+import 'package:bando/pages/auth/success_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/gradient_raised_button.dart';
