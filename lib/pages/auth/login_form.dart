@@ -9,7 +9,6 @@ import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:koin_flutter/koin_flutter.dart';
 
 class LoginForm extends StatefulWidget {
   State<LoginForm> createState() => _LoginFormState();
@@ -20,7 +19,8 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  LoginBloc _bloc;
+  LoginBloc _loginBloc;
+  AuthBloc _authBloc;
 
   bool get isLoginFieldsValid => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
 
@@ -31,7 +31,8 @@ class _LoginFormState extends State<LoginForm> {
   @override
   void initState() {
     super.initState();
-    _bloc = get<LoginBloc>();
+    _loginBloc = BlocProvider.of<LoginBloc>(context);
+    _authBloc = BlocProvider.of<AuthBloc>(context);
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
   }
@@ -71,8 +72,8 @@ class _LoginFormState extends State<LoginForm> {
             );
         }
         if (state.isSuccess) {
-          print("state SUCCESS and GROUP CONFIGURED");
-          get<AuthBloc>().add(AuthLoggedIn());
+          print("state SUCCESS and GROUP CONFIGURED | CurrentAuthState : ${BlocProvider.of<AuthBloc>(context).state}");
+          context.bloc<AuthBloc>()..add(AuthLoggedIn());
         }
 
       },
@@ -242,17 +243,17 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _bloc.close();
+    _loginBloc.close();
   }
 
   void _onEmailChanged() {
-    _bloc.add(
+    _loginBloc.add(
       LoginEmailChanged(email: _emailController.text),
     );
   }
 
   void _onPasswordChanged() {
-    _bloc.add(
+    _loginBloc.add(
       LoginPasswordChanged(password: _passwordController.text),
     );
   }
@@ -261,7 +262,7 @@ class _LoginFormState extends State<LoginForm> {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
     FocusScope.of(context).unfocus();
     if(isConnected) {
-      _bloc.add(
+      _loginBloc.add(
         LoginWithEmailPressed(
           email: _emailController.text,
           password: _passwordController.text,

@@ -1,16 +1,14 @@
-import 'package:bando/blocs/login_bloc/login_bloc.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:koin_flutter/koin_flutter.dart';
 
 import 'login_form.dart';
 
 class LoginPage extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
 
@@ -31,10 +29,7 @@ class LoginPage extends StatelessWidget {
             ),
           ),
           Container(
-            child: BlocProvider<LoginBloc>(
-              create: (context) => get<LoginBloc>(),
-              child: LoginForm(),
-            ),
+                child: LoginForm(),
           ),
           Positioned(
             bottom: 24,

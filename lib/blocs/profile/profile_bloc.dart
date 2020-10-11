@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bando/models/group_model.dart';
 import 'package:bando/models/user_model.dart';
+import 'package:bando/repositories/auth_repository.dart';
 import 'package:bando/repositories/firestore_group_repository.dart';
 import 'package:bando/repositories/firestore_user_repository.dart';
 import 'package:bloc/bloc.dart';
@@ -15,14 +16,18 @@ part 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final FirestoreUserRepository _userRepository;
   final FirestoreGroupRepository _groupRepository;
+  final AuthRepository _authRepository;
 
   ProfileBloc({
     @required FirestoreUserRepository userRepository,
     @required FirestoreGroupRepository groupRepository,
+    @required AuthRepository authRepository,
   })  : assert(userRepository != null),
         _userRepository = userRepository,
         assert(groupRepository != null),
         _groupRepository = groupRepository,
+        assert(authRepository != null),
+        _authRepository = authRepository,
         super(ProfileInitial());
 
   @override
@@ -31,10 +36,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ) async* {
       if(event is ProfileInitialEvent) {
         yield* _mapProfileInitialEventToState();
-      }
-      if(event is ProfileLoadAllDataEvent) {
+      } else if(event is ProfileLoadAllDataEvent) {
         yield* _mapProfileInitialEventToState();
+      } else if (event is ProfileLogoutEvent) {
+        yield* _mapProfileLogoutEventToState();
       }
+
   }
 
 
@@ -53,5 +60,21 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       debugPrint("-- ProfileBloc | Initial error : $e");
       yield ProfileFailureState();
     }
+  }
+
+  Stream<ProfileState> _mapProfileLogoutEventToState() async* {
+    yield ProfileLoadingState();
+
+    try {
+
+      await _authRepository.signOut();
+
+      yield ProfileLogoutSuccesState();
+
+    } catch (e) {
+      debugPrint("-- ProfileBloc | LogoutEvent error : $e");
+      yield ProfileFailureState();
+    }
+
   }
 }

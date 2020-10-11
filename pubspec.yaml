@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.10.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -47,17 +47,17 @@ dependencies:
   dio: ^3.0.10
   http: ^0.12.2
   pdf_viewer_plugin: ^1.0.0+2
-  bloc: ^5.0.1
+  bloc: ^6.0.3
   flutter_riverpod: ^0.10.1
-  flutter_bloc: ^5.0.1
+  flutter_bloc: ^6.0.5
   equatable: ^1.2.0
   path_provider: ^1.6.11
   open_file: ^3.0.1
   permission_handler: ^5.0.1+1
   flutter_svg: ^0.18.1
   smooth_page_indicator: ^0.1.5
-  koin: ^0.10.0
-  koin_flutter: ^0.6.3
+  koin: ^0.14.0
+  koin_flutter: ^0.10.0
   flutter_statusbarcolor: ^0.2.3
   animations: ^1.1.1
   connectivity_widget: ^0.1.7

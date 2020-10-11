@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth;
@@ -40,6 +41,9 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    await preferences.clear();
+
     return Future.wait([
       _firebaseAuth.signOut(),
       _googleSignIn.signOut(),

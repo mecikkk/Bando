@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:bando/repositories/auth_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 
 part 'auth_event.dart';
-
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -35,18 +35,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     print("After checking");
 
     if (isSignedIn) {
-      yield Authenticated(await _authRepository.getLoggedInUserId());
+      yield Authenticated();
     } else {
       yield Unauthenticated();
     }
   }
 
   Stream<AuthState> _mapAuthLoggedInToState() async* {
-    yield Authenticated(await _authRepository.getLoggedInUserId());
+    debugPrint("Event was called !");
+    yield AuthLoggedInState();
   }
 
   Stream<AuthState> _mapAuthLoggedOutToState() async* {
-    yield Unauthenticated();
-    _authRepository.signOut();
+    yield AuthLoggedOutState();
   }
 }

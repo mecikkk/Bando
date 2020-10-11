@@ -4,6 +4,7 @@ import 'package:bando/blocs/home_bloc/home_bloc.dart';
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
 import 'package:bando/blocs/profile/profile_bloc.dart';
 import 'package:bando/blocs/register_bloc/register_bloc.dart';
+import 'package:bando/blocs/udp/udp_bloc.dart';
 import 'package:bando/repositories/auth_repository.dart';
 import 'package:bando/repositories/firebase_storage_repository.dart';
 import 'package:bando/repositories/firestore_group_repository.dart';
@@ -20,9 +21,10 @@ var repositoriesModule = Module()
     ..single<RealtimeDatabaseRepository>((scope) => RealtimeDatabaseRepository());
 
 var blocsModule = Module()
-    ..single<HomeBloc>((scope) => HomeBloc(userRepository : scope.get(), databaseRepository: scope.get(), groupRepository: scope.get(), storageRepository: scope.get()))
-    ..single<LoginBloc>((scope) => LoginBloc(authRepository: scope.get()))
+    ..factory<HomeBloc>((scope) => HomeBloc(userRepository : scope.get(), databaseRepository: scope.get(), groupRepository: scope.get(), storageRepository: scope.get()))
+    ..factory<LoginBloc>((scope) => LoginBloc(authRepository: scope.get()))
     ..single<RegisterBloc>((scope) => RegisterBloc(userRepository: scope.get(), authRepository: scope.get()))
     ..single<AuthBloc>((scope) => AuthBloc(authRepository: scope.get()))
     ..single<GroupBloc>((scope) => GroupBloc(groupRepository: scope.get(), userRepository: scope.get()))
-    ..factory<ProfileBloc>((scope) => ProfileBloc(groupRepository: scope.get(), userRepository: scope.get()));
+    ..single<UdpBloc>((scope) => UdpBloc())
+    ..factory<ProfileBloc>((scope) => ProfileBloc(groupRepository: scope.get(), userRepository: scope.get(), authRepository: scope.get()));

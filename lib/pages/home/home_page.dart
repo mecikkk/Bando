@@ -1,5 +1,7 @@
+import 'package:bando/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/blocs/group_bloc/group_bloc.dart';
 import 'package:bando/blocs/home_bloc/home_bloc.dart';
+import 'package:bando/blocs/udp/udp_bloc.dart';
 import 'package:bando/models/database_lyrics_file_info_model.dart';
 import 'package:bando/models/deleted_files_model.dart';
 import 'package:bando/models/file_model.dart';
@@ -53,6 +55,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool showSearchBar = false;
 
   HomeBloc _bloc;
+  AuthBloc _authBloc;
 
   Widget _statusInfoWidget;
   BuildContext _scaffoldContext;
@@ -76,7 +79,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> initState() {
     super.initState();
 
-    _bloc = get<HomeBloc>()..add(HomeInitialEvent());
+    _bloc = BlocProvider.of<HomeBloc>(context)..add(HomeInitialEvent());
+    _authBloc = get<AuthBloc>();
 
     _statusAndSearchAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -240,6 +244,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           debugPrint("_____________ Build whole ui");
           return Scaffold(
             body: Builder(builder: (context) {
+              _scaffoldContext = context;
               return Stack(
                 children: <Widget>[
                   Positioned(
@@ -252,16 +257,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Positioned(
                     top: 0,
                     left: 0,
-                    child: HomeHeaderWidget(
-                      groupName: _groupName,
-                      username: _userName,
-                      lastLyricsFile: _lastLyricsFile,
-                      onLastLyricsFileClick: () {
-                        if (_lastLyricsFile != null) _navigateToLyricsPage(_lastLyricsFile);
+                    child: BlocListener<UdpBloc, UdpState>(
+                      cubit: get<UdpBloc>()..add(UdpStartListeningEvent()),
+                      listener: (context, state) {
+                        if (state is UdpDataReceivedState) {
+                          _getReceivedFile(state.udpMessage.songbookPath);
+                        }
                       },
-                      onProfileClick: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserProfile()));
-                      },
+                      child: BlocBuilder<UdpBloc, UdpState>(
+
+                        builder:(context, state) => HomeHeaderWidget(
+                          groupName: _groupName,
+                          username: _userName,
+                          lastLyricsFile: _lastLyricsFile,
+                          onLastLyricsFileClick: () {
+                            if (_lastLyricsFile != null) _navigateToLyricsPage(_lastLyricsFile);
+                          },
+                          onProfileClick: () {
+                            _navigateToUserProfile(context);
+                          },
+                        ),
+                      ),
                     ),
                   )
                 ],
@@ -271,6 +287,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
       ),
     );
+  }
+
+  Future _getReceivedFile(String localPath) async {
+    debugPrint("Searching for file");
+    List<FileModel> allFiles =
+        await FilesUtils.getOnlyFilesFromLocalSongbook(context.read(_songbookListProvider).state);
+    _lastLyricsFile = allFiles.firstWhere((element) => element.localPath.contains(localPath));
+    debugPrint("Founded file : ${_lastLyricsFile.fileSystemEntity.name}");
+
+    return;
+  }
+
+  void _navigateToUserProfile(BuildContext context) async {
+    bool isLoggedOut = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserProfile()));
+    debugPrint("IS LOGGED OUT : $isLoggedOut");
+    if (isLoggedOut) {
+      debugPrint("AuthState From home before: ${BlocProvider.of<AuthBloc>(context).state}");
+      context.bloc<AuthBloc>()..add(AuthLoggedOut());
+      debugPrint("AuthState From home after : ${BlocProvider.of<AuthBloc>(context).state}");
+    }
   }
 
   Widget _switchMainContent(HomeState state) {
@@ -315,8 +351,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _navigateToLyricsPage(FileModel file) async {
-    _lastLyricsFile = await Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => LyricsPage(songbook: context.read(_songbookListProvider).state, fileModel: file)));
+    _lastLyricsFile = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LyricsPage(
+          songbook: context.read(_songbookListProvider).state,
+          fileModel: file,
+        ),
+      ),
+    );
   }
 
   void _showUpdateInfoBottomSheet(BuildContext context, SongbookUpdateType updateType) {

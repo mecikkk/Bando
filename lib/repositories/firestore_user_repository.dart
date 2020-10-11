@@ -66,7 +66,7 @@ class FirestoreUserRepository {
 
     if (pref.getString('username') == null || pref.getString('uid') == null) {
       String uid = await currentUserId();
-      User user = await getUser(uid);
+      user = await getUser(uid);
       await pref.setString('username', user.username);
       await pref.setString('uid', user.uid);
       if (user.groupId != "") pref.setString('groupId', user.groupId);

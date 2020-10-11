@@ -1,7 +1,6 @@
 import 'package:bando/models/deleted_files_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 
 class RealtimeDatabaseRepository {
   Future<void> addDeletionInfo(String groupId, String userName, List<Map<String, dynamic>> deletedFilesInfo) async {
@@ -21,7 +20,6 @@ class RealtimeDatabaseRepository {
     List<Map<dynamic, dynamic>> snapshots = List();
     List<DeletedFiles> updates = List();
 
-    debugPrint("Reltime groupID : $groupId");
     try {
       await FirebaseDatabase.instance
           .reference()
@@ -44,10 +42,16 @@ class RealtimeDatabaseRepository {
       print("-- RealtimeDatabaseRepository | Getting deletes info error : $e");
     }
 
-    updates.forEach((element) {
-      debugPrint("Element : $element");
-    });
-
     return updates;
+  }
+
+  // TODO : Utowrzyc nowego bloca ? Zeby w czasie rzeczywistym obserwowac zmiany, kto jest leaderem, kto moze zmieniac teksty
+  Future<DatabaseReference> getCurrentLeader(String groupId) async =>
+      FirebaseDatabase.instance.reference().child(groupId).child('current_leader');
+
+  Future<void> setCurrentLeader(String groupId, String uid) async {
+    return await FirebaseDatabase.instance.reference().child(groupId).child('current_leader').set({
+      'currentLeader' : uid
+    });
   }
 }

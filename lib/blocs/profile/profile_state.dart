@@ -14,6 +14,8 @@ class ProfileLoadingState extends ProfileState {}
 
 class ProfileFailureState extends ProfileState {}
 
+class ProfileLogoutSuccesState extends ProfileState {}
+
 class ProfileDataLoadedState extends ProfileState {
   final User user;
   final Group group;

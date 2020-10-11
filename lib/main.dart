@@ -1,4 +1,6 @@
 import 'package:bando/bloc_observer.dart';
+import 'package:bando/blocs/login_bloc/login_bloc.dart';
+import 'package:bando/blocs/udp/udp_bloc.dart';
 import 'package:bando/dependency_injection.dart';
 import 'package:bando/pages/auth/login_page.dart';
 import 'package:bando/pages/home/home_page.dart';
@@ -46,22 +48,25 @@ class BandoApp extends StatelessWidget {
       darkTheme: AppThemes.darkTheme,
       themeMode: ThemeMode.system,
       home: BlocBuilder<AuthBloc, AuthState>(
-
         builder: (context, state) {
+          debugPrint("AuthCurrentState : $state");
           return AnimatedSwitcher(
             duration: Duration(milliseconds: 800),
             child: _swapPages(state, context),
           );
         },
-
       ),
     );
   }
 
   Widget _swapPages(AuthState state, BuildContext context) {
     if (state is Unauthenticated)
-      return LoginPage();
+      return _buildLoginPage();
+    else if (state is AuthLoggedOutState)
+      return _buildLoginPage();
     else if (state is Authenticated) {
+      return _buildHomePage();
+    } else if (state is AuthLoggedInState) {
       return _buildHomePage();
     } else {
       return _buildSplashScreen(context);
@@ -115,16 +120,20 @@ class BandoApp extends StatelessWidget {
     );
   }
 
-  Widget _buildHomePage() => Scaffold(
-        body: MultiBlocProvider(
+  Widget _buildHomePage() => MultiBlocProvider(
           providers: [
             BlocProvider<HomeBloc>(create: (context) => koin.get<HomeBloc>()),
             BlocProvider<GroupBloc>(create: (context) => koin.get<GroupBloc>()),
-            BlocProvider<AuthBloc>(create: (context) => koin.get<AuthBloc>())
+            BlocProvider<UdpBloc>(create: (context) => koin.get<UdpBloc>()),
           ],
           child: HomePage(),
-        ),
-      );
+        );
 
+  Widget _buildLoginPage() => MultiBlocProvider(
+      providers: [
+        BlocProvider<LoginBloc>(create: (context) => koin.get<LoginBloc>()),
+      ],
+      child: LoginPage(),
+    );
 
 }

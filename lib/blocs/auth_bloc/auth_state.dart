@@ -12,17 +12,14 @@ abstract class AuthState extends Equatable {
 class AuthInitial extends AuthState {}
 
 class Authenticated extends AuthState {
-  final String uid;
-
-  const Authenticated(this.uid);
-
-  @override
-  List<Object> get props => [uid];
-
   @override
   String toString() {
-    return 'AuthSuccess(uid : $uid)';
+    return 'AuthSuccess()';
   }
 }
 
+class AuthLoggedInState extends AuthState {}
+
 class Unauthenticated extends AuthState {}
+
+class AuthLoggedOutState extends AuthState {}

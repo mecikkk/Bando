@@ -52,6 +52,10 @@ class ProfilePageState extends State<ProfilePage> {
         if (state is ProfileInitial) {
           _bloc.add(ProfileLoadAllDataEvent());
         }
+
+        if(state is ProfileLogoutSuccesState) {
+          Navigator.pop(context, true);
+        }
       },
       child: BlocBuilder<ProfileBloc, ProfileState>(builder: (context, state) {
         debugPrint("BUILD PROFILE UI | state : $state");
@@ -103,6 +107,7 @@ class ProfilePageState extends State<ProfilePage> {
                         ),
                         onPressed: () {
                           debugPrint("Logout");
+                          _bloc.add(ProfileLogoutEvent());
                         },
                       ),
                     ),
@@ -249,7 +254,7 @@ class ProfilePageState extends State<ProfilePage> {
           height: 50.0,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _group.members.length,
+            itemCount: (_group != null) ? _group.members.length : 0,
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.all(8.0),
               child: Container(
@@ -278,7 +283,7 @@ class ProfilePageState extends State<ProfilePage> {
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Text(
-                        _group.members[index]['username'],
+                        (_group != null) ? _group.members[index]['username'] : 'Użytkownik',
                         style: TextStyle(fontSize: 16.0, color: AppThemes.getSecondAccentColor(context)),
                       ),
                     ),

@@ -58,8 +58,9 @@ class QuickLyricsSwitcher extends StatelessWidget {
   Widget _buildArrowWidget() => Padding(
         padding: (position == SwitcherPosition.LEFT) ? const EdgeInsets.only(right: 8.0) : const EdgeInsets.only(left: 8.0),
         child: Icon(
-          (position == SwitcherPosition.RIGHT) ? Icons.arrow_forward_ios : Icons.arrow_back_ios,
+          (position == SwitcherPosition.RIGHT) ? Icons.arrow_forward_ios_rounded : Icons.arrow_back_ios_rounded,
           color: color,
+          size: 20,
         ),
       );
 }
