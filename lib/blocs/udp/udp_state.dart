@@ -24,3 +24,16 @@ class UdpMessageSendSuccess extends UdpState {}
 class UdpLaunchingListener extends UdpState {}
 
 class UdpFailureState extends UdpState {}
+
+class UdpLeaderModeState extends UdpState {}
+
+class UdpMemberModeState extends UdpState {}
+
+class UdpGetSyncModeResultState extends UdpState {
+  final SyncMode syncMode;
+
+  UdpGetSyncModeResultState({@required this.syncMode});
+
+  @override
+  List<Object> get props => [syncMode];
+}

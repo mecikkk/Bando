@@ -29,15 +29,12 @@ dependencies:
   cloud_firestore: any
   firebase_database: any
   firebase_core: any
-  cloud_functions: ^0.5.0
+  cloud_functions: any
   google_sign_in: any
   firebase_auth: any
   firebase_analytics: any
-  firebase_storage:
-    git:
-      url: git://github.com/danysz/flutterfire.git
-      ref: master
-      path: packages/firebase_storage
+  firebase_storage: 5.0.0-dev.1
+  firebase_crashlytics: any
 
 # Other
   flutter_barcode_scanner: ^1.0.1
@@ -66,6 +63,7 @@ dependencies:
   collection: any
   modal_bottom_sheet: ^0.2.0+1
   expandable: ^4.1.4
+  flushbar: ^1.10.4
 
 
   cupertino_icons: ^0.1.3

@@ -1,6 +1,10 @@
+import 'dart:ui';
+
 import 'package:bando/blocs/profile/profile_bloc.dart';
 import 'package:bando/models/group_model.dart';
 import 'package:bando/models/user_model.dart';
+import 'package:bando/pages/profile/widgets/dialog_widget.dart';
+import 'package:bando/pages/profile/widgets/expandable_edit_panel.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/loading_widget.dart';
@@ -20,6 +24,10 @@ class ProfilePageState extends State<ProfilePage> {
   ProfileBloc _bloc;
   User _user;
   Group _group;
+  bool _isLeader = false;
+
+  TextEditingController _usernameController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
 
   GlobalKey _globalKey = GlobalKey();
 
@@ -34,6 +42,7 @@ class ProfilePageState extends State<ProfilePage> {
   void dispose() {
     super.dispose();
     _bloc.close();
+    _usernameController.dispose();
   }
 
   @override
@@ -47,14 +56,24 @@ class ProfilePageState extends State<ProfilePage> {
         if (state is ProfileDataLoadedState) {
           _user = state.user;
           _group = state.group;
+
+          _isLeader = (_group.leaderID == _user.uid) ? true : false;
         }
 
         if (state is ProfileInitial) {
           _bloc.add(ProfileLoadAllDataEvent());
         }
 
-        if(state is ProfileLogoutSuccesState) {
+        if (state is ProfileLogoutSuccessState) {
           Navigator.pop(context, true);
+        }
+
+        if (state is ProfileLeaderChangedSuccessfullyState) {
+          _bloc.add(ProfileInitialEvent());
+        }
+
+        if (state is ProfileUserDataUpdateSuccessState) {
+          _bloc.add(ProfileInitialEvent());
         }
       },
       child: BlocBuilder<ProfileBloc, ProfileState>(builder: (context, state) {
@@ -130,55 +149,83 @@ class ProfilePageState extends State<ProfilePage> {
                                 spreadRadius: 0.5,
                               )
                             ]),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 56.0, bottom: 8),
-                                child: Text(
-                                  (_group != null) ? _group.name : "Grupa",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.bold),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 56.0, bottom: 8),
+                                  child: Text(
+                                    (_group != null) ? _group.name : "Grupa",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 21.0, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 24.0),
-
-                            _buildTitle('Twoje dane', Icons.person),
-                            SizedBox(height: 8.0),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text("Nick : ", style: TextStyle(fontSize: 16.0),),
-                                    Text((_user != null) ? _user.username : "?", style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),),
-                                    Spacer(),
-                                    IconButton(
-                                      icon: Icon(Icons.edit),
-                                      onPressed: () {},
+                              SizedBox(height: 24.0),
+                              _buildTitle('Twoje dane', Icons.person),
+                              SizedBox(height: 8.0),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ExpandableEditPanel(
+                                    header: Row(
+                                      children: [
+                                        Text(
+                                          "Nick : ",
+                                          style: TextStyle(fontSize: 16.0),
+                                        ),
+                                        Text(
+                                          (_user != null) ? _user.username : "?",
+                                          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    controller: _usernameController,
+                                    textFieldLabel: "Nowy nick",
+                                    textFieldIcon: Icons.person,
+                                    onConfirmClick: () {
+                                      if (_usernameController.text.isNotEmpty)
+                                        _showConfirmChangeUserNameDialog(context, _usernameController.text);
+                                    },
+                                  ),
+                                  SizedBox(height: 15.0),
+                                  ExpandableEditPanel.password(
+                                    // TODO : Potrzebna reautentykacja, (dodac tutaj, wyswietlic dialog czy cos z podaniem maila, starego hasla i nowego hasla)
+                                    header: Row(
+                                      children: [
+                                        Text(
+                                          "Hasło : ",
+                                          style: TextStyle(fontSize: 16.0),
+                                        ),
+                                        Text(
+                                          "•••••••••",
+                                          style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    controller: _passwordController,
+                                    textFieldLabel: "Nowe hasło",
+                                    textFieldIcon: Icons.lock_rounded,
+                                    onConfirmClick: () {
+                                      if (_passwordController.text.isNotEmpty)
+                                        _showConfirmChangePasswordDialog(context, _passwordController.text);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 48.0),
+                              _buildTitle('Członkowie grupy', Icons.group),
+                              _buildMembersList(context),
+                              _isLeader
+                                  ? Text(
+                                      "Przytrzymaj nazwę użytkownika, któremu chcesz oddać rolę lidera.\nOddając rolę lidera innej osobie stracisz możliwość decydowania, jaki tekst ma zostać wyświetlony grupie.",
+                                      style: TextStyle(fontSize: 12.0, color: Colors.grey),
                                     )
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text("Hasło : ", style: TextStyle(fontSize: 16.0),),
-                                    Text( "•••••••••", style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),),
-                                    Spacer(),
-                                    IconButton(
-                                      icon: Icon(Icons.edit),
-                                      onPressed: () {},
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                            SizedBox(height:  48.0),
-
-                            _buildTitle('Członkowie grupy', Icons.group),
-                            _buildMembersList(context)
-                          ],
+                                  : SizedBox(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -228,23 +275,23 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   Row _buildTitle(String title, IconData icon) => Row(
-    children: [
-      Icon(
-        icon,
-        color: Theme.of(context).textTheme.bodyText1.color,
-        size: 30,
-      ),
-      Padding(
-        padding: const EdgeInsets.only(left: 8.0),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 18.0,
+        children: [
+          Icon(
+            icon,
+            color: Theme.of(context).textTheme.bodyText1.color,
+            size: 30,
           ),
-        ),
-      ),
-    ],
-  );
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18.0,
+              ),
+            ),
+          ),
+        ],
+      );
 
   Padding _buildMembersList(BuildContext context) {
     return Padding(
@@ -257,37 +304,43 @@ class ProfilePageState extends State<ProfilePage> {
             itemCount: (_group != null) ? _group.members.length : 0,
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Container(
-                padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 8.0, bottom: 8.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  color: AppThemes.getSecondAccentColor(context).withOpacity(0.3),
-                ),
-                child: Row(
-                  children: [
-                    (index == 0)
-                        ? (AppThemes.isLightTheme(context))
-                            ? SvgPicture.asset(
-                                'assets/crown.svg',
-                                height: 16,
-                                color: AppThemes.getSecondAccentColor(context),
-                              )
-                            : SvgPicture.asset('assets/crown.svg', height: 16)
-                        : Icon(
-                            Icons.person,
-                            size: 16,
-                            color: AppThemes.isLightTheme(context)
-                                ? AppThemes.getSecondAccentColor(context)
-                                : Colors.amberAccent,
-                          ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        (_group != null) ? _group.members[index]['username'] : 'Użytkownik',
-                        style: TextStyle(fontSize: 16.0, color: AppThemes.getSecondAccentColor(context)),
+              child: GestureDetector(
+                onLongPress: () {
+                  if (_isLeader && _group.members[index]['uid'] != _group.leaderID)
+                    _showConfirmChangeLeaderDialog(context, _group.members[index]);
+                },
+                child: Container(
+                  padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 8.0, bottom: 8.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                    color: AppThemes.getSecondAccentColor(context).withOpacity(0.3),
+                  ),
+                  child: Row(
+                    children: [
+                      (_group.members[index]['uid'] == _group.leaderID)
+                          ? (AppThemes.isLightTheme(context))
+                              ? SvgPicture.asset(
+                                  'assets/crown.svg',
+                                  height: 16,
+                                  color: AppThemes.getSecondAccentColor(context),
+                                )
+                              : SvgPicture.asset('assets/crown.svg', height: 16)
+                          : Icon(
+                              Icons.person,
+                              size: 16,
+                              color: AppThemes.isLightTheme(context)
+                                  ? AppThemes.getSecondAccentColor(context)
+                                  : Colors.amberAccent,
+                            ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          (_group != null) ? _group.members[index]['username'] : 'Użytkownik',
+                          style: TextStyle(fontSize: 16.0, color: AppThemes.getSecondAccentColor(context)),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -295,4 +348,60 @@ class ProfilePageState extends State<ProfilePage> {
         ));
   }
 
+  void _showConfirmChangeLeaderDialog(BuildContext context, Map<String, dynamic> newLeader) {
+    showDialog(
+      context: context,
+      builder: (context) => DialogWidget(
+        title: "Nowy lider",
+        content: RichText(
+          textAlign: TextAlign.center,
+          text:
+              TextSpan(style: TextStyle(fontSize: 16.0, color: Theme.of(context).textTheme.bodyText1.color), children: [
+            TextSpan(text: "Czy chcesz oddać rolę lidera użytkownikowi "),
+            TextSpan(
+                text: "${newLeader['username']} ?",
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppThemes.getStartColor(context))),
+          ]),
+        ),
+        onAcceptClick: () {
+          _bloc.add(ProfileChangeLeaderEvent(newLeaderId: newLeader['uid']));
+        },
+      ),
+    );
+  }
+
+  void _showConfirmChangeUserNameDialog(BuildContext context, String newUsername) {
+    showDialog(
+      context: context,
+      builder: (context) => DialogWidget(
+        title: "Nowy Nick",
+        content: RichText(
+          textAlign: TextAlign.center,
+          text:
+              TextSpan(style: TextStyle(fontSize: 16.0, color: Theme.of(context).textTheme.bodyText1.color), children: [
+            TextSpan(text: "Chcesz zmienić swoją nazwę użytkownika na "),
+            TextSpan(
+                text: "$newUsername ?",
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppThemes.getStartColor(context))),
+          ]),
+        ),
+        onAcceptClick: () {
+          _bloc.add(ProfileChangeUsernameEvent(newUsername: newUsername));
+        },
+      ),
+    );
+  }
+
+  void _showConfirmChangePasswordDialog(BuildContext context, String password) {
+    showDialog(
+      context: context,
+      builder: (context) => DialogWidget(
+        title: "Zmiana hasła",
+        content: Text("Czy na pewno chcesz zmienić swoje hasło ?"),
+        onAcceptClick: () {
+          _bloc.add(ProfileChangePasswordEvent(password: password));
+        },
+      ),
+    );
+  }
 }

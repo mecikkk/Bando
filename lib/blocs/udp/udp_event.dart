@@ -30,3 +30,14 @@ class UdpOnDataReceivedEvent extends UdpEvent {
   @override
   List<Object> get props => [udpMessage];
 }
+
+class UdpGetSyncModeEvent extends UdpEvent {}
+
+class UdpChangeSyncModeEvent extends UdpEvent {
+  final SyncMode syncMode;
+
+  UdpChangeSyncModeEvent({@required this.syncMode});
+
+  @override
+  List<Object> get props => [syncMode];
+}

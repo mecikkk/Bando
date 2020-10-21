@@ -1,6 +1,7 @@
 import 'package:bando/models/deleted_files_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 class RealtimeDatabaseRepository {
   Future<void> addDeletionInfo(String groupId, String userName, List<Map<String, dynamic>> deletedFilesInfo) async {
@@ -30,14 +31,7 @@ class RealtimeDatabaseRepository {
           .once()
           .then((value) => snapshots.add(value.value));
 
-      snapshots.forEach((element) {
-        if (element != null) {
-          element.values.toList().forEach((element) {
-            Map<dynamic, dynamic> snap = element;
-            updates.add(DeletedFiles.fromMap(snap));
-          });
-        }
-      });
+      updates = await compute(_parseSnapshots, {"snapshots": snapshots});
     } catch (e) {
       print("-- RealtimeDatabaseRepository | Getting deletes info error : $e");
     }
@@ -45,13 +39,32 @@ class RealtimeDatabaseRepository {
     return updates;
   }
 
-  // TODO : Utowrzyc nowego bloca ? Zeby w czasie rzeczywistym obserwowac zmiany, kto jest leaderem, kto moze zmieniac teksty
   Future<DatabaseReference> getCurrentLeader(String groupId) async =>
       FirebaseDatabase.instance.reference().child(groupId).child('current_leader');
 
   Future<void> setCurrentLeader(String groupId, String uid) async {
-    return await FirebaseDatabase.instance.reference().child(groupId).child('current_leader').set({
-      'currentLeader' : uid
-    });
+    return await FirebaseDatabase.instance
+        .reference()
+        .child(groupId)
+        .child('current_leader')
+        .set({'currentLeader': uid});
   }
+}
+
+Future<List<DeletedFiles>> _parseSnapshots(Map params) async {
+  List<DeletedFiles> updates = List();
+  List<Map<dynamic, dynamic>> snapshots = params["snapshots"];
+
+  debugPrint("parse Snapshots : $snapshots");
+
+  snapshots.forEach((element) {
+    if (element != null) {
+      element.values.toList().forEach((element) {
+        Map<dynamic, dynamic> snap = element;
+        updates.add(DeletedFiles.fromMap(snap));
+      });
+    }
+  });
+
+  return updates;
 }

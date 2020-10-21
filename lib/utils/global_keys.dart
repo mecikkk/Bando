@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 class GlobalKeys {
   static final homeSongbookListView = GlobalKey<SongbookListViewState>();
-  static final homeStatusInfo = GlobalKey<StatusInfoWidgetState>();
+  static final lyricsPageSongbookListView = GlobalKey<SongbookListViewState>();
 
+  static final homeStatusInfo = GlobalKey<StatusInfoWidgetState>();
 }

@@ -40,6 +40,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         yield* _mapProfileInitialEventToState();
       } else if (event is ProfileLogoutEvent) {
         yield* _mapProfileLogoutEventToState();
+      } else if (event is ProfileChangeLeaderEvent) {
+        yield* _mapProfileChangeLeaderEventToState(event.newLeaderId);
+      } else if (event is ProfileChangeUsernameEvent) {
+        yield* _mapProfileChangeUsernameEventToState(event.newUsername);
+      } else if (event is ProfileChangePasswordEvent) {
+        yield* _mapProfileChangePasswordEventToState(event.password);
       }
 
   }
@@ -69,12 +75,46 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       await _authRepository.signOut();
 
-      yield ProfileLogoutSuccesState();
+      yield ProfileLogoutSuccessState();
 
     } catch (e) {
       debugPrint("-- ProfileBloc | LogoutEvent error : $e");
       yield ProfileFailureState();
     }
+  }
 
+  Stream<ProfileState> _mapProfileChangeLeaderEventToState(String newLeaderId) async* {
+
+    try {
+      await _groupRepository.setLeader(newLeaderId);
+
+      yield ProfileLeaderChangedSuccessfullyState();
+    } catch(e) {
+      debugPrint("-- ProfileBloc | ChangeLeaderEventToState error : $e");
+      yield ProfileFailureState();
+    }
+
+  }
+
+  Stream<ProfileState> _mapProfileChangeUsernameEventToState(String newUsername) async* {
+    try {
+      await _groupRepository.changeMemberUsername(newUsername);
+      await _userRepository.changeUsername(newUsername);
+
+      yield ProfileUserDataUpdateSuccessState();
+    } catch(e) {
+      debugPrint("-- ProfileBloc | ChageUsernameEventToState error : $e");
+      yield ProfileFailureState();
+    }
+  }
+
+  Stream<ProfileState> _mapProfileChangePasswordEventToState(String password) async* {
+    try {
+      await _authRepository.changePassword(password);
+      yield ProfileUserDataUpdateSuccessState();
+    } catch (e) {
+      debugPrint("-- ProfileBloc | ChagePasswordEventToState error : $e");
+      yield ProfileFailureState();
+    }
   }
 }

@@ -1,4 +1,3 @@
-
 import 'package:bando/blocs/auth_bloc/auth_bloc.dart';
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
 import 'package:bando/pages/auth/register_page.dart';
@@ -20,7 +19,6 @@ class _LoginFormState extends State<LoginForm> {
   bool _obscurePassword = true;
 
   LoginBloc _loginBloc;
-  AuthBloc _authBloc;
 
   bool get isLoginFieldsValid => _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
 
@@ -32,7 +30,6 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     _loginBloc = BlocProvider.of<LoginBloc>(context);
-    _authBloc = BlocProvider.of<AuthBloc>(context);
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
   }
@@ -75,7 +72,6 @@ class _LoginFormState extends State<LoginForm> {
           print("state SUCCESS and GROUP CONFIGURED | CurrentAuthState : ${BlocProvider.of<AuthBloc>(context).state}");
           context.bloc<AuthBloc>()..add(AuthLoggedIn());
         }
-
       },
       child: BlocBuilder<LoginBloc, LoginState>(
         builder: (context, state) {
@@ -232,7 +228,7 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  void _changePasswordVisibility(){
+  void _changePasswordVisibility() {
     setState(() {
       _obscurePassword = !_obscurePassword;
     });
@@ -261,7 +257,7 @@ class _LoginFormState extends State<LoginForm> {
   void _onFormSubmitted() async {
     bool isConnected = await ConnectivityUtils.instance.isPhoneConnected();
     FocusScope.of(context).unfocus();
-    if(isConnected) {
+    if (isConnected) {
       _loginBloc.add(
         LoginWithEmailPressed(
           email: _emailController.text,

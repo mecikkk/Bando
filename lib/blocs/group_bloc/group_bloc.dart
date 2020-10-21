@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bando/models/group_model.dart';
-import 'package:bando/models/user_model.dart';
+import 'package:bando/models/user_model.dart' as BandoUser;
 import 'package:bando/repositories/firestore_group_repository.dart';
 import 'package:bando/repositories/firestore_user_repository.dart';
 import 'package:bando/utils/util.dart';
@@ -61,30 +61,28 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     String groupId,
     String groupName,
   ) async* {
-
     yield GroupLoadingState(loadingType: configurationType);
     Group group;
 
     try {
-      User user = await _userRepository.currentUser();
+      BandoUser.User user = await _userRepository.currentUser();
 
-      if(configurationType == GroupConfigurationType.JOINING_TO_GROUP) {
+      if (configurationType == GroupConfigurationType.JOINING_TO_GROUP) {
         await _userRepository.addGroupToUser(user.uid, groupId);
         group = await _groupRepository.addUserToGroup(groupId, user);
       } else {
-
-        Group newGroup = Group("", name: groupName, members: [user.toMap()]);
+        Group newGroup = Group("", leaderID: user.uid, name: groupName, members: [user.toMap()]);
         String newGroupId = await _groupRepository.createNewGroup(newGroup);
         group = newGroup.copyWith(groupId: newGroupId);
 
         // Add groupId claim for firebase storage rules
-        HttpsCallableResult result = await CloudFunctions.instance
+        await CloudFunctions.instance
             .getHttpsCallable(functionName: "addGroupToken")
             .call(<String, dynamic>{"groupId": newGroupId, "uid": user.uid});
 
-        FirebaseUser fUser = await FirebaseAuth.instance.currentUser();
+        User fUser = FirebaseAuth.instance.currentUser;
 
-        IdTokenResult tokenResult = await fUser.getIdToken(refresh: true);
+        await fUser.getIdTokenResult(true);
 
         await _userRepository.addGroupToUser(user.uid, newGroupId);
       }

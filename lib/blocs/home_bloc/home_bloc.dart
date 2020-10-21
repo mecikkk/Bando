@@ -18,6 +18,7 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -75,6 +76,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     yield HomeShowLoadingState(loadingType: LoadingType.LOADING);
 
     try {
+      _storageRepository.testStorageListAll();
 // Loading User personal info
       User user;
       Group group;
@@ -86,10 +88,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         yield HomeNoGroupState(user: user);
       else {
 // Checking local songbook state
-        List<FileModel> localSongbook = await FilesUtils.getBandoSongbookFiles();
+
+        List<FileModel> localSongbook =
+            await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
         if (localSongbook.isEmpty) {
-          var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo(group.groupId);
+          var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo();
           if (cloudSongbook.isEmpty)
             yield HomeEmptyLocalAndCloudSongbookState(user: user, group: group);
           else {
@@ -108,12 +112,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Stream<HomeState> _mapHomeRefreshLocalAndCloudSongbookEventToState() async* {
     yield HomeShowLoadingState(loadingType: LoadingType.LOADING);
 
-    String groupId = await _userRepository.getCurrentUserGroupId();
-
-    List<FileModel> localSongbook = await FilesUtils.getBandoSongbookFiles();
+    List<FileModel> localSongbook =
+        await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
     if (localSongbook.isEmpty) {
-      var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo(groupId);
+      var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo();
       if (cloudSongbook.isEmpty)
         yield HomeEmptyLocalAndCloudSongbookState();
       else {
@@ -128,27 +131,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     yield HomeShowLoadingState(message: "Pobieram teksty z biblioteki...", loadingType: LoadingType.CLOUD_PROGRESS);
 
     try {
-      String groupId = await _userRepository.getCurrentUserGroupId();
+      var list = await _groupRepository.getAllLyricsFilesInfo();
 
-      var list = await _groupRepository.getAllLyricsFilesInfo(groupId);
-
-      int count = list.length;
-      int fileNum = 1;
-
-      for (var fileInfo in list) {
-        final Directory systemDir = await FilesUtils.getSongbookDirectory();
-        final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
-
-        await downloadFile(uri: fileInfo.downloadUrl, fullPath: fullPath, count: count, current: fileNum);
-
-        yield HomeShowLoadingState(message: "Pobieranie $fileNum / $count", loadingType: LoadingType.CLOUD_PROGRESS);
-
-        fileNum++;
-      }
+      yield* _downloadFiles(list);
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+      List<FileModel> songbook = await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
       yield HomeReloadSongbook(songbook: songbook);
     } catch (e) {
@@ -161,48 +150,33 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     yield HomeShowLoadingState(message: "Pobieram teksty z biblioteki...", loadingType: LoadingType.CLOUD_PROGRESS);
 
     try {
-      int count = newCloudFiles.length;
-      int fileNum = 1;
-
-      for (var fileInfo in newCloudFiles) {
-        final Directory systemDir = await FilesUtils.getSongbookDirectory();
-        final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
-
-        await downloadFile(uri: fileInfo.downloadUrl, fullPath: fullPath, count: count, current: fileNum);
-        yield HomeShowLoadingState(message: "Pobieranie $fileNum / $count", loadingType: LoadingType.CLOUD_PROGRESS);
-
-        fileNum++;
-      }
+      yield* _downloadFiles(newCloudFiles);
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+      List<FileModel> songbook = await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
-      yield HomeReloadSongbook(songbook: songbook);
+      yield HomeReloadSongbookAndHideUpdatesInfo(songbook: songbook);
     } catch (e) {
       debugPrint("-- HomeBloc | Downloading missing files error : $e");
       yield HomeFailureState(message: "Błąd podczas pobierania plików");
     }
   }
 
-  Future<void> downloadFile({String uri, String fullPath, int count, int current}) async {
-    Dio dio = Dio();
+  Stream<HomeState> _downloadFiles(List<DatabaseLyricsFileInfo> files) async* {
+    int count = files.length;
+    int fileNum = 1;
 
-    String progress = "0";
+    for (var fileInfo in files) {
+      final Directory systemDir = await FilesUtils.getSongbookDirectory();
+      final String fullPath = "${systemDir.path}/${fileInfo.localPath}";
 
-    await dio.download(
-      uri,
-      fullPath,
-      onReceiveProgress: (rcv, total) {
-        progress = ((rcv / total) * 100).toStringAsFixed(0);
-      },
-      deleteOnError: true,
-    ).then((_) {
-      if (progress == "100") {
-        debugPrint("DONE !");
-        return;
-      }
-    });
+      await compute(_downloadFile, {"uri": fileInfo.downloadUrl, "fullPath": fullPath});
+
+      yield HomeShowLoadingState(message: "Pobieranie $fileNum / $count", loadingType: LoadingType.CLOUD_PROGRESS);
+
+      fileNum++;
+    }
   }
 
   Stream<HomeState> _mapHomeCheckForDeletedFilesEventToState() async* {
@@ -217,23 +191,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         debugPrint("DELETES FROM REALTIME DB : ${element.whoDeleted} | ${element.files}");
       });
 
-      List<FileModel> localFiles = await FilesUtils.getBandoSongbookFiles();
+      List<FileModel> localFiles =
+          await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
       List<String> localFilesPaths = _getLocalSongbookFilesPaths(localFiles);
 
-      deletedCloudFiles = List.from(deletedCloudFiles.where((element) => (element.whoDeleted != user.username)));
+      filesToDelete = await compute(_findDeletedFiles,
+          {'deletedCloudFiles': deletedCloudFiles, 'localFilesPaths': localFilesPaths, 'username': user.username});
 
-      deletedCloudFiles.forEach((deletedFile) {
-        List<Map<dynamic, dynamic>> files = List();
-
-        deletedFile.files.forEach((file) {
-          debugPrint("CloudDeletedFile : ${file['localPath']}");
-          if (localFilesPaths.contains(file['localPath'])) files.add(file);
-        });
-
-        filesToDelete.add(DeletedFiles(time: deletedFile.time, whoDeleted: deletedFile.whoDeleted, files: files));
-      });
-
+      debugPrint("-------- FilesToDelete : $filesToDelete");
       if (filesToDelete.isNotEmpty) {
         yield HomeNeedToDeleteFilesLocallyState(updates: filesToDelete);
       } else
@@ -255,7 +221,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      List<FileModel> songbook = await FilesUtils.getBandoSongbookFiles();
+      List<FileModel> songbook = await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
       yield HomeReloadSongbookAndHideUpdatesInfo(songbook: songbook);
     } catch (e) {
@@ -274,7 +240,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       deletionInfo = await _storageRepository.deleteFilesFromCloud(deletedFiles, groupId);
 
-      await _groupRepository.deleteLyricsFilesInfo(deletedFiles, groupId);
+      await _groupRepository.deleteLyricsFilesInfo(deletedFiles);
 
       await _databaseRepository.addDeletionInfo(groupId, user.username, deletionInfo);
 
@@ -284,19 +250,18 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
-      List<FileModel> localSongbook = await FilesUtils.getBandoSongbookFiles();
-
+      List<FileModel> localSongbook =
+          await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
 
       if (localSongbook.isEmpty) {
-        var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo(groupId);
+        var cloudSongbook = await _groupRepository.getAllLyricsFilesInfo();
         if (cloudSongbook.isEmpty)
           yield HomeEmptyLocalAndCloudSongbookState();
         else {
           yield HomeNeedToDownloadTheEntireSongbookState();
         }
       } else
-      yield HomeReloadSongbook(songbook: localSongbook);
-
+        yield HomeReloadSongbook(songbook: localSongbook);
     } catch (e) {
       debugPrint("-- HomeBloc | Deleting files from cloud error : $e");
       yield HomeFailureState(message: "Problem podczas usuwania tekstów w chmurze");
@@ -338,7 +303,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       List<DatabaseLyricsFileInfo> uploadedFilesInfo = await _storageRepository.uploadFiles(storageReferences);
 
-      await _groupRepository.updateLyricsFilesInfo(uploadedFilesInfo, user.groupId);
+      await _groupRepository.updateLyricsFilesInfo(uploadedFilesInfo);
 
       await _userRepository.setLastUpdateTime(Timestamp.fromDate(DateTime.now()).millisecondsSinceEpoch);
 
@@ -384,10 +349,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     List<String> localFiles = List();
     List<String> cloudFiles = List();
 
-    String groupId = await _userRepository.getCurrentUserGroupId();
-
-    localSongbook = await FilesUtils.getBandoSongbookFiles();
-    List<DatabaseLyricsFileInfo> cloudSongbook = await _groupRepository.getAllLyricsFilesInfo(groupId);
+    localSongbook = await compute(_getLocalBandoSongbook, {"dirs": await getExternalStorageDirectories()});
+    List<DatabaseLyricsFileInfo> cloudSongbook = await _groupRepository.getAllLyricsFilesInfo();
 
     localFiles = _getLocalSongbookAsCloudPaths(localSongbook);
 
@@ -451,4 +414,57 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     return allFilesNames;
   }
+}
+
+Future<List<FileModel>> _getLocalBandoSongbook(Map params) async {
+  List<Directory> storageList = params["dirs"];
+  return await FilesUtils.getBandoSongbookFiles(storageList);
+}
+
+Future<void> _downloadFile(Map params) async {
+  String uri = params["uri"];
+  String fullPath = params["fullPath"];
+
+  Dio dio = Dio();
+
+  String progress = "0";
+
+  await dio.download(
+    uri,
+    fullPath,
+    onReceiveProgress: (rcv, total) {
+      progress = ((rcv / total) * 100).toStringAsFixed(0);
+    },
+    deleteOnError: true,
+  ).then((_) {
+    if (progress == "100") {
+      debugPrint("DONE !");
+      return;
+    }
+  });
+}
+
+Future<List<DeletedFiles>> _findDeletedFiles(Map params) async {
+  List<DeletedFiles> deletedCloudFiles = params['deletedCloudFiles'];
+  List<String> localFilesPaths = params['localFilesPaths'];
+  String username = params['username'];
+
+  List<DeletedFiles> filesToDelete = List();
+
+  deletedCloudFiles = List.from(deletedCloudFiles.where((element) => (element.whoDeleted != username)));
+
+  deletedCloudFiles.forEach((deletedFile) {
+    List<Map<dynamic, dynamic>> files = List();
+
+    deletedFile.files.forEach((file) {
+      debugPrint(
+          "CloudDeletedFile : ${file['localPath']} | localPaths contains deleted file ? (${localFilesPaths.contains(file['localPath'])})");
+      if (localFilesPaths.contains(file['localPath'])) files.add(file);
+    });
+
+    if (files.isNotEmpty)
+      filesToDelete.add(DeletedFiles(time: deletedFile.time, whoDeleted: deletedFile.whoDeleted, files: files));
+  });
+
+  return filesToDelete;
 }

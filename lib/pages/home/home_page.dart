@@ -18,12 +18,11 @@ import 'package:bando/utils/files_utils.dart';
 import 'package:bando/utils/global_keys.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bando/widgets/animated_opaticy_widget.dart';
+import 'package:bando/widgets/animated_search_textfield.dart';
 import 'package:bando/widgets/loading_widget.dart';
-import 'package:bando/widgets/search_textfield.dart';
 import 'package:bando/widgets/songbook_listview.dart';
 import 'package:bando/widgets/songbook_update_modal_bottom_sheet.dart';
 import 'package:bando/widgets/status_info_widget.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +30,6 @@ import 'package:flutter_riverpod/all.dart';
 import 'package:koin_flutter/koin_flutter.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -55,7 +53,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool showSearchBar = false;
 
   HomeBloc _bloc;
-  AuthBloc _authBloc;
 
   Widget _statusInfoWidget;
   BuildContext _scaffoldContext;
@@ -80,7 +77,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.initState();
 
     _bloc = BlocProvider.of<HomeBloc>(context)..add(HomeInitialEvent());
-    _authBloc = get<AuthBloc>();
 
     _statusAndSearchAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -117,6 +113,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     super.dispose();
     _bloc.close();
+    get<UdpBloc>().add(UdpStopListeningEvent());
     _searchController.dispose();
     _deletingModeAnimationController.dispose();
     _statusAndSearchAnimationController.dispose();
@@ -265,8 +262,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         }
                       },
                       child: BlocBuilder<UdpBloc, UdpState>(
-
-                        builder:(context, state) => HomeHeaderWidget(
+                        builder: (context, state) => HomeHeaderWidget(
                           groupName: _groupName,
                           username: _userName,
                           lastLyricsFile: _lastLyricsFile,
@@ -302,7 +298,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void _navigateToUserProfile(BuildContext context) async {
     bool isLoggedOut = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => UserProfile()));
     debugPrint("IS LOGGED OUT : $isLoggedOut");
-    if (isLoggedOut) {
+    if (isLoggedOut != null && isLoggedOut) {
       debugPrint("AuthState From home before: ${BlocProvider.of<AuthBloc>(context).state}");
       context.bloc<AuthBloc>()..add(AuthLoggedOut());
       debugPrint("AuthState From home after : ${BlocProvider.of<AuthBloc>(context).state}");
@@ -351,14 +347,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _navigateToLyricsPage(FileModel file) async {
-    _lastLyricsFile = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => LyricsPage(
-          songbook: context.read(_songbookListProvider).state,
-          fileModel: file,
-        ),
-      ),
+    final lyricsPage = LyricsPage(
+      songbook: context.read(_songbookListProvider).state,
+      fileModel: file,
     );
+
+    FileModel returnedFile = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => lyricsPage),
+    );
+
+    if (returnedFile != null) _lastLyricsFile = returnedFile;
   }
 
   void _showUpdateInfoBottomSheet(BuildContext context, SongbookUpdateType updateType) {
@@ -475,7 +473,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
                               Align(
-                                child: SearchTextField(
+                                child: AnimatedSearchTextField(
                                   controller: _searchController,
                                   labelText: "Szukaj tekstów..",
                                   width: searchFieldAnimation,
@@ -643,13 +641,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     ).then((_) {
       _bloc.add(HomeInitialEvent());
     });
-  }
-
-  void _logout() async {
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.clear();
-
-    FirebaseAuth.instance.signOut();
   }
 
   Future<void> _showConfirmDeleteDialog() async {

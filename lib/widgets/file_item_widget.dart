@@ -68,7 +68,8 @@ class EntryFileItemState extends State<EntryFileItem> {
           widget.onLongClick(root, widget.selections[root.fileSystemEntity.path]);
         },
         onTap: () {
-          widget.onClick(root);
+          if(!root.isDirectory)
+            widget.onClick(root);
         },
         child: Container(
           decoration: widget.selections.isNotEmpty

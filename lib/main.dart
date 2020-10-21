@@ -1,5 +1,6 @@
 import 'package:bando/bloc_observer.dart';
 import 'package:bando/blocs/login_bloc/login_bloc.dart';
+import 'package:bando/blocs/search/search_bloc.dart';
 import 'package:bando/blocs/udp/udp_bloc.dart';
 import 'package:bando/dependency_injection.dart';
 import 'package:bando/pages/auth/login_page.dart';
@@ -7,6 +8,8 @@ import 'package:bando/pages/home/home_page.dart';
 import 'package:bando/utils/app_themes.dart';
 import 'package:bando/utils/util.dart';
 import 'package:bloc/bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/all.dart';
@@ -19,6 +22,11 @@ import 'blocs/home_bloc/home_bloc.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Bloc.observer = SimpleBlocObserver();
+  await Firebase.initializeApp();
+
+  FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+  // Pass all uncaught errors from the framework to Crashlytics.
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
   var koin = startKoin((app) {
     app.printLogger(level: Level.debug)..modules([repositoriesModule, blocsModule]);
@@ -121,19 +129,19 @@ class BandoApp extends StatelessWidget {
   }
 
   Widget _buildHomePage() => MultiBlocProvider(
-          providers: [
-            BlocProvider<HomeBloc>(create: (context) => koin.get<HomeBloc>()),
-            BlocProvider<GroupBloc>(create: (context) => koin.get<GroupBloc>()),
-            BlocProvider<UdpBloc>(create: (context) => koin.get<UdpBloc>()),
-          ],
-          child: HomePage(),
-        );
+        providers: [
+          BlocProvider<HomeBloc>(create: (context) => koin.get<HomeBloc>()),
+          BlocProvider<GroupBloc>(create: (context) => koin.get<GroupBloc>()),
+          BlocProvider<UdpBloc>(create: (context) => koin.get<UdpBloc>()),
+          BlocProvider<SearchBloc>(create: (context) => koin.get<SearchBloc>())
+        ],
+        child: HomePage(),
+      );
 
   Widget _buildLoginPage() => MultiBlocProvider(
-      providers: [
-        BlocProvider<LoginBloc>(create: (context) => koin.get<LoginBloc>()),
-      ],
-      child: LoginPage(),
-    );
-
+        providers: [
+          BlocProvider<LoginBloc>(create: (context) => koin.get<LoginBloc>()),
+        ],
+        child: LoginPage(),
+      );
 }

@@ -6,8 +6,15 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FilesUtils {
-  static Future<List<Directory>> getStorageList() async {
-    List<Directory> paths = await getExternalStorageDirectories();
+  static Future<List<Directory>> getStorageList(
+      [List<Directory> storageList]) async {
+    List<Directory> paths;
+
+    if (storageList == null)
+      paths = await getExternalStorageDirectories();
+    else
+      paths = storageList;
+
     List<Directory> filteredPaths = List<Directory>();
     for (Directory dir in paths) {
       filteredPaths.add(removeDataDirectory(dir.path));
@@ -19,43 +26,49 @@ class FilesUtils {
     return Directory(path.split("Android")[0]);
   }
 
-  static Future<List<FileModel>> getBandoSongbookFiles() async {
-    Directory songbookDirectory = await FilesUtils.getSongbookDirectory();
+  static Future<List<FileModel>> getBandoSongbookFiles(
+      [List<Directory> storageList]) async {
+    Directory songbookDirectory =
+        await FilesUtils.getSongbookDirectory(storageList);
 
     return await FilesUtils.getFilesInPath(songbookDirectory.path);
   }
 
-
   static Future<List<FileModel>> getFilesInPath(String path) async {
-    Directory dir = Directory(path);
-    List<FileModel> files = List<FileModel>();
-    List<FileSystemEntity> allFiles = sortList(dir.listSync());
+    try {
+      Directory dir = Directory(path);
+      List<FileModel> files = List<FileModel>();
+      List<FileSystemEntity> allFiles = sortList(dir.listSync());
 
-    if (allFiles.isNotEmpty) {
-      allFiles.forEach((element) async {
+      if (allFiles.isNotEmpty) {
+        allFiles.forEach((element) async {
+          var children = List<FileModel>();
+          var isDirectory = FileSystemEntity.isDirectorySync(element.path);
 
-        var children = List<FileModel>();
-        var isDirectory = FileSystemEntity.isDirectorySync(element.path);
+          if (isDirectory) {
+            children = await getFilesInPath(element.path);
+          }
+          // Accept only directories and pdf files
+          if (isPdfFile(element) || isDirectory)
+            files.add(FileModel(element, children, isDirectory));
+        });
+      }
 
-        if(isDirectory) {
-          children = await getFilesInPath(element.path);
-        }
-        // Accept only directories and pdf files
-        if(isPdfFile(element) || isDirectory)
-          files.add(FileModel(element, children, isDirectory));
-
-      });
+      return files;
+    } on Exception catch (e) {
+      debugPrint("--- FilesUtils | GetFilesInPath error : $e");
+      return List();
     }
-
-    return files;
   }
 
-  static Future<List<FileModel>> getOnlyFilesFromLocalSongbook(List<FileModel> songbook) async {
+  static Future<List<FileModel>> getOnlyFilesFromLocalSongbook(
+      List<FileModel> songbook) async {
     List<FileModel> allFiles = List();
 
-    for(var file in songbook) {
-      if (file.children.isNotEmpty){
-        List<FileModel> children = await getOnlyFilesFromLocalSongbook(file.children);
+    for (var file in songbook) {
+      if (file.children.isNotEmpty) {
+        List<FileModel> children =
+            await getOnlyFilesFromLocalSongbook(file.children);
         allFiles.addAll(children);
       }
       if (!file.isDirectory) allFiles.add(file);
@@ -68,7 +81,7 @@ class FilesUtils {
     return (extension(root.path) == '.pdf');
   }
 
-  static List<FileSystemEntity> sortList(List<FileSystemEntity> list){
+  static List<FileSystemEntity> sortList(List<FileSystemEntity> list) {
     if (list.toString().contains("Directory")) {
       list
         ..sort((f1, f2) => basename(f1.path)
@@ -100,9 +113,7 @@ class FilesUtils {
   }
 
   static Future<int> deleteFile({String fullPath}) async {
-
     try {
-
       var file;
 
       file = File("$fullPath");
@@ -112,12 +123,10 @@ class FilesUtils {
       file.deleteSync(recursive: true);
 
       return 1;
-
     } catch (e) {
       debugPrint("-- FileUtils | Deleting file error : $e");
       return -1;
     }
-
   }
 
   static String getFirestoreReferenceFromFileModel(FileModel fileModel) {
@@ -134,26 +143,28 @@ class FilesUtils {
     return (directories != "") ? directories : "Główny katalog";
   }
 
-  static Future<bool> moveSelectedDirToBandoDir(String selectedDirPath, {Directory destinationDir}) async {
+  static Future<bool> moveSelectedDirToBandoDir(String selectedDirPath,
+      {Directory destinationDir}) async {
     try {
       List<Directory> listOfStorages = await getStorageList();
       Directory appDir;
 
-      if(destinationDir == null)
+      if (destinationDir == null)
         appDir = Directory("${listOfStorages[0].path}/BandoSongbook");
       else
         appDir = destinationDir;
 
-      List<FileSystemEntity> selectedDirFiles = Directory(selectedDirPath).listSync();
+      List<FileSystemEntity> selectedDirFiles =
+          Directory(selectedDirPath).listSync();
       selectedDirFiles.forEach((element) async {
         var isDirectory = FileSystemEntity.isDirectorySync(element.path);
-        if(isDirectory) {
-          Directory newDir = await createDirInBandoDirectory(basename(element.path));
+        if (isDirectory) {
+          Directory newDir =
+              await createDirInBandoDirectory(basename(element.path));
           await moveSelectedDirToBandoDir(element.path, destinationDir: newDir);
         } else {
           moveFile(element, "${appDir.path}");
         }
-
       });
 
       return true;
@@ -163,12 +174,12 @@ class FilesUtils {
     }
   }
 
-
   static Future<Directory> generateBandoSongbookDirectory() async {
     try {
       List<Directory> listOfStorages = await getStorageList();
-      if(!Directory('${listOfStorages[0].path}/BandoSongbook').existsSync())
-        return await new Directory('${listOfStorages[0].path}/BandoSongbook').create(recursive: false);
+      if (!Directory('${listOfStorages[0].path}/BandoSongbook').existsSync())
+        return await new Directory('${listOfStorages[0].path}/BandoSongbook')
+            .create(recursive: false);
       else
         return null;
     } catch (e) {
@@ -177,9 +188,10 @@ class FilesUtils {
     }
   }
 
-  static Future<Directory> getSongbookDirectory() async {
+  static Future<Directory> getSongbookDirectory(
+      [List<Directory> storageList]) async {
     try {
-      List<Directory> listOfStorages = await getStorageList();
+      List<Directory> listOfStorages = await getStorageList(storageList);
       return Directory('${listOfStorages[0].path}/BandoSongbook');
     } catch (e) {
       print(e);
@@ -190,11 +202,12 @@ class FilesUtils {
   static Future<Directory> createDirInBandoDirectory(String dirName) async {
     try {
       List<Directory> listOfStorages = await getStorageList();
-      return await new Directory('${listOfStorages[0].path}/BandoSongbook/$dirName').create(recursive: false);
+      return await new Directory(
+              '${listOfStorages[0].path}/BandoSongbook/$dirName')
+          .create(recursive: false);
     } catch (e) {
       print(e);
       return null;
     }
   }
-
 }

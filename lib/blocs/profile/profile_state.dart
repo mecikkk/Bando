@@ -14,7 +14,7 @@ class ProfileLoadingState extends ProfileState {}
 
 class ProfileFailureState extends ProfileState {}
 
-class ProfileLogoutSuccesState extends ProfileState {}
+class ProfileLogoutSuccessState extends ProfileState {}
 
 class ProfileDataLoadedState extends ProfileState {
   final User user;
@@ -25,3 +25,7 @@ class ProfileDataLoadedState extends ProfileState {
   @override
   List<Object> get props => [user, group];
 }
+
+class ProfileLeaderChangedSuccessfullyState extends ProfileState {}
+
+class ProfileUserDataUpdateSuccessState extends ProfileState {}
