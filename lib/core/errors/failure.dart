@@ -10,6 +10,8 @@ abstract class Failure extends Equatable {
   List<Object> get props => [message];
 }
 
+class ServerFailure extends Failure {}
+
 class LoginFailure extends Failure {
   LoginFailure({@required String message}) : super(message: message);
 }
