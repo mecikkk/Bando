@@ -1,28 +1,30 @@
 import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
-import 'package:bando/core/models/user_model.dart';
+import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart' as FireAuth;
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-abstract class RemoteDataSource {
+abstract class AuthRemoteDataSource {
   Future<UserModel> signInWithEmailAndPassword(EmailAddress email, Password password);
   Future<UserModel> signInWithGoogle();
   Future<UserModel> registerWithEmailAndPassword(EmailAddress email, Password password, String username);
+  Future<UserModel> isLoggedIn();
+  Future<void> loggOut();
 }
 
-class RemoteDataSourceImpl implements RemoteDataSource {
+class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FireAuth.FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
 
-  RemoteDataSourceImpl({@required FireAuth.FirebaseAuth firebaseAuth, @required GoogleSignIn googleSignIn})
+  AuthRemoteDataSourceImpl({@required FireAuth.FirebaseAuth firebaseAuth, @required GoogleSignIn googleSignIn})
       : _firebaseAuth = firebaseAuth,
         _googleSignIn = googleSignIn;
 
   @override
   Future<UserModel> registerWithEmailAndPassword(EmailAddress email, Password password, String username) async {
     final userCredential =
-        await _firebaseAuth.createUserWithEmailAndPassword(email: email.email, password: password.password);
+        await _firebaseAuth.createUserWithEmailAndPassword(email: email.value, password: password.value);
 
     await userCredential.user.updateProfile(displayName: username);
 
@@ -31,8 +33,7 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
   @override
   Future<UserModel> signInWithEmailAndPassword(EmailAddress email, Password password) async {
-    final userCredential =
-        await _firebaseAuth.signInWithEmailAndPassword(email: email.email, password: password.password);
+    final userCredential = await _firebaseAuth.signInWithEmailAndPassword(email: email.value, password: password.value);
 
     return await UserModel.fromFirebase(userCredential.user);
   }
@@ -49,5 +50,19 @@ class RemoteDataSourceImpl implements RemoteDataSource {
 
     final userCredential = await _firebaseAuth.signInWithCredential(credential);
     return await UserModel.fromFirebase(userCredential.user);
+  }
+
+  @override
+  Future<UserModel> isLoggedIn() {
+    final fUser = _firebaseAuth.currentUser;
+    return (fUser != null) ? UserModel.fromFirebase(fUser) : null;
+  }
+
+  @override
+  Future<void> loggOut() async {
+    final fUser = _firebaseAuth.currentUser;
+    return (fUser.providerData[1].providerId == 'google.com')
+        ? await _googleSignIn.signOut()
+        : await _firebaseAuth.signOut();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:bando/core/entities/user.dart';
-import 'package:bando/core/errors/exceptions.dart';
 import 'package:firebase_auth/firebase_auth.dart' as FireAuth;
 import 'package:flutter/foundation.dart';
 
@@ -12,11 +11,10 @@ class UserModel extends User {
 
   static Future<UserModel> fromFirebase(FireAuth.User fUser) async {
     FireAuth.IdTokenResult token = await fUser.getIdTokenResult();
-    if (token.claims['groupId'] == null || token.claims['groupId'] == '') throw UserClaimsException();
     return UserModel(
-      uid: fUser.uid ?? 'Unknown user ID',
-      displayName: fUser.displayName ?? 'Unknown User name',
-      groupId: token.claims['groupId'],
+      uid: fUser.uid ?? '',
+      displayName: fUser.displayName ?? '',
+      groupId: token.claims['groupId'] ?? '',
     );
   }
 

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:bando/core/errors/exceptions.dart';
-import 'package:bando/core/models/user_model.dart';
+import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

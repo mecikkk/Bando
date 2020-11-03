@@ -2,11 +2,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 class EmailAddress extends Equatable {
-  final String email;
+  final String value;
 
-  EmailAddress({@required this.email});
+  EmailAddress({@required this.value});
 
   @override
-  List<Object> get props => [email];
-
+  List<Object> get props => [value];
 }

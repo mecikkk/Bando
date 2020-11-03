@@ -2,26 +2,26 @@ import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/entities/user.dart';
 import 'package:bando/core/errors/failure.dart';
-import 'package:bando/features/login_register/data/repositories/login_register_repository_impl.dart';
-import 'package:bando/features/login_register/domain/usecases/register_with_email_and_password.dart';
+import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
+import 'package:bando/features/authorization/domain/usecases/register_with_email_and_password.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-class MockLoginRepository extends Mock implements LoginRegisterRepositoryImpl {}
+class MockAuthRepository extends Mock implements AuthRepositoryImpl {}
 
 void main() {
-  MockLoginRepository repository;
+  MockAuthRepository repository;
   RegisterWithEmailAndPassword usecase;
 
   setUp(() {
-    repository = MockLoginRepository();
-    usecase = RegisterWithEmailAndPassword(repository: repository);
+    repository = MockAuthRepository();
+    usecase = RegisterWithEmailAndPassword(repository);
   });
 
   group('Usecase RegisterWithEmailAndPassword - ', () {
-    final email = EmailAddress(email: 'valid@email.com');
-    final password = Password(password: 'pass123');
+    final email = EmailAddress(value: 'valid@email.com');
+    final password = Password(value: 'pass123');
 
     final user = User(uid: 'TestUid', displayName: 'TestName', groupId: 'TestGroupId');
 

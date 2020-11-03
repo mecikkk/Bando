@@ -1,24 +1,22 @@
 import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/errors/failure.dart';
-import 'package:bando/core/models/user_model.dart';
-import 'package:bando/features/login_register/data/datasources/local_data_source.dart';
-import 'package:bando/features/login_register/data/datasources/remote_data_source.dart';
-import 'package:bando/features/login_register/data/repositories/login_register_repository_impl.dart';
+import 'package:bando/features/authorization/data/datasources/local_data_source.dart';
+import 'package:bando/features/authorization/data/datasources/auth_remote_data_source.dart';
+import 'package:bando/features/authorization/data/models/user_model.dart';
+import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-import '../../../fixtures/firebase_auth_mock.dart';
-
-class MockRemoteDataSource extends Mock implements RemoteDataSourceImpl {}
+class MockRemoteDataSource extends Mock implements AuthRemoteDataSourceImpl {}
 
 class MockLocalDataSource extends Mock implements LocalDataSourceImpl {}
 
 void main() {
   EmailAddress email;
   Password password;
-  LoginRegisterRepositoryImpl repository;
+  AuthRepositoryImpl repository;
   UserModel user;
   MockRemoteDataSource remoteDataSource;
   MockLocalDataSource localDataSource;
@@ -26,9 +24,9 @@ void main() {
   setUp(() {
     remoteDataSource = MockRemoteDataSource();
     localDataSource = MockLocalDataSource();
-    repository = LoginRegisterRepositoryImpl(remoteDataSource: remoteDataSource, localDataSource: localDataSource);
-    password = Password(password: 'pass123');
-    email = EmailAddress(email: 'test@email.com');
+    repository = AuthRepositoryImpl(remoteDataSource: remoteDataSource, localDataSource: localDataSource);
+    password = Password(value: 'pass123');
+    email = EmailAddress(value: 'test@email.com');
     user = UserModel(uid: 'TestUid', displayName: 'TestName', groupId: 'TestGroupId');
   });
 
