@@ -33,4 +33,19 @@ class UserModel extends User {
       'groupId': groupId,
     };
   }
+
+  factory UserModel.mapAsMember(Map<String, dynamic> json) {
+    return UserModel(
+      uid: json['uid'],
+      displayName: json['displayName'],
+      groupId: '',
+    );
+  }
+
+  Map<String, dynamic> toMember() {
+    return {
+      'uid': uid,
+      'displayName': displayName,
+    };
+  }
 }
