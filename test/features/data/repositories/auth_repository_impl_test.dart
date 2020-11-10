@@ -1,8 +1,8 @@
 import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/errors/failure.dart';
-import 'package:bando/features/authorization/data/datasources/local_data_source.dart';
 import 'package:bando/features/authorization/data/datasources/auth_remote_data_source.dart';
+import 'package:bando/features/authorization/data/datasources/local_data_source.dart';
 import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
 import 'package:dartz/dartz.dart';
@@ -32,7 +32,7 @@ void main() {
 
   group('LoginRegisterRepository tests - ', () {
     test('should return UserModel created from Firebase User when user sign in using email and password ', () async {
-      when(remoteDataSource.signInWithEmailAndPassword(email, password)).thenAnswer((_) async => user);
+      when(remoteDataSource.signInWithEmailAndPassword(email, password)).thenAnswer((_) async => Right(user));
       when(localDataSource.cacheUserInfo(user)).thenAnswer((_) async => true);
 
       final resultUser = await repository.signInWithEmailAndPassword(email, password);
@@ -45,17 +45,61 @@ void main() {
       verifyNoMoreInteractions(localDataSource);
     });
 
-    test('should throw ServerFailure when user tries to sign in using email and password', () async {
-      when(remoteDataSource.signInWithEmailAndPassword(email, password))
-          .thenAnswer((realInvocation) => throw ServerFailure());
+    test('should return ServerFailure when user tries to sign in using email and password', () async {
+      when(remoteDataSource.signInWithEmailAndPassword(email, password)).thenThrow(Exception());
 
-      final call = repository.signInWithEmailAndPassword;
+      final result = await repository.signInWithEmailAndPassword(email, password);
 
-      expect(() => call(email, password), throwsA(isInstanceOf<ServerFailure>()));
+      expect(result, Left(ServerFailure()));
 
       verify(remoteDataSource.signInWithEmailAndPassword(email, password));
       verifyNoMoreInteractions(remoteDataSource);
       verifyNoMoreInteractions(localDataSource);
+    });
+
+    test('should return User entity when checks is logged in', () async {
+      //arrange
+      when(remoteDataSource.isLoggedIn()).thenAnswer((_) => Future.value(user));
+      //act
+      final result = await repository.isLoggedIn();
+
+      //assert
+      expect(result, equals(Right(user)));
+    });
+
+    test('should return Unauthorized when user is not logged in', () async {
+      //arrange
+      when(remoteDataSource.isLoggedIn()).thenAnswer((_) => Future.value(null));
+      //act
+      final result = await repository.isLoggedIn();
+
+      //assert
+      expect(result, equals(Left(Unauthorized())));
+    });
+
+    test('should return ServerFailure when checking logged in user throw an Exception', () async {
+      //arrange
+      when(remoteDataSource.isLoggedIn()).thenThrow(Exception());
+      //act
+      final result = await repository.isLoggedIn();
+
+      //assert
+      expect(result, Left(ServerFailure()));
+    });
+
+    test('should return Right(unit) object when logging out is successful', () async {
+      //act
+      final result = await repository.logout();
+      //assert
+      expect(result, Right(unit));
+    });
+
+    test('should return ServerFailure when logging out is failure', () async {
+      when(remoteDataSource.logout()).thenThrow(Exception());
+      //act
+      final result = await repository.logout();
+      //assert
+      expect(result, Left(ServerFailure()));
     });
   });
 }

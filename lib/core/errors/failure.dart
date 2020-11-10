@@ -1,4 +1,5 @@
 import 'package:bando/core/entities/user.dart';
+import 'package:bando/core/utils/constants.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
@@ -26,6 +27,18 @@ class PasswordFailure extends Failure {
 }
 
 class Unauthorized extends Failure {}
+
+class GoogleAuthCanceled extends Failure {
+  GoogleAuthCanceled() : super(message: FIREBASE_CANCELED_BY_USER);
+}
+
+class EmailAlreadyInUse extends Failure {
+  EmailAlreadyInUse() : super(message: FIREBASE_EMAIL_ALREADY_IN_USE);
+}
+
+class WrongEmailOrPassword extends Failure {
+  WrongEmailOrPassword() : super(message: FIREBASE_WRONG_EMAIL_OR_PASSWORD);
+}
 
 class UnconfiguredGroup extends Failure {
   final User user;

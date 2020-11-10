@@ -5,10 +5,10 @@ import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
 import 'package:dartz/dartz.dart';
 
-class RegisterWithEmailAndPassword {
+class RegisterWithEmailAndPasswordUseCase {
   final AuthRepositoryImpl _repository;
 
-  RegisterWithEmailAndPassword(this._repository);
+  RegisterWithEmailAndPasswordUseCase(this._repository);
 
   Future<Either<Failure, User>> call(EmailAddress email, Password password, String username) async {
     return await _repository.registerWithEmailAndPassword(email, password, username);

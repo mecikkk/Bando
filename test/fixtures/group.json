@@ -1,0 +1,14 @@
+{
+  "name": "TestGroupName",
+  "leaderId": "TestLeaderId",
+  "members": [
+    {
+      "uid": "TestUid1",
+      "displayName": "TestName1"
+    },
+    {
+      "uid": "TestUid2",
+      "displayName": "TestName2"
+    }
+  ]
+}

@@ -4,16 +4,17 @@ import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/entities/user.dart';
 import 'package:bando/core/errors/failure.dart';
-import 'package:bando/features/authorization/domain/usecases/check_is_logged_in.dart';
-import 'package:bando/features/authorization/domain/usecases/logout.dart';
-import 'package:bando/features/authorization/domain/usecases/sign_in_with_email_and_password.dart';
-import 'package:bando/features/authorization/domain/usecases/sign_in_with_google.dart';
+import 'package:bando/features/authorization/domain/usecases/check_is_logged_in_use_case.dart';
+import 'package:bando/features/authorization/domain/usecases/logout_use_case.dart';
+import 'package:bando/features/authorization/domain/usecases/sign_in_with_email_and_password_use_case.dart';
+import 'package:bando/features/authorization/domain/usecases/sign_in_with_google_use_case.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 part 'auth_event.dart';
+
 part 'auth_state.dart';
 
 const String AUTH_SERVER_ERROR = 'Server failure';
@@ -22,10 +23,10 @@ const String SIGN_IN_ERROR = 'Signing in error';
 typedef Future<Either<Failure, User>> _SignInMethod();
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final CheckIsLoggedIn _checkIsLoggedIn;
-  final Logout _logout;
-  final SignInWithEmailAndPassword _signInWithEmailAndPassword;
-  final SignInWithGoogle _signInWithGoogle;
+  final CheckIsLoggedInUseCase _checkIsLoggedIn;
+  final LogoutUseCase _logout;
+  final SignInWithEmailAndPasswordUseCase _signInWithEmailAndPassword;
+  final SignInWithGoogleUseCase _signInWithGoogle;
 
   AuthBloc(this._checkIsLoggedIn, this._logout, this._signInWithEmailAndPassword, this._signInWithGoogle)
       : super(AuthInitial());
@@ -53,11 +54,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     if (event is LogoutEvent) {
-      yield SplashScreenState();
+      yield SplashScreenState(
+      );
+
+      final logoutEither = await _logout.call(
+      );
 
       try {
-        await _logout.call();
-        yield UnauthorizedState();
+        yield* logoutEither.fold(
+              (failure) async* {
+            yield Error(
+                message: AUTH_SERVER_ERROR);
+          },
+              (unit) async* {
+            yield UnauthorizedState(
+            );
+          },
+        );
       } on Exception {
         yield Error(message: AUTH_SERVER_ERROR);
       }
@@ -80,9 +93,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     yield* signInEither.fold(
       (failure) async* {
         if (failure is UnconfiguredGroup)
-          yield UnconfiguredGroupState(user: failure.user);
+          yield NotConfiguredGroupState(
+              user: failure.user);
+        else if (failure is WrongEmailOrPassword)
+          yield WrongEmailOrPasswordState(
+          );
+        else if (failure is GoogleAuthCanceled)
+          yield GoogleAuthCanceledState(
+          );
         else
-          yield Error(message: (failure.message != '') ? failure.message : SIGN_IN_ERROR);
+          yield Error(
+              message: (failure.message != '') ? failure.message : SIGN_IN_ERROR);
       },
       (user) async* {
         yield AuthorizedState(user: user);

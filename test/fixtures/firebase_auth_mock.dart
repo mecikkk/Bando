@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mockito/mockito.dart';
@@ -71,13 +72,14 @@ class MockUserCredential extends Mock implements UserCredential {
         _isUserValid = isUserValid;
 
   @override
-  User get user => _isUserValid ? MockUser(isAnonymous: _isAnonymous) : MockNoClaimsUser(isAnonymous: _isAnonymous);
+  User get user =>
+      _isUserValid ? MockFirebaseUser(isAnonymous: _isAnonymous) : MockNoClaimsUser(isAnonymous: _isAnonymous);
 }
 
-class MockUser extends Mock implements User {
+class MockFirebaseUser extends Mock implements User {
   final bool _isAnonymous;
 
-  MockUser({bool isAnonymous}) : _isAnonymous = isAnonymous;
+  MockFirebaseUser({bool isAnonymous}) : _isAnonymous = isAnonymous;
 
   @override
   String get displayName => 'TestName';
@@ -92,6 +94,13 @@ class MockUser extends Mock implements User {
   bool get isAnonymous => _isAnonymous;
 
   @override
+  List<UserInfo> get providerData =>
+      [MockFirebaseUserInfo(
+      ), MockFirebaseUserInfo(
+      )
+      ];
+
+  @override
   Future<IdTokenResult> getIdTokenResult([bool forceRefresh = false]) async {
     return IdTokenResult(
       {
@@ -99,6 +108,50 @@ class MockUser extends Mock implements User {
       },
     );
   }
+}
+
+class MockGoogleUser extends Mock implements User {
+  final bool _isAnonymous;
+
+  MockGoogleUser({bool isAnonymous}) : _isAnonymous = isAnonymous;
+
+  @override
+  String get displayName => 'TestName';
+
+  @override
+  String get uid => 'TestUid';
+
+  @override
+  String get email => 'test@email.com';
+
+  @override
+  bool get isAnonymous => _isAnonymous;
+
+  @override
+  List<UserInfo> get providerData =>
+      [MockGoogleUserInfo(
+      ), MockGoogleUserInfo(
+      )
+      ];
+
+  @override
+  Future<IdTokenResult> getIdTokenResult([bool forceRefresh = false]) async {
+    return IdTokenResult(
+      {
+        'claims': {'groupId': 'TestGroupId'},
+      },
+    );
+  }
+}
+
+class MockGoogleUserInfo extends Mock implements UserInfo {
+  @override
+  String get providerId => 'google.com';
+}
+
+class MockFirebaseUserInfo extends Mock implements UserInfo {
+  @override
+  String get providerId => 'password';
 }
 
 class MockNoClaimsUser extends Mock implements User {
@@ -120,8 +173,20 @@ class MockNoClaimsUser extends Mock implements User {
 
   @override
   Future<IdTokenResult> getIdTokenResult([bool forceRefresh = false]) async {
-    return IdTokenResult({
-      'claims': {'uid': 'TestUid'}
-    });
+    return IdTokenResult(
+        {
+          'claims': {'uid': 'TestUid'}
+        });
+  }
+}
+
+class MockDocumentSnapshot extends Mock implements DocumentSnapshot {
+  final Map<String, dynamic> _data;
+
+  MockDocumentSnapshot(this._data);
+
+  @override
+  Map<String, dynamic> data() {
+    return _data;
   }
 }

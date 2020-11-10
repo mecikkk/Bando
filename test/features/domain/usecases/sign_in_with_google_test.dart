@@ -1,7 +1,7 @@
 import 'package:bando/core/entities/user.dart';
 import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
-import 'package:bando/features/authorization/domain/usecases/sign_in_with_google.dart';
+import 'package:bando/features/authorization/domain/usecases/sign_in_with_google_use_case.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -9,12 +9,12 @@ import 'package:mockito/mockito.dart';
 class MockAuthRepository extends Mock implements AuthRepositoryImpl {}
 
 void main() {
-  SignInWithGoogle googleUsecase;
+  SignInWithGoogleUseCase googleUsecase;
   MockAuthRepository authRepository;
 
   setUp(() {
     authRepository = MockAuthRepository();
-    googleUsecase = SignInWithGoogle(authRepository);
+    googleUsecase = SignInWithGoogleUseCase(authRepository);
   });
 
   final user = User(uid: 'testuid', displayName: 'TestUser', groupId: 'testGroupId');

@@ -1,20 +1,29 @@
+import 'package:bando/core/entities/group.dart';
 import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
-class GroupModel extends Equatable {
-  final String name;
-  final String leaderId;
-  final List<UserModel> members;
-
-  GroupModel({@required this.name, @required this.leaderId, @required this.members});
+class GroupModel extends Group {
+  GroupModel({
+    @required String name,
+    @required String leaderId,
+    @required List<UserModel> members,
+  }) : super(
+          leaderId: leaderId,
+          name: name,
+          members: members,
+        );
 
   @override
   List<Object> get props => [name, leaderId, members];
 
   factory GroupModel.fromSnapshot(DocumentSnapshot doc) {
-    final List<Map<String, dynamic>> membersMap = doc.data()['members'];
+    final List<Map<String, dynamic>> membersMap = List();
+
+    doc.data()['members'].forEach((element) {
+      membersMap.add({'uid': element['uid'], 'displayName': element['displayName']});
+    });
+
     final List<UserModel> members = membersMap.map((e) => UserModel.mapAsMember(e)).toList();
 
     return GroupModel(
@@ -25,11 +34,18 @@ class GroupModel extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    final List<Map<String, dynamic>> membersMap = members.map((e) => e.toMember()).toList();
+    final List<Map<String, dynamic>> membersMap = List(
+    );
+    members.forEach(
+            (element) {
+          membersMap.add(
+              {'uid': element.uid, 'displayName': element.displayName});
+        });
     return {
       'name': name,
       'leaderId': leaderId,
       'members': membersMap,
     };
   }
+// TODO : Ogarnac usecasey datasourcesy i repository
 }

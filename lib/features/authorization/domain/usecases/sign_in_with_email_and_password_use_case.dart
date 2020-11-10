@@ -6,10 +6,10 @@ import 'package:bando/features/authorization/data/repositories/auth_repository_i
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 
-class SignInWithEmailAndPassword {
+class SignInWithEmailAndPasswordUseCase {
   final AuthRepositoryImpl _authRepository;
 
-  SignInWithEmailAndPassword(this._authRepository);
+  SignInWithEmailAndPasswordUseCase(this._authRepository);
 
   Future<Either<Failure, User>> call({@required EmailAddress email, @required Password password}) async {
     return await _authRepository.signInWithEmailAndPassword(email, password);

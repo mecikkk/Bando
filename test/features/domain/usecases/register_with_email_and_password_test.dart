@@ -3,7 +3,7 @@ import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/entities/user.dart';
 import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
-import 'package:bando/features/authorization/domain/usecases/register_with_email_and_password.dart';
+import 'package:bando/features/authorization/domain/usecases/register_with_email_and_password_use_case.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -12,11 +12,11 @@ class MockAuthRepository extends Mock implements AuthRepositoryImpl {}
 
 void main() {
   MockAuthRepository repository;
-  RegisterWithEmailAndPassword usecase;
+  RegisterWithEmailAndPasswordUseCase usecase;
 
   setUp(() {
     repository = MockAuthRepository();
-    usecase = RegisterWithEmailAndPassword(repository);
+    usecase = RegisterWithEmailAndPasswordUseCase(repository);
   });
 
   group('Usecase RegisterWithEmailAndPassword - ', () {

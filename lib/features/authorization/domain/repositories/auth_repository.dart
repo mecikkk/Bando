@@ -6,8 +6,12 @@ import 'package:dartz/dartz.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, User>> signInWithEmailAndPassword(EmailAddress email, Password password);
+
   Future<Either<Failure, User>> signInWithGoogle();
+
   Future<Either<Failure, User>> registerWithEmailAndPassword(EmailAddress email, Password password, String username);
+
   Future<Either<Failure, User>> isLoggedIn();
-  Future<void> loggOut();
+
+  Future<Either<Failure, Unit>> logout();
 }

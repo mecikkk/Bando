@@ -3,12 +3,12 @@ import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/domain/repositories/auth_repository.dart';
 import 'package:dartz/dartz.dart';
 
-class SignInWithGoogle {
-  final AuthRepository _authRepository;
+class CheckIsLoggedInUseCase {
+  final AuthRepository _repository;
 
-  SignInWithGoogle(this._authRepository);
+  CheckIsLoggedInUseCase(this._repository);
 
   Future<Either<Failure, User>> call() async {
-    return await _authRepository.signInWithGoogle();
+    return await _repository.isLoggedIn();
   }
 }

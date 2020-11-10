@@ -33,11 +33,15 @@ class Error extends AuthState {
 
 class LoadingState extends AuthState {}
 
-class UnconfiguredGroupState extends AuthState {
+class NotConfiguredGroupState extends AuthState {
   final User user;
 
-  UnconfiguredGroupState({@required this.user});
+  NotConfiguredGroupState({@required this.user});
 
   @override
   List<Object> get props => [user];
 }
+
+class WrongEmailOrPasswordState extends AuthState {}
+
+class GoogleAuthCanceledState extends AuthState {}
