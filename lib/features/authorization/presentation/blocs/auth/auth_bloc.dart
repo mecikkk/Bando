@@ -14,7 +14,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 part 'auth_event.dart';
-
 part 'auth_state.dart';
 
 const String AUTH_SERVER_ERROR = 'Server failure';
@@ -35,8 +34,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Stream<AuthState> mapEventToState(
     AuthEvent event,
   ) async* {
-    if (event is AuthInitial) {
+    if (event is AuthStart) {
       yield SplashScreenState();
+      // TODO : Dwa razy uruchamia AuthStart...
 
       final authEither = await _checkIsLoggedIn.call();
 
@@ -54,21 +54,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     if (event is LogoutEvent) {
-      yield SplashScreenState(
-      );
-
-      final logoutEither = await _logout.call(
-      );
+      final logoutEither = await _logout.call();
 
       try {
         yield* logoutEither.fold(
-              (failure) async* {
-            yield Error(
-                message: AUTH_SERVER_ERROR);
+          (failure) async* {
+            yield Error(message: AUTH_SERVER_ERROR);
           },
-              (unit) async* {
-            yield UnauthorizedState(
-            );
+          (unit) async* {
+            yield UnauthorizedState();
           },
         );
       } on Exception {
@@ -93,17 +87,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     yield* signInEither.fold(
       (failure) async* {
         if (failure is UnconfiguredGroup)
-          yield NotConfiguredGroupState(
-              user: failure.user);
+          yield NotConfiguredGroupState(user: failure.user);
         else if (failure is WrongEmailOrPassword)
-          yield WrongEmailOrPasswordState(
-          );
+          yield WrongEmailOrPasswordState();
         else if (failure is GoogleAuthCanceled)
-          yield GoogleAuthCanceledState(
-          );
+          yield GoogleAuthCanceledState();
         else
-          yield Error(
-              message: (failure.message != '') ? failure.message : SIGN_IN_ERROR);
+          yield Error(message: (failure.message != '') ? failure.message : SIGN_IN_ERROR);
       },
       (user) async* {
         yield AuthorizedState(user: user);

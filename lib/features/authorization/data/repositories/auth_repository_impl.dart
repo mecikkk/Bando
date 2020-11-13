@@ -34,28 +34,19 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, User>> signInWithGoogle() async {
-    return await _process(
-            () =>
-            _remoteDataSource.signInWithGoogle(
-            ));
+    return await _process(() => _remoteDataSource.signInWithGoogle());
   }
 
   Future<Either<Failure, User>> _process(_ActionChooser actionChooser) async {
     try {
-      final eitherAction = await actionChooser(
-      );
+      final eitherAction = await actionChooser();
       return eitherAction.fold(
-            (failure) {
-          return Left(
-              failure);
+        (failure) {
+          return Left(failure);
         },
-            (user) {
-          _localDataSource.cacheUserInfo(
-              user);
-          return (user.groupId == '') ? Left(
-              UnconfiguredGroup(
-                  user: user)) : Right(
-              user);
+        (user) {
+          _localDataSource.cacheUserInfo(user);
+          return (user.groupId == '') ? Left(UnconfiguredGroup(user: user)) : Right(user);
         },
       );
     } on Exception {
@@ -66,12 +57,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> isLoggedIn() async {
     try {
-      final user = await _remoteDataSource.isLoggedIn(
-      );
-      return (user != null) ? Right(
-          user) : Left(
-          Unauthorized(
-          ));
+      final user = await _remoteDataSource.isLoggedIn();
+      return (user != null) ? Right(user) : Left(Unauthorized());
     } on Exception {
       return Left(ServerFailure());
     }
@@ -80,14 +67,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, Unit>> logout() async {
     try {
-      await _remoteDataSource.logout(
-      );
-      return Right(
-          unit);
+      await _remoteDataSource.logout();
+      return Right(unit);
     } on Exception {
-      return Left(
-          ServerFailure(
-          ));
+      return Left(ServerFailure());
     }
   }
 }

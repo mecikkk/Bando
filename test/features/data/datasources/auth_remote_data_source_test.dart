@@ -38,180 +38,96 @@ void main() {
   });
 
   group('RemoteDataSource tests - ', () {
-    test(
-        'should return UserModel from Firebase User', () async {
-      final dataSource = AuthRemoteDataSourceImpl(
-          firebaseAuth: auth, googleSignIn: googleSignIn);
+    test('should return UserModel from Firebase User', () async {
+      final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, googleSignIn: googleSignIn);
 
-      final resultUser = await dataSource.signInWithEmailAndPassword(
-          email, password);
-      expect(
-          resultUser, Right(
-          user));
+      final resultUser = await dataSource.signInWithEmailAndPassword(email, password);
+      expect(resultUser, Right(user));
     });
 
-    test(
-        'should return WrongEmailOrPassword when user tries to sign in with wrong password', () async {
-      when(
-          firebaseAuth2.signInWithEmailAndPassword(
-              email: email.value, password: password.value))
-          .thenThrow(
-          FirebaseAuthException(
-              message: 'Wrong password', code: 'ERROR_WRONG_PASSWORD'));
+    test('should return WrongEmailOrPassword when user tries to sign in with wrong password', () async {
+      when(firebaseAuth2.signInWithEmailAndPassword(email: email.value, password: password.value))
+          .thenThrow(FirebaseAuthException(message: 'Wrong password', code: 'ERROR_WRONG_PASSWORD'));
 
-      final resultUser = await dataSource.signInWithEmailAndPassword(
-          email, password);
+      final resultUser = await dataSource.signInWithEmailAndPassword(email, password);
 
-      expect(
-          resultUser, Left(
-          WrongEmailOrPassword(
-          )));
+      expect(resultUser, Left(WrongEmailOrPassword()));
     });
 
-    test(
-        'should return UserModel from new account', () async {
-      when(
-          firebaseAuth2.createUserWithEmailAndPassword(
-              email: email.value, password: password.value))
-          .thenAnswer(
-              (_) =>
-              Future.value(
-                  MockUserCredential(
-                      isUserValid: true)));
+    test('should return UserModel from new account', () async {
+      when(firebaseAuth2.createUserWithEmailAndPassword(email: email.value, password: password.value))
+          .thenAnswer((_) => Future.value(MockUserCredential(isUserValid: true)));
 
-      final createdUser = await dataSource.registerWithEmailAndPassword(
-          email, password, 'TestName');
+      final createdUser = await dataSource.registerWithEmailAndPassword(email, password, 'TestName');
 
-      expect(
-          createdUser, equals(
-          Right(
-              user)));
+      expect(createdUser, equals(Right(user)));
     });
 
-    test(
-        'should return EmailAlreadyInUse when user tries to create account on exist user email', () async {
-      when(
-          firebaseAuth2.createUserWithEmailAndPassword(
-              email: email.value, password: password.value))
-          .thenThrow(
-          FirebaseAuthException(
-              message: 'Email in use', code: 'ERROR_EMAIL_ALREADY_IN_USE'));
+    test('should return EmailAlreadyInUse when user tries to create account on exist user email', () async {
+      when(firebaseAuth2.createUserWithEmailAndPassword(email: email.value, password: password.value))
+          .thenThrow(FirebaseAuthException(message: 'Email in use', code: 'ERROR_EMAIL_ALREADY_IN_USE'));
 
-      final resultUser = await dataSource.registerWithEmailAndPassword(
-          email, password, 'SomeName');
+      final resultUser = await dataSource.registerWithEmailAndPassword(email, password, 'SomeName');
 
-      expect(
-          resultUser, Left(
-          EmailAlreadyInUse(
-          )));
+      expect(resultUser, Left(EmailAlreadyInUse()));
     });
 
-    test(
-        'should return UserModel from Google account', () async {
-      when(
-          firebaseAuth2.signInWithCredential(
-              any))
-          .thenAnswer(
-              (_) =>
-              Future.value(
-                  MockUserCredential(
-                      isUserValid: true)));
+    test('should return UserModel from Google account', () async {
+      when(firebaseAuth2.signInWithCredential(any))
+          .thenAnswer((_) => Future.value(MockUserCredential(isUserValid: true)));
 
-      final createdUser = await dataSource.signInWithGoogle(
-      );
+      final createdUser = await dataSource.signInWithGoogle();
 
-      expect(
-          createdUser, equals(
-          Right(
-              user)));
+      expect(createdUser, equals(Right(user)));
     });
 
-    test(
-        'should return GoogleAuthCanceled when user resigns from logging in', () async {
-      final dataSource = AuthRemoteDataSourceImpl(
-          firebaseAuth: auth, googleSignIn: canceledGoogleSignIn);
+    test('should return GoogleAuthCanceled when user resigns from logging in', () async {
+      final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, googleSignIn: canceledGoogleSignIn);
 
-      when(
-          firebaseAuth2.signInWithCredential(
-              any))
-          .thenAnswer(
-              (_) =>
-              Future.value(
-                  MockUserCredential(
-                      isUserValid: true)));
+      when(firebaseAuth2.signInWithCredential(any))
+          .thenAnswer((_) => Future.value(MockUserCredential(isUserValid: true)));
 
-      final createdUser = await dataSource.signInWithGoogle(
-      );
+      final createdUser = await dataSource.signInWithGoogle();
 
-      expect(
-          createdUser, equals(
-          Left(
-              GoogleAuthCanceled(
-              ))));
+      expect(createdUser, equals(Left(GoogleAuthCanceled())));
     });
 
-    test(
-        'should return UserModel when checks is logged in', () async {
+    test('should return UserModel when checks is logged in', () async {
       //arrange
-      when(
-          firebaseAuth2.currentUser).thenReturn(
-          MockFirebaseUser(
-          ));
+      when(firebaseAuth2.currentUser).thenReturn(MockFirebaseUser());
 
       //act
-      final userModel = await dataSource.isLoggedIn(
-      );
+      final userModel = await dataSource.isLoggedIn();
 
       //assert
-      expect(
-          userModel, equals(
-          user));
+      expect(userModel, equals(user));
     });
 
-    test(
-        'should return null when checks is logged in', () async {
+    test('should return null when checks is logged in', () async {
       //arrange
-      when(
-          firebaseAuth2.currentUser).thenReturn(
-          null);
+      when(firebaseAuth2.currentUser).thenReturn(null);
 
       //act
-      final userModel = await dataSource.isLoggedIn(
-      );
+      final userModel = await dataSource.isLoggedIn();
 
       //assert
-      expect(
-          userModel, null);
+      expect(userModel, null);
     });
 
-    test(
-        'should invoke sign out method from google sign in', () async {
-      when(
-          firebaseAuth2.currentUser).thenReturn(
-          MockGoogleUser(
-          ));
+    test('should invoke sign out method from google sign in', () async {
+      when(firebaseAuth2.currentUser).thenReturn(MockGoogleUser());
 
-      await dataSource.logout(
-      );
+      await dataSource.logout();
 
-      verifyNever(
-          firebaseAuth2.signOut(
-          ));
+      verifyNever(firebaseAuth2.signOut());
     });
 
-    test(
-        'should invoke sign out method from firebase auth', () async {
-      when(
-          firebaseAuth2.currentUser).thenReturn(
-          MockFirebaseUser(
-          ));
+    test('should invoke sign out method from firebase auth', () async {
+      when(firebaseAuth2.currentUser).thenReturn(MockFirebaseUser());
 
-      await dataSource.logout(
-      );
+      await dataSource.logout();
 
-      verify(
-          firebaseAuth2.signOut(
-          ));
+      verify(firebaseAuth2.signOut());
     });
   });
 }
