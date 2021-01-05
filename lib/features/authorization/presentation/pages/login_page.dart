@@ -1,4 +1,3 @@
-import 'package:bando/core/errors/failure.dart';
 import 'package:bando/core/utils/app_theme.dart';
 import 'package:bando/core/utils/constants.dart';
 import 'package:bando/core/utils/context_extensions.dart';
@@ -62,8 +61,6 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   @override
   Widget build(BuildContext context) {
     totalHeight = context.height;
-
-    AppThemes.getStartColor(context);
 
     Future.delayed(const Duration(milliseconds: 600), () {
       setState(() {

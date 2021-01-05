@@ -1,3 +1,4 @@
+import 'package:bando/core/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class RoundedTextField extends StatefulWidget {
@@ -77,7 +78,8 @@ class RoundedTextFieldState extends State<RoundedTextField> {
         decoration: _setDecoration(widget.inputType),
         keyboardType: widget.inputType,
         obscureText: _isPasswordVisible,
-        autovalidate: true,
+        cursorColor: AppThemes.getAccentColor(),
+        autovalidateMode: AutovalidateMode.always,
         autocorrect: false,
         validator: widget.validator);
   }

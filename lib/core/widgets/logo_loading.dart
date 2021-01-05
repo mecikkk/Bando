@@ -54,43 +54,28 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
     ).animate(CurvedAnimation(parent: _controller, curve: Interval(0.6, 1.0, curve: Curves.linear)));
 
     _controller.addStatusListener((status) {
-      if (_repeat) {
-        debugPrint("REPEAT ON - Anim status : $status");
-        if (status != AnimationStatus.dismissed) {
-          _controller.stop();
-          _controller.forward();
-          _controller.repeat();
-        }
-      } else {
-        debugPrint("REPEAT OFF - Anim status : $status");
-        if (status == AnimationStatus.completed) {
-          _controller.reset();
-          _controller.stop();
-          debugPrint("REPEAT OFF AND ANIM COMPLETED - Anim status : $status");
-        }
-      }
-    });
-
-    _micro.addStatusListener((status) {
-      if (!_repeat) {
-        debugPrint("STOP | Anim status : $status | repeat : $_repeat ");
+      if (!_repeat && status == AnimationStatus.completed) {
         _controller.reset();
         _controller.stop();
       }
     });
   }
 
-  void startAnim() { // TODO : Przetestowac czy dla wszyskich przypadkow dziala (start/stop) przy nakladaniu sie wywolan startu i stopu itd..
-    _repeat = true;
-    _controller.forward();
+  void startAnim() {
+    if (!_repeat) {
+      _repeat = true;
+      _controller.forward();
+      _controller.repeat();
+    }
   }
 
   void stopAnim() {
-    debugPrint("STOP ANIM and repeat to false");
-    setState(() {
-      _repeat = false;
-      _controller.forward(); // TODO : ZAblokowac przycisk ZALOGUJ dopoki nie otrzyma notyfikacji że cos poszlo nie tak
-    });
+    if (_repeat) {
+      setState(() {
+        _repeat = false;
+        _controller.forward();
+      });
+    }
   }
 
   @override

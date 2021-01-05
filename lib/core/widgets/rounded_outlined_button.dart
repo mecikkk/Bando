@@ -1,6 +1,6 @@
 import 'package:bando/core/utils/app_theme.dart';
-import 'package:flutter/material.dart';
 import 'package:bando/core/utils/context_extensions.dart';
+import 'package:flutter/material.dart';
 
 class RoundedOutlinedButton extends StatelessWidget {
   final String label;
@@ -45,7 +45,7 @@ class RoundedOutlinedButton extends StatelessWidget {
         );
 
   ButtonStyle _getStyle(BuildContext context) => OutlinedButton.styleFrom(
-        primary: rippleColor ?? AppThemes.getSecondAccentColor(context),
+        primary: rippleColor ?? AppThemes.getSecondAccentColor(),
         shape: StadiumBorder(),
         side: BorderSide(color: borderColor ?? context.textColor),
       );

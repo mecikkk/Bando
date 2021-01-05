@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:bando/core/utils/context_extensions.dart';
+import 'package:flutter/material.dart';
 
 class AppThemes {
   static BuildContext _context;
@@ -25,6 +25,7 @@ class AppThemes {
     backgroundColor: Color(0xfff3f4f9),
     scaffoldBackgroundColor: Color(0xfff3f4f9),
     visualDensity: VisualDensity.adaptivePlatformDensity,
+    textSelectionHandleColor: getAccentColor(),
     fontFamily: 'Varela',
     dividerColor: Colors.black12,
   );
@@ -34,6 +35,7 @@ class AppThemes {
     accentColor: AppThemes.darkAccentColor,
     backgroundColor: Color(0xff27272b),
     scaffoldBackgroundColor: Color(0xff27272b),
+    textSelectionHandleColor: getAccentColor(),
     visualDensity: VisualDensity.adaptivePlatformDensity,
     fontFamily: 'Varela',
     dividerColor: Colors.white10,
@@ -47,15 +49,15 @@ class AppThemes {
     return _context.isLightTheme ? lightPositiveGreenColor : darkPositiveGreenColor;
   }
 
-  static Color getStartColor(BuildContext context) {
+  static Color getStartColor() {
     return  _context.isLightTheme ? lightStartColor : darkStartColor;
   }
 
-  static Color getAccentColor(BuildContext context) {
+  static Color getAccentColor() {
     return  _context.isLightTheme ? lightAccentColor : darkAccentColor;
   }
 
-  static Color getSecondAccentColor(BuildContext context) {
+  static Color getSecondAccentColor() {
     return  _context.isLightTheme ? lightSecondAccentColor : darkSecondAccentColor;
   }
 }

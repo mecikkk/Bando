@@ -33,7 +33,7 @@ class GradientButton extends StatelessWidget {
                   radius: 7.5,
                   stops: [0.001, 0.4, 1.0],
                   center: Alignment.topRight,
-                  colors: [AppThemes.getSecondAccentColor(context), AppThemes.getAccentColor(context), AppThemes.getStartColor(context)]),
+                  colors: [AppThemes.getSecondAccentColor(), AppThemes.getAccentColor(), AppThemes.getStartColor()]),
               borderRadius: BorderRadius.circular(
                   30.0),
 

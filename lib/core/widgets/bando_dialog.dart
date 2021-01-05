@@ -50,8 +50,8 @@ class BandoDialog extends StatelessWidget {
               if (onConfirmClick != null) onConfirmClick();
               Navigator.of(context).pop();
             },
-            labelColor: AppThemes.getAccentColor(context),
-            borderColor: AppThemes.getAccentColor(context),
+            labelColor: AppThemes.getAccentColor(),
+            borderColor: AppThemes.getAccentColor(),
           ),
         ),
       ],

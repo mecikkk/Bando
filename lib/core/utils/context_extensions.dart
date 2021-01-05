@@ -29,5 +29,6 @@ extension MediaQueryExt on BuildContext {
 }
 
 extension ContextExt on BuildContext {
+  /// Returns translated string from JSON file located in __lang__ dir
   String translate(String value) => AppLocalizations.of(this).translate(value);
 }
