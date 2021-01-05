@@ -3,6 +3,7 @@ import 'package:bando/core/utils/generate_screen.dart';
 import 'package:bando/di.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:koin_flutter/koin_flutter.dart';
@@ -24,8 +25,11 @@ void main() async {
 }
 
 class BandoApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
+    AppThemes.setContext(context);
+
     return BlocProvider(
       create: (context) => get<AuthBloc>(),
       child: MaterialApp(
@@ -48,19 +52,15 @@ class BandoApp extends StatelessWidget {
         localeResolutionCallback:
             (Locale locale, Iterable<Locale> supportedLocales) {
           if (locale == null) {
-            debugPrint("*language locale is null!!!");
             return supportedLocales.first;
           }
 
           for (Locale supportedLocale in supportedLocales) {
             if (supportedLocale.languageCode == locale.languageCode ||
                 supportedLocale.countryCode == locale.countryCode) {
-              debugPrint("*language ok $supportedLocale");
               return supportedLocale;
             }
           }
-
-          debugPrint("*language to fallback ${supportedLocales.first}");
           return supportedLocales.first;
         },
         builder: (context, child) {

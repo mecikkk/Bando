@@ -27,16 +27,6 @@ class AuthRepositoryImpl implements AuthRepository {
     return await _process(() => _remoteDataSource.registerWithEmailAndPassword(email, password, username));
   }
 
-  @override
-  Future<Either<Failure, User>> signInWithEmailAndPassword(EmailAddress email, Password password) async {
-    return await _process(() => _remoteDataSource.signInWithEmailAndPassword(email, password));
-  }
-
-  @override
-  Future<Either<Failure, User>> signInWithGoogle() async {
-    return await _process(() => _remoteDataSource.signInWithGoogle());
-  }
-
   Future<Either<Failure, User>> _process(_ActionChooser actionChooser) async {
     try {
       final eitherAction = await actionChooser();

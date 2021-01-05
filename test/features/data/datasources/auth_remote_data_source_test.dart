@@ -38,21 +38,7 @@ void main() {
   });
 
   group('RemoteDataSource tests - ', () {
-    test('should return UserModel from Firebase User', () async {
-      final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, googleSignIn: googleSignIn);
 
-      final resultUser = await dataSource.signInWithEmailAndPassword(email, password);
-      expect(resultUser, Right(user));
-    });
-
-    test('should return WrongEmailOrPassword when user tries to sign in with wrong password', () async {
-      when(firebaseAuth2.signInWithEmailAndPassword(email: email.value, password: password.value))
-          .thenThrow(FirebaseAuthException(message: 'Wrong password', code: 'ERROR_WRONG_PASSWORD'));
-
-      final resultUser = await dataSource.signInWithEmailAndPassword(email, password);
-
-      expect(resultUser, Left(WrongEmailOrPassword()));
-    });
 
     test('should return UserModel from new account', () async {
       when(firebaseAuth2.createUserWithEmailAndPassword(email: email.value, password: password.value))
@@ -70,26 +56,6 @@ void main() {
       final resultUser = await dataSource.registerWithEmailAndPassword(email, password, 'SomeName');
 
       expect(resultUser, Left(EmailAlreadyInUse()));
-    });
-
-    test('should return UserModel from Google account', () async {
-      when(firebaseAuth2.signInWithCredential(any))
-          .thenAnswer((_) => Future.value(MockUserCredential(isUserValid: true)));
-
-      final createdUser = await dataSource.signInWithGoogle();
-
-      expect(createdUser, equals(Right(user)));
-    });
-
-    test('should return GoogleAuthCanceled when user resigns from logging in', () async {
-      final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, googleSignIn: canceledGoogleSignIn);
-
-      when(firebaseAuth2.signInWithCredential(any))
-          .thenAnswer((_) => Future.value(MockUserCredential(isUserValid: true)));
-
-      final createdUser = await dataSource.signInWithGoogle();
-
-      expect(createdUser, equals(Left(GoogleAuthCanceled())));
     });
 
     test('should return UserModel when checks is logged in', () async {

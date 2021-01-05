@@ -8,15 +8,3 @@ abstract class AuthEvent extends Equatable {
 }
 class AuthStart extends AuthEvent {}
 class LogoutEvent extends AuthEvent {}
-
-class SignInWithEmailAndPasswordEvent extends AuthEvent {
-  final EmailAddress email;
-  final Password password;
-
-  SignInWithEmailAndPasswordEvent({@required this.email, @required this.password});
-
-  @override
-  List<Object> get props => [email, password];
-}
-
-class SignInWithGoogleEvent extends AuthEvent {}

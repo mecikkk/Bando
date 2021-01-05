@@ -1,3 +1,26 @@
 {
-  "splash_subtitle" : "Synchronize your band songbook ♫"
+  "splash_subtitle" : "Synchronize your band songbook ♫",
+  "invalid_email" : "Invalid Email",
+  "empty_email" : "Email can\\'t be empty",
+  "password_empty" : "Password can\\'t be empty",
+  "invalid_password" : "At least 6 characters, and one digit",
+  "signing_in_error" : "Signing in error",
+  "wrong_email_password" : "Wrong email address or password",
+  "google_auth_canceled" : "Signing in canceled",
+  "sign_in" : "Sign in",
+  "or" : "or",
+  "sign_in_with_google" : "Sign in with Google",
+  "google" : "Google",
+  "create_account" : "Create account",
+  "password" : "Password",
+  "forgot_password" : "Forgot password ?",
+  "entered_incorrect_data" : "Incorrect data",
+  "login_canceled" : "Login was canceled",
+  "email_in_use" : "Email already in use",
+  "server_failure" : "Server failure. Try again.",
+  "something_went_wrong" : "Ops, something went wrong...",
+  "reset_password" : "Reset password",
+  "reset_password_description" : "Are you sure you want to reset the password for the given email address?",
+  "confirm" : "Confirm",
+  "cancel" : "Cancel"
 }

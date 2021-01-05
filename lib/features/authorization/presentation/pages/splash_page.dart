@@ -1,7 +1,9 @@
-import 'package:bando/core/utils/localization.dart';
+import 'package:bando/core/utils/context_extensions.dart';
 import 'package:bando/features/authorization/presentation/blocs/auth/auth_bloc.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
+import 'package:bando/features/authorization/presentation/pages/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:koin_flutter/koin_flutter.dart';
 
@@ -11,9 +13,23 @@ class SplashPage extends StatefulWidget {
 }
 
 class SplashPageState extends State<SplashPage> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
-    return BlocListener(
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        systemNavigationBarColor : context.bgColor,
+        systemNavigationBarIconBrightness: _setIconsBrightness(context),
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: _setIconsBrightness(context),
+        statusBarBrightness: _setIconsBrightness(context)),
+    );
+
+    return BlocListener<AuthBloc, AuthState>(
       cubit: get<AuthBloc>()..add(AuthStart()),
       listener: (context, state) {
         if (state is AuthorizedState) {
@@ -24,46 +40,34 @@ class SplashPageState extends State<SplashPage> {
           debugPrint("Initializing, show splash screen");
         }
       },
-      child: Scaffold(
-        body: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              bottom: 100,
-              right: 0,
-              left: 0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if(state is UnauthorizedState)
+            return BlocProvider(
+                create: (context) => get<LoginBloc>(),
+                child: LoginPage(),);
+          else
+            return Scaffold(
+              body: Stack(
                 children: [
-                  Image.asset(
-                    'assets/logo_gradient.png',
-                    height: 200.0,
-                  ),
-                  SizedBox(height: 50.0),
-                  Text(
-                    'Bando',
-                    style: TextStyle(fontSize: 38.0),
-                  ),
-                  Text(
-                    AppLocalizations.of(context).translate('splash_subtitle'),
-                    style: TextStyle(fontSize: 21.0),
+                  Positioned(
+                    top: 36.0,
+                    right: 16.0,
+                    child: Image.asset(
+                      'assets/logo_transparent.png',
+                      scale: _setImageScale(context),
+                    ),
                   ),
                 ],
               ),
-            ),
-            Positioned(
-              top: 30,
-              right: 30,
-              child: Image.asset(
-                'assets/logo_gradient.png',
-                height: 350.0,
-                color: Colors.grey.withOpacity(0.1),
-              ),
-            ),
-          ],
-        ),
+            );
+        },
       ),
     );
   }
+
+  double _setImageScale(BuildContext context) => (context.width >= 480) ? 2.5 : 4;
+
+  Brightness _setIconsBrightness(BuildContext context) =>
+      context.isLightTheme ? Brightness.light : Brightness.dark;
 }

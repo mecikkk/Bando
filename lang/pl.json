@@ -1,3 +1,26 @@
 {
-  "splash_subtitle" : "Zsynchronizuj śpiewnik zespołowy ♫"
+  "splash_subtitle" : "Zsynchronizuj śpiewnik zespołowy ♫",
+  "invalid_email" : "Niepoprawny email",
+  "empty_email" : "Pole nie może być puste",
+  "password_empty" : "Hasło jest wymagane",
+  "invalid_password" : "Minimum 6 znaków, w tym jedna cyfra",
+  "signing_in_error" : "Wystąpił problem podczas logowania",
+  "wrong_email_password" : "Błędny email lub hasło",
+  "google_auth_canceled" : "Anulowane logowanie",
+  "sign_in" : "Zaloguj",
+  "or" : "lub",
+  "sign_in_with_google" : "Zaloguj z Google",
+  "create_account" : "Utwórz konto",
+  "password" : "Hasło",
+  "forgot_password" : "Zapomniałeś hasła ?",
+  "google" : "Google",
+  "entered_incorrect_data" : "Niepoprawne dane",
+  "login_canceled" : "Anulowano logowanie",
+  "email_in_use" : "Konto z podanym adresem już istnieje",
+  "server_failure" : "Błąd serwera. Spróbuj ponownie.",
+  "something_went_wrong" : "Ups, coś poszło nie tak..",
+  "reset_password" : "Resetowanie hasła",
+  "reset_password_description" : "Czy na pewno chcesz zresetować hasło dla podanego adresu email ?",
+  "confirm" : "Potwierdź",
+  "cancel" : "Anuluj"
 }
