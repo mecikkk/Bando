@@ -22,5 +22,6 @@
   "reset_password" : "Reset password",
   "reset_password_description" : "Are you sure you want to reset the password for the given email address?",
   "confirm" : "Confirm",
-  "cancel" : "Cancel"
+  "cancel" : "Cancel",
+  "no_connection" : "You're offline. Check your connection."
 }

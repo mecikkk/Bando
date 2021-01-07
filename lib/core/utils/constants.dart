@@ -24,4 +24,5 @@ class Texts {
   static const String RESET_PASSWORD = "reset_password";
   static const String CONFIRM = "confirm";
   static const String CANCEL = 'cancel';
+  static const String NO_CONNECTION = 'no_connection';
 }

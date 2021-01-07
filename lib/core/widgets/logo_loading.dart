@@ -12,7 +12,7 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
   AnimationController _controller;
   bool _repeat = false;
 
-  Animation _micro;
+  Animation _microphone;
   Animation _stand;
 
   @override
@@ -40,7 +40,7 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
       ],
     ).animate(CurvedAnimation(parent: _controller, curve: Interval(0.1, 0.6, curve: Curves.linear)));
 
-    _micro = TweenSequence(
+    _microphone = TweenSequence(
       <TweenSequenceItem<double>>[
         TweenSequenceItem<double>(
           tween: Tween(begin: 10.0, end: 0.0).chain(CurveTween(curve: Curves.easeOutCirc)),
@@ -95,7 +95,7 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
             alignment: Alignment.center,
             children: [
               Positioned(
-                top: context.scale(_micro.value),
+                top: context.scale(_microphone.value),
                 left: 0.0,
                 right: 0.0,
                 child: Image.asset(

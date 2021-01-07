@@ -108,7 +108,7 @@ class ShakeAnimationState extends State<ShakeAnimation> with TickerProviderState
     );
   }
 
-  void shake(double animation) {
+  void shake() {
     debugPrint("Start shaking");
     _controller.reset();
     _controller.forward();

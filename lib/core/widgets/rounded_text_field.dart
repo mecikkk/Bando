@@ -91,7 +91,6 @@ class RoundedTextFieldState extends State<RoundedTextField> {
   InputDecoration _setDecoration(TextInputType passwordDecoration) {
     return (passwordDecoration == TextInputType.visiblePassword)
         ? InputDecoration(
-            // TODO : Ustawic contentPadding zeby zmieniac wysokosc textfielda
             border: buildOutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(vertical: 10.0),
             focusedBorder: buildOutlineInputBorder(),

@@ -1,6 +1,5 @@
 import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/data/datasources/auth_remote_data_source.dart';
-import 'package:bando/features/authorization/data/datasources/local_data_source.dart';
 import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
 import 'package:dartz/dartz.dart';
@@ -8,18 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 class MockRemoteDataSource extends Mock implements AuthRemoteDataSourceImpl {}
-class MockLocalDataSource extends Mock implements LocalDataSourceImpl {}
 
 void main() {
   AuthRepositoryImpl repository;
   UserModel user;
   MockRemoteDataSource remoteDataSource;
-  MockLocalDataSource localDataSource;
 
   setUp(() {
     remoteDataSource = MockRemoteDataSource();
-    localDataSource = MockLocalDataSource();
-    repository = AuthRepositoryImpl(remoteDataSource: remoteDataSource, localDataSource: localDataSource);
+    repository = AuthRepositoryImpl(remoteDataSource: remoteDataSource);
     user = UserModel(uid: 'TestUid', displayName: 'TestName', groupId: 'TestGroupId');
   });
 

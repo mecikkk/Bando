@@ -2,20 +2,20 @@ import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/entities/user.dart';
 import 'package:bando/core/errors/failure.dart';
-import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
+import 'package:bando/features/authorization/domain/repositories/registration_repository.dart';
 import 'package:bando/features/authorization/domain/usecases/register_with_email_and_password_use_case.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
-class MockAuthRepository extends Mock implements AuthRepositoryImpl {}
+class MockRegistrationRepository extends Mock implements RegistrationRepository {}
 
 void main() {
-  MockAuthRepository repository;
+  MockRegistrationRepository repository;
   RegisterWithEmailAndPasswordUseCase usecase;
 
   setUp(() {
-    repository = MockAuthRepository();
+    repository = MockRegistrationRepository();
     usecase = RegisterWithEmailAndPasswordUseCase(repository);
   });
 
@@ -36,28 +36,17 @@ void main() {
       verifyNoMoreInteractions(repository);
     });
 
-    test('should return LoginFailure with message \'Register error\' when unsuccessful register', () async {
+    test('should return EmailAlreadyInUser failure when user tries to sign in', () async {
       when(repository.registerWithEmailAndPassword(email, password, 'TestName'))
-          .thenAnswer((_) async => Left(LoginFailure(message: 'Register error')));
+          .thenAnswer((_) async => Left(EmailAlreadyInUse()));
 
       final result = await usecase.call(email, password, 'TestName');
 
-      expect(result, Left(LoginFailure(message: 'Register error')));
+      expect(result, Left(EmailAlreadyInUse()));
 
       verify(repository.registerWithEmailAndPassword(email, password, 'TestName'));
       verifyNoMoreInteractions(repository);
     });
 
-    test('should return LoginFailure with message \'Caching user info error\' when successful registered', () async {
-      when(repository.registerWithEmailAndPassword(email, password, 'TestName'))
-          .thenAnswer((_) async => Left(LoginFailure(message: 'Caching user info error')));
-
-      final result = await usecase.call(email, password, 'TestName');
-
-      expect(result, Left(LoginFailure(message: 'Caching user info error')));
-
-      verify(repository.registerWithEmailAndPassword(email, password, 'TestName'));
-      verifyNoMoreInteractions(repository);
-    });
   });
 }

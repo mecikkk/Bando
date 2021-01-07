@@ -28,7 +28,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   GlobalKey<RoundedTextFieldState> _emailKey = GlobalKey<RoundedTextFieldState>();
   GlobalKey<RoundedTextFieldState> _passwordKey = GlobalKey<RoundedTextFieldState>();
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  GlobalKey<ShakeAnimationState> _shakerKey = GlobalKey<ShakeAnimationState>();
+  GlobalKey<ShakeAnimationState> _noConnectionBarKey = GlobalKey<ShakeAnimationState>();
   GlobalKey<LogoLoadingState> _logoLoadingKey = GlobalKey<LogoLoadingState>();
 
   bool _connected;
@@ -84,6 +84,9 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
         if (state is WrongEmailOrPasswordState ||
             state is GoogleAuthCanceledState ||
             state is ResetPasswordFailureState) _logoLoadingKey.currentState.stopAnim();
+
+        if(state is LoggingInSuccessState) {
+        }
       },
       child: BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
         return Scaffold(
@@ -114,7 +117,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                 left: 0.0,
                 right: 0.0,
                 child: ShakeAnimation(
-                  key: _shakerKey,
+                  key: _noConnectionBarKey,
                   child: ConnectivityWidget(
                     offlineBanner: Container(
                       height: 34,
@@ -131,7 +134,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                           ]),
                       child: Center(
                         child: Text(
-                          "Brak połączenia z internetem",
+                          context.translate(Texts.NO_CONNECTION),
                           style: TextStyle(color: Colors.black),
                         ),
                       ),
@@ -222,7 +225,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
           GradientButton(
             text: context.translate(Texts.SIGN_IN),
             height: context.scale(45.0),
-            onPressed: _onSignInClick,
+            onPressed: (_bloc.passwordValid && _bloc.emailValid) ? _onSignInClick : null,
           ),
           SizedBox(height: context.scale(30.0)),
           _buildDivider(context),
@@ -239,10 +242,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                     "assets/google_g.svg",
                     height: 22,
                   ),
-                  onPressed: () {
-                    _shakerKey.currentState.shake(1.0);
-                    _logoLoadingKey.currentState.stopAnim();
-                  },
+                  onPressed: _onSignInWithGoogleClick,
                   label: Text(
                       (context.shortestSideSize > 480)
                           ? context.translate(Texts.SIGN_IN_GOOGLE)
@@ -290,7 +290,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
               color: context.textColor,
               height: 10.0,
               thickness: 1.0,
-              indent: 25.0,
+              indent: 0.0,
               endIndent: 25.0,
             ),
           ),
@@ -304,7 +304,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
               height: 10.0,
               thickness: 1.0,
               indent: 25.0,
-              endIndent: 25.0,
+              endIndent: 0.0,
             ),
           ),
         ],
@@ -325,10 +325,18 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
 
   void _onSignInClick() {
     if (!_connected)
-      _shakerKey.currentState.shake(1.0);
+      _noConnectionBarKey.currentState.shake();
     else {
       _logoLoadingKey.currentState.startAnim();
       _bloc.add(SignInWithEmailAndPasswordEvent(email: _emailController.text, password: _passwordController.text));
+    }
+  }
+  void _onSignInWithGoogleClick() {
+    if (!_connected)
+      _noConnectionBarKey.currentState.shake();
+    else {
+      _logoLoadingKey.currentState.startAnim();
+      _bloc.add(SignInWithGoogleEvent());
     }
   }
 

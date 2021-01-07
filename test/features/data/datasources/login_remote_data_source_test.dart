@@ -48,7 +48,7 @@ void main() {
 
     test('should return WrongEmailOrPassword when user tries to sign in with wrong password', () async {
       when(firebaseAuth2.signInWithEmailAndPassword(email: email.value, password: password.value))
-          .thenThrow(FirebaseAuthException(message: 'Wrong password', code: 'ERROR_WRONG_PASSWORD'));
+          .thenThrow(FirebaseAuthException(message: 'Wrong password', code: 'wrong-password'));
 
       final resultUser = await dataSource.signInWithEmailAndPassword(email, password);
 
