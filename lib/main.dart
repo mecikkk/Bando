@@ -1,9 +1,7 @@
-
 import 'package:bando/core/utils/generate_screen.dart';
 import 'package:bando/di.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:koin_flutter/koin_flutter.dart';
@@ -19,23 +17,20 @@ void main() async {
   await Firebase.initializeApp();
   await initDi();
 
-  runApp(
-    BandoApp()
-  );
+  runApp(BandoApp());
 }
 
 class BandoApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-    AppThemes.setContext(context);
+    final GenerateScreen _generateScreen = GenerateScreen(getKoin());
 
     return BlocProvider(
       create: (context) => get<AuthBloc>(),
       child: MaterialApp(
         title: 'Bando',
-        initialRoute: Pages.LOGIN,
-        onGenerateRoute: GenerateScreen.onGenerate,
+        initialRoute: Pages.SPLASH,
+        onGenerateRoute: _generateScreen.onGenerate,
         debugShowCheckedModeBanner: false,
         theme: AppThemes.lightTheme,
         darkTheme: AppThemes.darkTheme,
@@ -49,8 +44,7 @@ class BandoApp extends StatelessWidget {
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        localeResolutionCallback:
-            (Locale locale, Iterable<Locale> supportedLocales) {
+        localeResolutionCallback: (Locale locale, Iterable<Locale> supportedLocales) {
           if (locale == null) {
             return supportedLocales.first;
           }
@@ -69,13 +63,11 @@ class BandoApp extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class MyBehavior extends ScrollBehavior {
   @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;
   }
 }

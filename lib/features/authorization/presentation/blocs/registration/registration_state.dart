@@ -8,3 +8,21 @@ abstract class RegistrationState extends Equatable {
 }
 
 class RegistrationInitial extends RegistrationState {}
+
+class RegistrationFailureState extends RegistrationState {
+  final Failure failure;
+
+  RegistrationFailureState({this.failure});
+
+  @override
+  List<Object> get props => [failure];
+}
+
+class RegistrationSuccess extends RegistrationState {
+  final User user;
+
+  RegistrationSuccess({this.user});
+
+  @override
+  List<Object> get props => [user];
+}

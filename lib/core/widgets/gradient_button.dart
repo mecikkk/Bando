@@ -1,4 +1,4 @@
-import 'package:bando/core/utils/app_theme.dart';
+import 'package:bando/core/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 
 class GradientButton extends StatelessWidget {
@@ -33,7 +33,7 @@ class GradientButton extends StatelessWidget {
                   radius: 7.5,
                   stops: [0.001, 0.4, 1.0],
                   center: Alignment.topRight,
-                  colors: [AppThemes.getSecondAccentColor(), AppThemes.getAccentColor(), AppThemes.getStartColor()]),
+                  colors: [context.colors.accent, context.colors.second, context.colors.first]),
               borderRadius: BorderRadius.circular(
                   30.0),
 

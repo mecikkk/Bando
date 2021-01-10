@@ -23,5 +23,10 @@
   "reset_password_description" : "Czy na pewno chcesz zresetować hasło dla podanego adresu email ?",
   "confirm" : "Potwierdź",
   "cancel" : "Anuluj",
-  "no_connection" : "Jesteś offline. Sprawdź połączenie z siecią."
+  "no_connection" : "Jesteś offline. Sprawdź połączenie z siecią.",
+  "registration" : "Rejestracja",
+  "registration_subtitle" : "Utwórz nowe konto i dołącz do istniejącej grupy, lub stwórz własną, aby móc w pełni korzystać z możliwości jakie daje Bando!",
+  "username" : "Nazwa użytkownika",
+  "register" : "Zarejestruj"
+
 }

@@ -7,26 +7,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:koin_flutter/koin_flutter.dart';
 
-class SplashPage extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() => SplashPageState();
-}
-
-class SplashPageState extends State<SplashPage> {
-
-  @override
-  void initState() {
-    super.initState();
-  }
+class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        systemNavigationBarColor : context.bgColor,
-        systemNavigationBarIconBrightness: _setIconsBrightness(context),
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: _setIconsBrightness(context),
-        statusBarBrightness: _setIconsBrightness(context)),
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+          systemNavigationBarColor: context.bgColor,
+          systemNavigationBarIconBrightness: _setIconsBrightness(context),
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: _setIconsBrightness(context),
+          statusBarBrightness: _setIconsBrightness(context)),
     );
 
     return BlocListener<AuthBloc, AuthState>(
@@ -42,10 +32,11 @@ class SplashPageState extends State<SplashPage> {
       },
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
-          if(state is UnauthorizedState)
-            return BlocProvider(
-                create: (context) => get<LoginBloc>(),
-                child: LoginPage(),);
+          if (state is UnauthorizedState)
+            return BlocProvider<LoginBloc>(
+              create: (context) => get<LoginBloc>(),
+              child: LoginPage(),
+            );
           else
             return Scaffold(
               body: Stack(
@@ -68,6 +59,5 @@ class SplashPageState extends State<SplashPage> {
 
   double _setImageScale(BuildContext context) => (context.width >= 480) ? 2.5 : 4;
 
-  Brightness _setIconsBrightness(BuildContext context) =>
-      context.isLightTheme ? Brightness.light : Brightness.dark;
+  Brightness _setIconsBrightness(BuildContext context) => context.isLightTheme ? Brightness.light : Brightness.dark;
 }

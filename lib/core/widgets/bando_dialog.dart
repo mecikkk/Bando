@@ -1,4 +1,3 @@
-import 'package:bando/core/utils/app_theme.dart';
 import 'package:bando/core/utils/context_extensions.dart';
 import 'package:bando/core/widgets/rounded_outlined_button.dart';
 import 'package:flutter/material.dart';
@@ -50,8 +49,8 @@ class BandoDialog extends StatelessWidget {
               if (onConfirmClick != null) onConfirmClick();
               Navigator.of(context).pop();
             },
-            labelColor: AppThemes.getAccentColor(),
-            borderColor: AppThemes.getAccentColor(),
+            labelColor: context.colors.accent,
+            borderColor: context.colors.accent,
           ),
         ),
       ],

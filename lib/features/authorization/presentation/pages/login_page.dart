@@ -1,14 +1,13 @@
-import 'package:bando/core/utils/app_theme.dart';
 import 'package:bando/core/utils/constants.dart';
 import 'package:bando/core/utils/context_extensions.dart';
+import 'package:bando/core/utils/generate_screen.dart';
 import 'package:bando/core/widgets/bando_dialog.dart';
 import 'package:bando/core/widgets/bando_snackbar.dart';
+import 'package:bando/core/widgets/connectivity_bar.dart';
 import 'package:bando/core/widgets/gradient_button.dart';
 import 'package:bando/core/widgets/logo_loading.dart';
 import 'package:bando/core/widgets/rounded_text_field.dart';
-import 'package:bando/core/widgets/shake_animation.dart';
 import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
-import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,11 +24,12 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   LoginBloc _bloc;
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  GlobalKey<RoundedTextFieldState> _emailKey = GlobalKey<RoundedTextFieldState>();
-  GlobalKey<RoundedTextFieldState> _passwordKey = GlobalKey<RoundedTextFieldState>();
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  GlobalKey<ShakeAnimationState> _noConnectionBarKey = GlobalKey<ShakeAnimationState>();
-  GlobalKey<LogoLoadingState> _logoLoadingKey = GlobalKey<LogoLoadingState>();
+  ConnectivityBar _connectivityBar;
+
+  final GlobalKey<RoundedTextFieldState> _emailKey = GlobalKey<RoundedTextFieldState>();
+  final GlobalKey<RoundedTextFieldState> _passwordKey = GlobalKey<RoundedTextFieldState>();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<LogoLoadingState> _logoLoadingKey = GlobalKey<LogoLoadingState>();
 
   bool _connected;
 
@@ -43,6 +43,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
     _bloc = get<LoginBloc>();
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
+    _connectivityBar = ConnectivityBar(currentStatus: (isOnline) { _connected = isOnline;});
     super.initState();
   }
 
@@ -107,44 +108,14 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                 ),
               ),
               SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 50.0, left: 32.0, right: 32.0),
-                  child: _buildForm(context, state),
-                ),
+                padding: const EdgeInsets.only(top: 50.0, left: 32.0, right: 32.0),
+                child: _buildForm(context, state),
               ),
               Positioned(
                 bottom: 24,
                 left: 0.0,
                 right: 0.0,
-                child: ShakeAnimation(
-                  key: _noConnectionBarKey,
-                  child: ConnectivityWidget(
-                    offlineBanner: Container(
-                      height: 34,
-                      decoration: BoxDecoration(
-                          color: context.colors.failure,
-                          borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 10,
-                              spreadRadius: 0,
-                              offset: Offset(0, 0),
-                              color: Colors.black.withOpacity(0.5),
-                            )
-                          ]),
-                      child: Center(
-                        child: Text(
-                          context.translate(Texts.NO_CONNECTION),
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                    ),
-                    builder: (context, isOnline) {
-                      _connected = isOnline;
-                      return SizedBox();
-                    },
-                  ),
-                ),
+                child: _connectivityBar
               )
             ],
           ),
@@ -263,7 +234,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                     side: BorderSide(color: context.textColor),
                   ),
                   onPressed: () {
-                    _logoLoadingKey.currentState.startAnim();
+                    Navigator.of(context).pushNamed(Pages.REGISTRATION);
                   },
                   child: Text(
                     context.translate(Texts.CREATE_ACCOUNT).toUpperCase(),
@@ -325,7 +296,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
 
   void _onSignInClick() {
     if (!_connected)
-      _noConnectionBarKey.currentState.shake();
+      _connectivityBar.shake();
     else {
       _logoLoadingKey.currentState.startAnim();
       _bloc.add(SignInWithEmailAndPasswordEvent(email: _emailController.text, password: _passwordController.text));
@@ -333,7 +304,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   }
   void _onSignInWithGoogleClick() {
     if (!_connected)
-      _noConnectionBarKey.currentState.shake();
+      _connectivityBar.shake();
     else {
       _logoLoadingKey.currentState.startAnim();
       _bloc.add(SignInWithGoogleEvent());

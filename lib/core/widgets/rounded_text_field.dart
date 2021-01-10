@@ -1,4 +1,4 @@
-import 'package:bando/core/utils/app_theme.dart';
+import 'package:bando/core/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 
 class RoundedTextField extends StatefulWidget {
@@ -15,7 +15,7 @@ class RoundedTextField extends StatefulWidget {
     this.inputType,
     this.labelText,
     this.icon,
-    this.obscureText,
+    this.obscureText = false,
     this.validator,
   }) : super(key: key);
 
@@ -51,6 +51,25 @@ class RoundedTextField extends StatefulWidget {
         validator: validator,
       );
 
+  factory RoundedTextField.custom({
+    Key key,
+    @required TextEditingController controller,
+    @required String labelText,
+    @required FormFieldValidator<String> validator,
+    IconData icon,
+    bool obscureText,
+    TextInputType inputType,
+  }) =>
+      RoundedTextField(
+        key: key,
+        controller: controller,
+        inputType: inputType,
+        labelText: labelText,
+        icon: icon,
+        obscureText: obscureText,
+        validator: validator,
+      );
+
   @override
   State<StatefulWidget> createState() => RoundedTextFieldState();
 }
@@ -78,7 +97,7 @@ class RoundedTextFieldState extends State<RoundedTextField> {
         decoration: _setDecoration(widget.inputType),
         keyboardType: widget.inputType,
         obscureText: _isPasswordVisible,
-        cursorColor: AppThemes.getAccentColor(),
+        cursorColor: context.colors.accent,
         autovalidateMode: AutovalidateMode.always,
         autocorrect: false,
         validator: widget.validator);

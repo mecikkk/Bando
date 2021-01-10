@@ -16,9 +16,11 @@ import 'package:bando/features/authorization/domain/usecases/sign_in_with_email_
 import 'package:bando/features/authorization/domain/usecases/sign_in_with_google_use_case.dart';
 import 'package:bando/features/authorization/presentation/blocs/auth/auth_bloc.dart';
 import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
+import 'package:bando/features/authorization/presentation/blocs/registration/registration_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:koin/koin.dart';
+import 'package:koin_bloc/koin_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 var _sharedPreferences;
@@ -55,5 +57,6 @@ var authUseCasesModule = Module()
   ..single<ResetPasswordUseCase>((scope) => ResetPasswordUseCase(scope.get<LoginRepository>()));
 
 var authBlocsModules = Module()
-  ..single<AuthBloc>((scope) => AuthBloc(scope.get(), scope.get()))
-  ..single<LoginBloc>((scope) => LoginBloc(scope.get<SignInWithEmailAndPasswordUseCase>(), scope.get<SignInWithGoogleUseCase>(), scope.get<ResetPasswordUseCase>()));
+  ..cubit<AuthBloc>((scope) => AuthBloc(scope.get(), scope.get()))
+  ..cubit<LoginBloc>((scope) => LoginBloc(scope.get<SignInWithEmailAndPasswordUseCase>(), scope.get<SignInWithGoogleUseCase>(), scope.get<ResetPasswordUseCase>()))
+  ..cubit<RegistrationBloc>((scope) => RegistrationBloc(scope.get<RegisterWithEmailAndPasswordUseCase>()));

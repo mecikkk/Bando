@@ -23,5 +23,9 @@
   "reset_password_description" : "Are you sure you want to reset the password for the given email address?",
   "confirm" : "Confirm",
   "cancel" : "Cancel",
-  "no_connection" : "You're offline. Check your connection."
+  "no_connection" : "You're offline. Check your connection.",
+  "registration" : "Registration",
+  "registration_subtitle" : "Create a new account and join an existing group, or create your own to take full advantage of the opportunities offered by Bando!",
+  "username" : "Username",
+  "register" : "Register"
 }
