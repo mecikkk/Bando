@@ -22,10 +22,10 @@ class UnauthorizedState extends AuthState {}
 
 class SplashScreenState extends AuthState {}
 
-class Error extends AuthState {
+class AuthError extends AuthState {
   final String message;
 
-  Error({@required this.message});
+  AuthError({@required this.message});
 
   @override
   List<Object> get props => [message];

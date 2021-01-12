@@ -8,6 +8,7 @@ class RoundedTextField extends StatefulWidget {
   final IconData icon;
   final bool obscureText;
   final FormFieldValidator<String> validator;
+  final bool enableFocusNextFieldButton;
 
   RoundedTextField({
     Key key,
@@ -17,6 +18,7 @@ class RoundedTextField extends StatefulWidget {
     this.icon,
     this.obscureText = false,
     this.validator,
+    this.enableFocusNextFieldButton = false
   }) : super(key: key);
 
   factory RoundedTextField.email({
@@ -24,6 +26,7 @@ class RoundedTextField extends StatefulWidget {
     @required TextEditingController controller,
     @required String labelText,
     @required FormFieldValidator<String> validator,
+    bool enableFocusNextFieldButton,
   }) =>
       RoundedTextField(
         key: key,
@@ -33,6 +36,7 @@ class RoundedTextField extends StatefulWidget {
         icon: Icons.email_outlined,
         obscureText: false,
         validator: validator,
+        enableFocusNextFieldButton: enableFocusNextFieldButton ?? false,
       );
 
   factory RoundedTextField.password({
@@ -40,6 +44,7 @@ class RoundedTextField extends StatefulWidget {
     @required TextEditingController controller,
     @required String labelText,
     @required FormFieldValidator<String> validator,
+    bool enableFocusNextFieldButton,
   }) =>
       RoundedTextField(
         key: key,
@@ -49,6 +54,7 @@ class RoundedTextField extends StatefulWidget {
         icon: Icons.lock_outline,
         obscureText: true,
         validator: validator,
+        enableFocusNextFieldButton: enableFocusNextFieldButton ?? false,
       );
 
   factory RoundedTextField.custom({
@@ -59,6 +65,7 @@ class RoundedTextField extends StatefulWidget {
     IconData icon,
     bool obscureText,
     TextInputType inputType,
+    bool enableFocusNextFieldButton,
   }) =>
       RoundedTextField(
         key: key,
@@ -68,6 +75,7 @@ class RoundedTextField extends StatefulWidget {
         icon: icon,
         obscureText: obscureText,
         validator: validator,
+        enableFocusNextFieldButton: enableFocusNextFieldButton ?? false,
       );
 
   @override
@@ -91,6 +99,7 @@ class RoundedTextFieldState extends State<RoundedTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final node = FocusScope.of(context);
     return TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
@@ -100,6 +109,8 @@ class RoundedTextFieldState extends State<RoundedTextField> {
         cursorColor: context.colors.accent,
         autovalidateMode: AutovalidateMode.always,
         autocorrect: false,
+        onEditingComplete: () => (widget.enableFocusNextFieldButton) ? node.nextFocus() : null,
+        onFieldSubmitted: (_) => (!widget.enableFocusNextFieldButton) ? node.unfocus() : null,
         validator: widget.validator);
   }
 

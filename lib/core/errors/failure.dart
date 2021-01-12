@@ -14,6 +14,10 @@ abstract class Failure extends Equatable {
 
 class ServerFailure extends Failure {}
 
+class EnteredDataFailure extends Failure {
+  EnteredDataFailure() : super(message: Texts.ENTERED_INCORRECT_DATA);
+}
+
 class LoginFailure extends Failure {
   LoginFailure({@required String message}) : super(message: message);
 }

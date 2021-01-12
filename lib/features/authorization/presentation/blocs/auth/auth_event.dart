@@ -8,3 +8,11 @@ abstract class AuthEvent extends Equatable {
 }
 class AuthStart extends AuthEvent {}
 class LogoutEvent extends AuthEvent {}
+class SignedIn extends AuthEvent {
+  final User user;
+
+  SignedIn({this.user});
+
+  @override
+  List<Object> get props => [user];
+}

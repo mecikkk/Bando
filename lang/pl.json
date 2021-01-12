@@ -27,6 +27,8 @@
   "registration" : "Rejestracja",
   "registration_subtitle" : "Utwórz nowe konto i dołącz do istniejącej grupy, lub stwórz własną, aby móc w pełni korzystać z możliwości jakie daje Bando!",
   "username" : "Nazwa użytkownika",
-  "register" : "Zarejestruj"
+  "register" : "Zarejestruj",
+  "field_required" : "Pole jest wymagane",
+  "enter_email_address" : "Wprowadź swój adres email"
 
 }

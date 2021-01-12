@@ -46,6 +46,7 @@ dependencies:
   flutter_svg: ^0.18.1
   animations: ^1.1.1
   lottie: any
+  show_up_animation: ^1.0.2
   # QR
   flutter_barcode_scanner: ^1.0.1
   qr_flutter: ^3.2.0

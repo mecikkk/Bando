@@ -23,7 +23,7 @@ class SplashPage extends StatelessWidget {
       cubit: get<AuthBloc>()..add(AuthStart()),
       listener: (context, state) {
         if (state is AuthorizedState) {
-          debugPrint("Authorized, start home screen");
+          debugPrint("Authorized, start home screen | logged in as ${state.user}");
         } else if (state is UnauthorizedState) {
           debugPrint("Unauthorized, show login page");
         } else if (state is SplashScreenState) {

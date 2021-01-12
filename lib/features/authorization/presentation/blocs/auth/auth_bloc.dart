@@ -32,7 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       yield* authEither.fold(
         (failure) async* {
           if (failure is ServerFailure)
-            yield Error(message: AUTH_SERVER_ERROR);
+            yield AuthError(message: AUTH_SERVER_ERROR);
           else
             yield UnauthorizedState();
         },
@@ -48,15 +48,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         yield* logoutEither.fold(
           (failure) async* {
-            yield Error(message: AUTH_SERVER_ERROR);
+            yield AuthError(message: AUTH_SERVER_ERROR);
           },
           (unit) async* {
             yield UnauthorizedState();
           },
         );
       } on Exception {
-        yield Error(message: AUTH_SERVER_ERROR);
+        yield AuthError(message: AUTH_SERVER_ERROR);
       }
+    }
+
+    if(event is SignedIn) {
+      yield AuthorizedState(user: event.user);
     }
   }
 

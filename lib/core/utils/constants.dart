@@ -11,6 +11,7 @@ class Texts {
   static const String INVALID_PASSWORD = "invalid_password";
   static const String SIGNING_IN_ERROR = "signing_in_error";
   static const String GOOGLE_AUTH_CANCELED = "google_auth_canceled";
+  static const String ENTER_EMAIL_ADDRESS= "enter_email_address";
 
   // LOGIN
   static const String SIGN_IN = "sign_in";
@@ -37,5 +38,6 @@ class Texts {
   static const String CONFIRM = "confirm";
   static const String CANCEL = 'cancel';
   static const String USERNAME = 'username';
+  static const String FIELD_REQUIRED = 'field_required';
 
 }

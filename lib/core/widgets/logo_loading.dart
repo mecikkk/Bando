@@ -2,7 +2,8 @@ import 'package:bando/core/utils/context_extensions.dart';
 import 'package:flutter/material.dart';
 
 class LogoLoading extends StatefulWidget {
-  LogoLoading({Key key}) : super(key: key);
+  final bool autoRun;
+  LogoLoading({Key key, this.autoRun = false}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => LogoLoadingState();
@@ -86,6 +87,8 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
+    if(widget.autoRun) startAnim();
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, widget) {

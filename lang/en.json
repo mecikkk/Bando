@@ -27,5 +27,8 @@
   "registration" : "Registration",
   "registration_subtitle" : "Create a new account and join an existing group, or create your own to take full advantage of the opportunities offered by Bando!",
   "username" : "Username",
-  "register" : "Register"
+  "register" : "Register",
+  "field_required" : "Field is required",
+  "enter_email_address" : "Please enter your email address"
+
 }

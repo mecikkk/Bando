@@ -1,14 +1,15 @@
 import 'package:bando/core/utils/constants.dart';
 import 'package:bando/core/utils/context_extensions.dart';
 import 'package:bando/core/utils/generate_screen.dart';
+import 'package:bando/core/utils/widget_extensions.dart';
 import 'package:bando/core/widgets/bando_dialog.dart';
 import 'package:bando/core/widgets/bando_snackbar.dart';
 import 'package:bando/core/widgets/connectivity_bar.dart';
 import 'package:bando/core/widgets/gradient_button.dart';
 import 'package:bando/core/widgets/logo_loading.dart';
 import 'package:bando/core/widgets/rounded_text_field.dart';
+import 'package:bando/features/authorization/presentation/blocs/auth/auth_bloc.dart';
 import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -32,6 +33,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   final GlobalKey<LogoLoadingState> _logoLoadingKey = GlobalKey<LogoLoadingState>();
 
   bool _connected;
+  bool _firstRun = true;
 
   double totalHeight;
   double totalWidth;
@@ -43,7 +45,9 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
     _bloc = get<LoginBloc>();
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
-    _connectivityBar = ConnectivityBar(currentStatus: (isOnline) { _connected = isOnline;});
+    _connectivityBar = ConnectivityBar(currentStatus: (isOnline) {
+      _connected = isOnline;
+    });
     super.initState();
   }
 
@@ -56,6 +60,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _bloc.close();
     super.dispose();
   }
 
@@ -63,11 +68,13 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     totalHeight = context.height;
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {
-        _contentOpacity = 1.0;
+    if (_firstRun)
+      Future.delayed(const Duration(milliseconds: 600), () {
+        setState(() {
+          _contentOpacity = 1.0;
+          _firstRun = false;
+        });
       });
-    });
 
     return BlocListener<LoginBloc, LoginState>(
       cubit: _bloc,
@@ -86,7 +93,9 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
             state is GoogleAuthCanceledState ||
             state is ResetPasswordFailureState) _logoLoadingKey.currentState.stopAnim();
 
-        if(state is LoggingInSuccessState) {
+        if (state is LoggingInSuccessState) {
+          _logoLoadingKey.currentState.stopAnim();
+          get<AuthBloc>()..add(SignedIn(user: state.user));
         }
       },
       child: BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
@@ -111,12 +120,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
                 padding: const EdgeInsets.only(top: 50.0, left: 32.0, right: 32.0),
                 child: _buildForm(context, state),
               ),
-              Positioned(
-                bottom: 24,
-                left: 0.0,
-                right: 0.0,
-                child: _connectivityBar
-              )
+              Positioned(bottom: 24, left: 0.0, right: 0.0, child: _connectivityBar)
             ],
           ),
         );
@@ -125,132 +129,130 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
   }
 
   Widget _buildForm(BuildContext context, LoginState state) {
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 500),
-      opacity: _contentOpacity,
-      curve: Curves.easeInCirc,
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: LogoLoading(key: _logoLoadingKey),
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.topCenter,
+          child: LogoLoading(key: _logoLoadingKey),
+        ),
+        SizedBox(height: 16.0),
+        Align(
+          alignment: Alignment.topLeft,
+          child: Text(
+            'Bando',
+            style: TextStyle(fontSize: context.scale(38.0)),
           ),
-          SizedBox(height: 16.0),
-          Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                'Bando',
-                style: TextStyle(fontSize: context.scale(38.0)),
-              )),
-          Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                context.translate(Texts.SPLASH_SUBTITLE),
-                style: TextStyle(fontSize: context.scale(18.0)),
-              )),
-          SizedBox(height: 24.0),
-          RoundedTextField.email(
-            key: _emailKey,
-            controller: _emailController,
-            labelText: 'E-mail',
-            validator: (text) {
-              if (state is EmailFieldChangedState)
-                return (state.message != null) ? context.translate(state.message) : null;
-              else
-                return null;
+        ).showFromBottomAnimation(1),
+        Align(
+          alignment: Alignment.topLeft,
+          child: Text(
+            context.translate(Texts.SPLASH_SUBTITLE),
+            style: TextStyle(fontSize: context.scale(18.0)),
+          ),
+        ).showFromBottomAnimation(2),
+        RoundedTextField.email(
+          key: _emailKey,
+          controller: _emailController,
+          labelText: 'E-mail',
+          enableFocusNextFieldButton: true,
+          validator: (text) {
+            if (state is EmailFieldChangedState)
+              return (state.message != null) ? context.translate(state.message) : null;
+            else
+              return null;
+          },
+        ).paddingOnly(top: 24.0, bottom: 25.0).showFromBottomAnimation(3),
+        RoundedTextField.password(
+          key: _passwordKey,
+          controller: _passwordController,
+          labelText: context.translate(Texts.PASSWORD),
+          validator: (text) {
+            if (state is PasswordFieldChangedState)
+              return (state.message != null) ? context.translate(state.message) : null;
+            else
+              return null;
+          },
+        ).showFromBottomAnimation(4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FlatButton(
+            onPressed: () {
+              if (_bloc.emailValid && _emailController.text.isNotEmpty) {
+                FocusScope.of(context).unfocus();
+                _showMaterialDialog();
+              } else {
+                _showSnackBar(Texts.ENTER_EMAIL_ADDRESS);
+              }
             },
+            child: Text(
+              'Forgot password',
+              style: TextStyle(color: context.colors.accent, fontSize: 14.0),
+            ),
           ),
-          SizedBox(height: 25.0),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 10,
-                child: RoundedTextField.password(
-                  key: _passwordKey,
-                  controller: _passwordController,
-                  labelText: context.translate(Texts.PASSWORD),
-                  validator: (text) {
-                    if (state is PasswordFieldChangedState)
-                      return (state.message != null) ? context.translate(state.message) : null;
-                    else
-                      return null;
-                  },
-                ),
-              ),
-              IconButton(
+        ).showFromBottomAnimation(5),
+        GradientButton(
+          text: context.translate(Texts.SIGN_IN),
+          height: context.scale(45.0),
+          onPressed: (_bloc.passwordValid && _bloc.emailValid) ? _onSignInClick : null,
+        )
+            .paddingOnly(
+              top: context.scale(10.0),
+              bottom: context.scale(30.0),
+            )
+            .showFromBottomAnimation(6),
+        _buildDivider(context).showFromBottomAnimation(7),
+        Row(
+          children: [
+            Expanded(
+              flex: 10,
+              child: RaisedButton.icon(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0), side: BorderSide(color: Colors.black.withOpacity(0.1))),
                 icon: SvgPicture.asset(
-                  'assets/forgot_pass.svg',
-                  height: 40.0,
+                  "assets/google_g.svg",
+                  height: 22,
+                ),
+                onPressed: _onSignInWithGoogleClick,
+                label: Text(
+                    (context.shortestSideSize > 480)
+                        ? context.translate(Texts.SIGN_IN_GOOGLE)
+                        : context.translate(Texts.GOOGLE),
+                    style: TextStyle(color: context.textColor)),
+                color: context.bgColor,
+              ),
+            ),
+            Spacer(
+              flex: 1,
+            ),
+            Expanded(
+              flex: 10,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  primary: context.colors.accent,
+                  shape: StadiumBorder(),
+                  side: BorderSide(color: context.textColor),
                 ),
                 onPressed: () {
-                  if (_bloc.emailValid && _emailController.text.isNotEmpty) {
-                    FocusScope.of(context).unfocus();
-                    _showMaterialDialog();
-                  }
+                  Navigator.of(context).pushNamed(Pages.REGISTRATION);
                 },
-              ),
-            ],
-          ),
-          SizedBox(height: context.scale(45.0)),
-          GradientButton(
-            text: context.translate(Texts.SIGN_IN),
-            height: context.scale(45.0),
-            onPressed: (_bloc.passwordValid && _bloc.emailValid) ? _onSignInClick : null,
-          ),
-          SizedBox(height: context.scale(30.0)),
-          _buildDivider(context),
-          SizedBox(height: context.scale(20.0)),
-          Row(
-            children: [
-              Expanded(
-                flex: 10,
-                child: RaisedButton.icon(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      side: BorderSide(color: Colors.black.withOpacity(0.1))),
-                  icon: SvgPicture.asset(
-                    "assets/google_g.svg",
-                    height: 22,
-                  ),
-                  onPressed: _onSignInWithGoogleClick,
-                  label: Text(
-                      (context.shortestSideSize > 480)
-                          ? context.translate(Texts.SIGN_IN_GOOGLE)
-                          : context.translate(Texts.GOOGLE),
-                      style: TextStyle(color: context.textColor)),
-                  color: context.bgColor,
-                ),
-              ),
-              Spacer(
-                flex: 1,
-              ),
-              Expanded(
-                flex: 10,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    primary: context.colors.accent,
-                    shape: StadiumBorder(),
-                    side: BorderSide(color: context.textColor),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(Pages.REGISTRATION);
-                  },
-                  child: Text(
-                    context.translate(Texts.CREATE_ACCOUNT).toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.textColor,
-                      fontSize: context.scale(14.0),
-                    ),
+                child: Text(
+                  context.translate(Texts.CREATE_ACCOUNT).toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: context.textColor,
+                    fontSize: context.scale(14.0),
                   ),
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: context.scale(50.0)),
-        ],
-      ),
+            ),
+          ]
+        )
+            .paddingOnly(
+              top: context.scale(20.0),
+              bottom: context.scale(50.0),
+            )
+            .showFromBottomAnimation(8),
+      ],
     );
   }
 
@@ -302,6 +304,7 @@ class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixi
       _bloc.add(SignInWithEmailAndPasswordEvent(email: _emailController.text, password: _passwordController.text));
     }
   }
+
   void _onSignInWithGoogleClick() {
     if (!_connected)
       _connectivityBar.shake();

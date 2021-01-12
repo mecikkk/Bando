@@ -29,10 +29,14 @@ class RegistrationRemoteDataSourceImpl implements RegistrationRemoteDataSource {
       final userCredential =
       await _firebaseAuth.createUserWithEmailAndPassword(email: email.value, password: password.value);
 
-      await userCredential.user.updateProfile(displayName: username);
+      User user = userCredential.user;
 
-      final user = await userCredential.user.toDomain();
-      return Right(user);
+      await user.updateProfile(displayName: username);
+
+      await user.reload();
+
+      final bandoUser = await _firebaseAuth.currentUser.toDomain();
+      return Right(bandoUser);
     } on FirebaseAuthException catch (e) {
       return (e.code == 'email-already-in-use') ? Left(EmailAlreadyInUse()) : Left(ServerFailure());
     }
