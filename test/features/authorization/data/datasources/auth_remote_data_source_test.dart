@@ -9,8 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mockito/mockito.dart';
 
-import '../../../fixtures/firebase_auth_mock.dart';
-import '../../../fixtures/google_sign_mock.dart';
+import '../../../../fixtures/firebase_auth_mock.dart';
+import '../../../../fixtures/google_sign_mock.dart';
 
 class MockFirebaseAuth2 extends Mock implements FirebaseAuth {}
 

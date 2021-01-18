@@ -1,6 +1,7 @@
 import 'package:bando/core/utils/context_extensions.dart';
 import 'package:bando/features/authorization/presentation/blocs/auth/auth_bloc.dart';
 import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
+import 'package:bando/features/authorization/presentation/blocs/registration/registration_bloc.dart';
 import 'package:bando/features/authorization/presentation/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,8 +34,11 @@ class SplashPage extends StatelessWidget {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is UnauthorizedState)
-            return BlocProvider<LoginBloc>(
-              create: (context) => get<LoginBloc>(),
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<LoginBloc>(create: (context) => get<LoginBloc>()),
+                BlocProvider<RegistrationBloc>(create: (context) => get<RegistrationBloc>()),
+              ],
               child: LoginPage(),
             );
           else

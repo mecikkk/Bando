@@ -27,15 +27,15 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
     _stand = TweenSequence(
       <TweenSequenceItem<double>>[
         TweenSequenceItem<double>(
-          tween: Tween(begin: 100.0, end: 110.0).chain(CurveTween(curve: Curves.easeOutCirc)),
+          tween: Tween(begin: 82.0, end: 92.0).chain(CurveTween(curve: Curves.easeOutCirc)),
           weight: 50.0,
         ),
         TweenSequenceItem<double>(
-          tween: Tween(begin: 110.0, end: 90.0).chain(CurveTween(curve: Curves.linear)),
+          tween: Tween(begin: 92.0, end: 72.0).chain(CurveTween(curve: Curves.linear)),
           weight: 25.0,
         ),
         TweenSequenceItem<double>(
-          tween: Tween(begin: 90.0, end: 100.0).chain(CurveTween(curve: Curves.easeOutCirc)),
+          tween: Tween(begin: 72.0, end: 82.0).chain(CurveTween(curve: Curves.easeOutCirc)),
           weight: 25.0,
         ),
       ],
@@ -93,7 +93,7 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
       animation: _controller,
       builder: (context, widget) {
         return Container(
-          height: context.scale(200.0),
+          height: context.scale(170.0),
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -103,14 +103,14 @@ class LogoLoadingState extends State<LogoLoading> with SingleTickerProviderState
                 right: 0.0,
                 child: Image.asset(
                   'assets/micro_b.png',
-                  height: context.scale(125.0),
+                  height: context.scale(100.0),
                 ),
               ),
               Positioned(
                 top: context.scale(_stand.value),
                 child: Image.asset(
                   'assets/stand.png',
-                  width: context.scale(125.0),
+                  width: context.scale(100.0),
                 ),
               ),
             ],

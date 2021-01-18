@@ -1,19 +1,10 @@
-import 'package:bando/core/utils/constants.dart';
 import 'package:bando/core/utils/context_extensions.dart';
-import 'package:bando/core/utils/generate_screen.dart';
-import 'package:bando/core/utils/widget_extensions.dart';
-import 'package:bando/core/widgets/bando_dialog.dart';
 import 'package:bando/core/widgets/bando_snackbar.dart';
 import 'package:bando/core/widgets/connectivity_bar.dart';
-import 'package:bando/core/widgets/gradient_button.dart';
 import 'package:bando/core/widgets/logo_loading.dart';
-import 'package:bando/core/widgets/rounded_text_field.dart';
-import 'package:bando/features/authorization/presentation/blocs/auth/auth_bloc.dart';
-import 'package:bando/features/authorization/presentation/blocs/login/login_bloc.dart';
+import 'package:bando/features/authorization/presentation/pages/login_form.dart';
+import 'package:bando/features/authorization/presentation/pages/registration_form.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:koin_flutter/koin_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,321 +13,110 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
-  LoginBloc _bloc;
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
   ConnectivityBar _connectivityBar;
 
-  final GlobalKey<RoundedTextFieldState> _emailKey = GlobalKey<RoundedTextFieldState>();
-  final GlobalKey<RoundedTextFieldState> _passwordKey = GlobalKey<RoundedTextFieldState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<LogoLoadingState> _logoLoadingKey = GlobalKey<LogoLoadingState>();
+  final GlobalKey<LoginFormState> _loginFormKey = GlobalKey<LoginFormState>();
+  final GlobalKey<RegistrationPageState> _registrationFormKey = GlobalKey<RegistrationPageState>();
 
   bool _connected;
-  bool _firstRun = true;
-
-  double totalHeight;
-  double totalWidth;
-
-  double _contentOpacity = 0;
+  bool _showRegistrationForm = false;
 
   @override
   void initState() {
-    _bloc = get<LoginBloc>();
-    _emailController.addListener(_onEmailChanged);
-    _passwordController.addListener(_onPasswordChanged);
     _connectivityBar = ConnectivityBar(currentStatus: (isOnline) {
       _connected = isOnline;
+      _loginFormKey.currentState?.onConnectivityStateChange(isOnline: _connected);
+      _registrationFormKey.currentState
+          ?.onConnectivityStateChange(isOnline: _connected);
     });
     super.initState();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _bloc.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    totalHeight = context.height;
 
-    if (_firstRun)
-      Future.delayed(const Duration(milliseconds: 600), () {
-        setState(() {
-          _contentOpacity = 1.0;
-          _firstRun = false;
-        });
-      });
-
-    return BlocListener<LoginBloc, LoginState>(
-      cubit: _bloc,
-      listener: (context, state) {
-        if (state is EmailFieldChangedState) _emailKey.currentState.updateValidState(_bloc.emailValid);
-        if (state is PasswordFieldChangedState) _passwordKey.currentState.updateValidState(_bloc.passwordValid);
-        if (state is Error) {
-          _showSnackBar(state.message);
-          _logoLoadingKey.currentState.stopAnim();
-        }
-        // if (state is WrongEmailOrPasswordState) _showSnackBar(state.message);
-        // if (state is GoogleAuthCanceledState) _showSnackBar(state.message);
-        // if (state is ResetPasswordFailureState) _showSnackBar(state.message);
-
-        if (state is WrongEmailOrPasswordState ||
-            state is GoogleAuthCanceledState ||
-            state is ResetPasswordFailureState) _logoLoadingKey.currentState.stopAnim();
-
-        if (state is LoggingInSuccessState) {
-          _logoLoadingKey.currentState.stopAnim();
-          get<AuthBloc>()..add(SignedIn(user: state.user));
-        }
-      },
-      child: BlocBuilder<LoginBloc, LoginState>(builder: (context, state) {
-        return Scaffold(
-          key: _scaffoldKey,
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              Positioned(
-                top: 36.0,
-                right: 16.0,
-                child: FadeInImage(
-                  fadeInDuration: const Duration(milliseconds: 300),
-                  fadeInCurve: Curves.easeInCirc,
-                  placeholder: MemoryImage(kTransparentImage),
-                  image: AssetImage('assets/logo_transparent.png'),
-                  height: context.scale(300.0),
-                  width: context.scale(250.0),
-                ),
-              ),
-              SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 50.0, left: 32.0, right: 32.0),
-                child: _buildForm(context, state),
-              ),
-              Positioned(bottom: 24, left: 0.0, right: 0.0, child: _connectivityBar)
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildForm(BuildContext context, LoginState state) {
-    return Column(
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: LogoLoading(key: _logoLoadingKey),
-        ),
-        SizedBox(height: 16.0),
-        Align(
-          alignment: Alignment.topLeft,
-          child: Text(
-            'Bando',
-            style: TextStyle(fontSize: context.scale(38.0)),
-          ),
-        ).showFromBottomAnimation(1),
-        Align(
-          alignment: Alignment.topLeft,
-          child: Text(
-            context.translate(Texts.SPLASH_SUBTITLE),
-            style: TextStyle(fontSize: context.scale(18.0)),
-          ),
-        ).showFromBottomAnimation(2),
-        RoundedTextField.email(
-          key: _emailKey,
-          controller: _emailController,
-          labelText: 'E-mail',
-          enableFocusNextFieldButton: true,
-          validator: (text) {
-            if (state is EmailFieldChangedState)
-              return (state.message != null) ? context.translate(state.message) : null;
-            else
-              return null;
-          },
-        ).paddingOnly(top: 24.0, bottom: 25.0).showFromBottomAnimation(3),
-        RoundedTextField.password(
-          key: _passwordKey,
-          controller: _passwordController,
-          labelText: context.translate(Texts.PASSWORD),
-          validator: (text) {
-            if (state is PasswordFieldChangedState)
-              return (state.message != null) ? context.translate(state.message) : null;
-            else
-              return null;
-          },
-        ).showFromBottomAnimation(4),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FlatButton(
-            onPressed: () {
-              if (_bloc.emailValid && _emailController.text.isNotEmpty) {
-                FocusScope.of(context).unfocus();
-                _showMaterialDialog();
-              } else {
-                _showSnackBar(Texts.ENTER_EMAIL_ADDRESS);
-              }
-            },
-            child: Text(
-              'Forgot password',
-              style: TextStyle(color: context.colors.accent, fontSize: 14.0),
-            ),
-          ),
-        ).showFromBottomAnimation(5),
-        GradientButton(
-          text: context.translate(Texts.SIGN_IN),
-          height: context.scale(45.0),
-          onPressed: (_bloc.passwordValid && _bloc.emailValid) ? _onSignInClick : null,
-        )
-            .paddingOnly(
-              top: context.scale(10.0),
-              bottom: context.scale(30.0),
-            )
-            .showFromBottomAnimation(6),
-        _buildDivider(context).showFromBottomAnimation(7),
-        Row(
+    return Scaffold(
+      key: _scaffoldKey,
+      body: WillPopScope(
+        onWillPop: () async {
+          if (_showRegistrationForm) {
+            setState(() {
+              _showRegistrationForm = false;
+            });
+            return false;
+          } else
+            return true;
+        },
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Expanded(
-              flex: 10,
-              child: RaisedButton.icon(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0), side: BorderSide(color: Colors.black.withOpacity(0.1))),
-                icon: SvgPicture.asset(
-                  "assets/google_g.svg",
-                  height: 22,
-                ),
-                onPressed: _onSignInWithGoogleClick,
-                label: Text(
-                    (context.shortestSideSize > 480)
-                        ? context.translate(Texts.SIGN_IN_GOOGLE)
-                        : context.translate(Texts.GOOGLE),
-                    style: TextStyle(color: context.textColor)),
-                color: context.bgColor,
+            Positioned(
+              top: 36.0,
+              right: 16.0,
+              child: FadeInImage(
+                fadeInDuration: const Duration(milliseconds: 300),
+                fadeInCurve: Curves.easeInCirc,
+                placeholder: MemoryImage(kTransparentImage),
+                image: AssetImage('assets/logo_transparent.png'),
+                height: context.scale(300.0),
+                width: context.scale(250.0),
               ),
             ),
-            Spacer(
-              flex: 1,
-            ),
-            Expanded(
-              flex: 10,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  primary: context.colors.accent,
-                  shape: StadiumBorder(),
-                  side: BorderSide(color: context.textColor),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pushNamed(Pages.REGISTRATION);
-                },
-                child: Text(
-                  context.translate(Texts.CREATE_ACCOUNT).toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: context.textColor,
-                    fontSize: context.scale(14.0),
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 40.0, left: 32.0, right: 32.0),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: LogoLoading(key: _logoLoadingKey),
                   ),
-                ),
+                  SizedBox(height: 16.0),
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: 100),
+                    child: !_showRegistrationForm
+                        ? LoginForm(
+                            key: _loginFormKey,
+                            logoLoadingKey: _logoLoadingKey,
+                            scaffoldKey: _scaffoldKey,
+                            shakeConnectivityBar: () {
+                              _connectivityBar.shake();
+                            },
+                            showMessage: (message) {
+                              _showSnackBar(message);
+                            },
+                            showRegistrationForm: () {
+                              setState(() {
+                                _showRegistrationForm = true;
+                              });
+                            },
+                          )
+                        : RegistrationPage(
+                            key: _registrationFormKey,
+                            logoLoadingKey: _logoLoadingKey,
+                            scaffoldKey: _scaffoldKey,
+                            shakeConnectivityBar: () {
+                              _connectivityBar.shake();
+                            },
+                            showMessage: (message) {
+                              _showSnackBar(message);
+                            },
+                            initialConnectionState: _connected,
+                          ),
+                  ),
+                ],
               ),
             ),
-          ]
-        )
-            .paddingOnly(
-              top: context.scale(20.0),
-              bottom: context.scale(50.0),
-            )
-            .showFromBottomAnimation(8),
-      ],
+            Positioned(bottom: 24, left: 0.0, right: 0.0, child: _connectivityBar)
+          ],
+        ),
+      ),
     );
   }
-
-  Widget _buildDivider(BuildContext context) => Row(
-        children: [
-          Flexible(
-            child: Divider(
-              color: context.textColor,
-              height: 10.0,
-              thickness: 1.0,
-              indent: 0.0,
-              endIndent: 25.0,
-            ),
-          ),
-          Text(
-            context.translate(Texts.OR),
-            style: TextStyle(fontSize: context.scale(16.0)),
-          ),
-          Flexible(
-            child: Divider(
-              color: context.textColor,
-              height: 10.0,
-              thickness: 1.0,
-              indent: 25.0,
-              endIndent: 0.0,
-            ),
-          ),
-        ],
-      );
 
   void _showSnackBar(String message) {
     if (_scaffoldKey != null)
       _scaffoldKey.currentState.showSnackBar(BandoSnackBar.error(message: message).build(context));
-  }
-
-  void _onEmailChanged() {
-    _bloc.add(EmailTextFieldChanged(enteredText: _emailController.text));
-  }
-
-  void _onPasswordChanged() {
-    _bloc.add(PasswordTextFieldChanged(enteredText: _passwordController.text));
-  }
-
-  void _onSignInClick() {
-    if (!_connected)
-      _connectivityBar.shake();
-    else {
-      _logoLoadingKey.currentState.startAnim();
-      _bloc.add(SignInWithEmailAndPasswordEvent(email: _emailController.text, password: _passwordController.text));
-    }
-  }
-
-  void _onSignInWithGoogleClick() {
-    if (!_connected)
-      _connectivityBar.shake();
-    else {
-      _logoLoadingKey.currentState.startAnim();
-      _bloc.add(SignInWithGoogleEvent());
-    }
-  }
-
-  _showMaterialDialog() {
-    showDialog(
-        context: context,
-        builder: (_) => new BandoDialog(
-              title: context.translate(Texts.RESET_PASSWORD),
-              content: Container(
-                height: 80.0,
-                child: Column(
-                  children: [
-                    new Text(context.translate(Texts.RESET_PASSWORD_DESCRIPTION)),
-                    new Text(
-                      "${_emailController.text}",
-                      style: TextStyle(fontWeight: FontWeight.bold, color: context.colors.first),
-                    ),
-                  ],
-                ),
-              ),
-              confirmActionLabel: context.translate(Texts.CONFIRM),
-              cancelActionLabel: context.translate(Texts.CANCEL),
-              onConfirmClick: () {
-                _bloc.add(ResetPasswordEvent(email: _emailController.text));
-                _logoLoadingKey.currentState.startAnim();
-              },
-            ));
   }
 }

@@ -1,5 +1,5 @@
-import 'package:bando/core/widgets/show_up_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:show_up_animation/show_up_animation.dart';
 
 extension Paddings on Widget {
   Widget paddingAll(double value) => Padding(
@@ -25,8 +25,12 @@ extension Paddings on Widget {
 }
 
 extension WidgetAnimatons on Widget {
-  Widget showFromBottomAnimation(int positionInOrder) => ShowUpWidget(
-        child: this,
-        positionInOrder: positionInOrder,
-      );
+  Widget showFromBottomAnimation(int positionInOrder) => ShowUpAnimation(
+    child: this,
+    delayStart: Duration(milliseconds: (positionInOrder * 50)),
+    animationDuration: const Duration(milliseconds: 550),
+    curve: Curves.easeOutCirc,
+    direction: Direction.vertical,
+    offset: 0.3,
+  );
 }
