@@ -14,6 +14,10 @@ abstract class Failure extends Equatable {
 
 class ServerFailure extends Failure {}
 
+class NetworkConnectionFailure extends Failure {
+  NetworkConnectionFailure() : super(message: Texts.NO_CONNECTION);
+}
+
 class EnteredDataFailure extends Failure {
   EnteredDataFailure() : super(message: Texts.ENTERED_INCORRECT_DATA);
 }
@@ -55,4 +59,8 @@ class UnconfiguredGroup extends Failure {
 
 class SendingResetPasswordEmailFailure extends Failure {
   SendingResetPasswordEmailFailure() : super(message: Texts.SOMETHING_WENT_WRONG);
+}
+
+class CreatingNewGroupFailure extends Failure {
+  CreatingNewGroupFailure() : super(message: Texts.GROUP_CREATION_FAILED);
 }

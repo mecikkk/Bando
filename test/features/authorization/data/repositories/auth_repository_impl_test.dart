@@ -1,6 +1,6 @@
 import 'package:bando/core/errors/failure.dart';
+import 'package:bando/core/models/user_model.dart';
 import 'package:bando/features/authorization/data/datasources/auth_remote_data_source.dart';
-import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:bando/features/authorization/data/repositories/auth_repository_impl.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -32,6 +32,9 @@ class Texts {
   static const String REGISTRATION_SUBTITLE = 'registration_subtitle';
   static const String REGISTER = 'register';
 
+  // GROUP
+  static const String GROUP_CREATION_FAILED = 'group_creation_error';
+
   // COMMON
   static const String SPLASH_SUBTITLE = "splash_subtitle";
   static const String NO_CONNECTION = 'no_connection';

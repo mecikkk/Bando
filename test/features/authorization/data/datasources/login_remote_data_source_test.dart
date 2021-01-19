@@ -2,12 +2,13 @@ import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/errors/failure.dart';
 import 'package:bando/features/authorization/data/datasources/login_remote_data_source.dart';
-import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mockito/mockito.dart';
+
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/core/models/user_model.dart';
 
 import '../../../../fixtures/firebase_auth_mock.dart';
 import '../../../../fixtures/google_sign_mock.dart';

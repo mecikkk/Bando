@@ -29,6 +29,8 @@
   "username" : "Username",
   "register" : "Register",
   "field_required" : "Field is required",
-  "enter_email_address" : "Please enter your email address"
+  "enter_email_address" : "Please enter your email address",
+  "group_creation_error" : "Something went wrong when creating the group"
+
 
 }

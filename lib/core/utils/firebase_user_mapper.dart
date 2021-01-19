@@ -1,4 +1,4 @@
-import 'package:bando/features/authorization/data/models/user_model.dart';
+import 'package:bando/core/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 extension FirebaseUserToDomain on User {

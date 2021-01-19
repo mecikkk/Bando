@@ -29,6 +29,6 @@
   "username" : "Nazwa użytkownika",
   "register" : "Zarejestruj",
   "field_required" : "Pole jest wymagane",
-  "enter_email_address" : "Wprowadź swój adres email"
-
+  "enter_email_address" : "Wprowadź swój adres email",
+  "group_creation_error" : "Wystąpił błąd podczas tworzenia grupy"
 }

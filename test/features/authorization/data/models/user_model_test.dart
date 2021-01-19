@@ -1,6 +1,7 @@
 import 'package:bando/core/entities/user.dart';
-import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'file:///D:/Android/Bando/FlutterProject/bando/lib/core/models/user_model.dart';
 
 void main() async {
   final userModel = UserModel(uid: 'TestUid', displayName: 'TestName', groupId: 'TestGroupId');

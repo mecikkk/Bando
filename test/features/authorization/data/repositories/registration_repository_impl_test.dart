@@ -1,9 +1,9 @@
 import 'package:bando/core/entities/email_address.dart';
 import 'package:bando/core/entities/password.dart';
 import 'package:bando/core/errors/failure.dart';
+import 'package:bando/core/models/user_model.dart';
 import 'package:bando/features/authorization/data/datasources/local_data_source.dart';
 import 'package:bando/features/authorization/data/datasources/registration_remote_data_source.dart';
-import 'package:bando/features/authorization/data/models/user_model.dart';
 import 'package:bando/features/authorization/data/repositories/registration_repository_impl.dart';
 import 'package:bando/features/authorization/domain/repositories/registration_repository.dart';
 import 'package:dartz/dartz.dart';

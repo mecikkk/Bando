@@ -1,14 +1,14 @@
 {
-  "name": "TestGroupName",
-  "leaderId": "TestLeaderId",
+  "name": "SomeFakeName",
+  "leaderId": "SomeFakeId",
   "members": [
     {
-      "uid": "TestUid1",
-      "displayName": "TestName1"
+      "uid": "SomeFakeUid1",
+      "displayName": "SomeFakeMemberName1"
     },
     {
-      "uid": "TestUid2",
-      "displayName": "TestName2"
+      "uid": "SomeFakeUid2",
+      "displayName": "SomeFakeMemberName2"
     }
   ]
 }
